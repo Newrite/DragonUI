@@ -3,7 +3,7 @@
 
 | Method | Link |
 |--------|------|
-| **Latest stable release** | [Download](https://github.com/PentSec/DragonUI/releases/download/v2.5/DragonUI-2.5.zip) |
+| **Latest stable release** | [Download](https://github.com/PentSec/DragonUI/releases/latest/download/DragonUI.zip) |
 | **Cutting-edge (main branch)** | [Download](https://github.com/PentSec/DragonUI/archive/refs/heads/main.zip) |
 
 
