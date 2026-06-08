@@ -37,6 +37,14 @@ local function BuildAdditionalBarsTab(scroll)
     local stance = C:AddSection(scroll, LO["Stance Bar"])
 
     C:AddToggle(stance, {
+        label = LO["Show Stance Bar"],
+        dbPath = "additional.stance.show",
+        callback = function()
+            if addon.RefreshStance then addon.RefreshStance() end
+        end,
+    })
+
+    C:AddToggle(stance, {
         label = LO["Show Hotkey Text"],
         dbPath = "additional.stance.show_hotkey",
         callback = RefreshAdditionalBarHotkeys,
@@ -59,6 +67,37 @@ local function BuildAdditionalBarsTab(scroll)
         width = 200,
         callback = function()
             if addon.RefreshStance then addon.RefreshStance() end
+        end,
+    })
+
+    C:AddSlider(stance, {
+        label = LO["Scale"],
+        dbPath = "additional.stance.scale",
+        min = 0.5, max = 2.0, step = 0.05,
+        width = 200,
+        callback = function()
+            if addon.RefreshStance then addon.RefreshStance() end
+        end,
+    })
+
+    C:AddSlider(stance, {
+        label = LO["X Position"],
+        desc = LO["Horizontal position of stance bar from screen center. Negative values move left, positive values move right."],
+        dbPath = "additional.stance.x_position",
+        min = -600, max = 600, step = 1,
+        width = 200,
+        callback = function()
+            if addon.UpdateStanceBarPosition then addon.UpdateStanceBarPosition() end
+        end,
+    })
+
+    C:AddSlider(stance, {
+        label = LO["Y Offset"],
+        dbPath = "additional.stance.y_offset",
+        min = -200, max = 200, step = 1,
+        width = 200,
+        callback = function()
+            if addon.UpdateStanceBarPosition then addon.UpdateStanceBarPosition() end
         end,
     })
 

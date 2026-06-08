@@ -377,10 +377,12 @@ local defaults = {
             size = 31,
             spacing = 6,
             stance = {
+                show = true, -- Show/hide stance bar
                 x_position = -211,
                 y_offset = -58, -- Additional Y offset for fine-tuning position
                 button_size = 31, -- Size of stance buttons (native Blizzard size)
                 button_spacing = 6, -- Spacing between stance buttons
+                scale = 1.0, -- Global stance bar scale
                 show_hotkey = false
             },
             pet = {

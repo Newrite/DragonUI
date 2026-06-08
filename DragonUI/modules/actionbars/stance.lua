@@ -43,10 +43,13 @@ end
 -- Nil-safe accessor for stance-specific config (addon.db.profile.additional.stance)
 -- IMPORTANT: Keep in sync with database.lua → additional.stance
 local STANCE_DEFAULTS = {
+    show = true,
     x_position = -211,
     y_offset = -60,
     button_size = 31,
     button_spacing = 6,
+    scale = 1.0,
+    show_hotkey = false,
 }
 local function GetStanceConfig()
     if addon.db and addon.db.profile and addon.db.profile.additional and addon.db.profile.additional.stance then
@@ -103,6 +106,11 @@ local function stancebar_update()
     local y_offset = stanceConfig.y_offset or 0         -- Additional Y offset
     local base_y = 200                                  -- Base Y position from bottom
     local final_y = base_y + y_offset                   -- Final Y position
+
+    -- Apply global bar scale
+    if anchor then
+        anchor:SetScale(stanceConfig.scale or 1.0)
+    end
     
     -- Apply dual-bar offset when both XP and Rep bars are visible
     -- Only if stance bar is at its default position (not moved by user)
@@ -148,6 +156,11 @@ local function CreateStanceFrames()
     -- Create simple anchor frame
     anchor = CreateFrame('Frame', 'pUiStanceHolder', UIParent)
     anchor:SetSize(37, 37)  -- Visual style matching reference
+
+    -- Apply global bar scale from config
+    local stanceConfig = GetStanceConfig()
+    anchor:SetScale(stanceConfig.scale or 1.0)
+
     StanceModule.frames.anchor = anchor
     
     -- Create stance bar frame
@@ -361,14 +374,18 @@ local function stancebutton_position()
 	    RegisterStateDriver(stancebar, 'visibility', visCondition)
 	end
 
-	-- Hide anchor when no forms are available, regardless of class token
+	-- Visibility logic: user toggle takes priority, then auto-show based on forms
 	-- This handles CoA 21-classes where custom classes may have stances
 	-- but their class token isn't in the original stance table
-	local numForms = GetNumShapeshiftForms()
-	if numForms == 0 then
+	if stanceConfig.show == false then
 		anchor:Hide()
 	else
-		anchor:Show()
+		local numForms = GetNumShapeshiftForms()
+		if numForms == 0 then
+			anchor:Hide()
+		else
+			anchor:Show()
+		end
 	end
 end
 
@@ -707,13 +724,18 @@ function addon.RefreshStance()
 	-- Update position
 	stancebar_update()
 
-	-- Hide/show anchor based on available forms (handles CoA 21-classes)
-	local numForms = GetNumShapeshiftForms()
+	-- Visibility logic: user toggle takes priority, then auto-show based on forms
+	-- Handles CoA 21-classes where custom class tokens aren't in the stance table
 	if anchor then
-		if numForms == 0 then
+		if stanceConfig.show == false then
 			anchor:Hide()
 		else
-			anchor:Show()
+			local numForms = GetNumShapeshiftForms()
+			if numForms == 0 then
+				anchor:Hide()
+			else
+				anchor:Show()
+			end
 		end
 	end
 end

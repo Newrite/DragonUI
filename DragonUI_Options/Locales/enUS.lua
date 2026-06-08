@@ -557,6 +557,7 @@ L["Space between buttons for all additional bars"] = true
 -- Stance Bar
 L["Stance Bar"] = true
 L["Warriors, Druids, Death Knights"] = true
+L["Show Stance Bar"] = true
 L["X Position"] = true
 L["Y Position"] = true
 L["Y Offset"] = true
