@@ -580,6 +580,7 @@ L["Use Blizzard vehicle bar art with health/power display. Requires reload."] = 
 -- Totem Bar
 L["Totem Bar"] = true
 L["Totem Bar (Shaman)"] = true
+L["Show Totem Bar"] = true
 L["Shamans only - Totem multicast bar. Position is controlled via Editor Mode."] = true
 L["TIP: Use Editor Mode to position the totem bar (type /dragonui edit)."] = true
 

@@ -12,11 +12,6 @@ local UIParent = UIParent;
 local NUM_POSSESS_SLOTS = NUM_POSSESS_SLOTS or 10;
 local NUM_MULTI_CAST_BUTTONS_PER_PAGE = NUM_MULTI_CAST_BUTTONS_PER_PAGE or 4;
 
--- Get player class dynamically (addon._class may not be set yet at load time)
-local function GetPlayerClass()
-    return addon._class or select(2, UnitClass('player'))
-end
-
 -- noop function for protecting frames
 local noop = addon._noop
 
@@ -42,6 +37,11 @@ if addon.RegisterModule then
         refresh = "RefreshMulticast",
         loadOnce = true,
     })
+end
+
+-- Module enable check
+local function IsModuleEnabled()
+    return addon:IsModuleEnabled("multicast")
 end
 
 -- Module frames (created only when enabled)
@@ -138,7 +138,6 @@ end
 PositionTotemButtons = function()
     if not anchor or not totembar then return end
     if InCombatLockdown() then return end
-    if GetPlayerClass() ~= 'SHAMAN' then return end
     if not MultiCastActionBarFrame then return end
     
     -- READ VALUES FROM DATABASE
@@ -332,9 +331,8 @@ end
 -- =============================================================================
 local multicastSetupDone = false
 local multicastSetupPending = false
-local function SetupShamanMulticast()
+local function SetupMulticast()
     if multicastSetupDone then return end
-    if GetPlayerClass() ~= 'SHAMAN' then return end
     if not MultiCastActionBarFrame then return end
     
     -- CRITICAL: Defer entire setup if in combat
@@ -342,9 +340,9 @@ local function SetupShamanMulticast()
     if InCombatLockdown() then
         if not multicastSetupPending then
             multicastSetupPending = true
-            addon.CombatQueue:Add("multicast_SetupShamanMulticast", function()
+            addon.CombatQueue:Add("multicast_SetupMulticast", function()
                 multicastSetupPending = false
-                SetupShamanMulticast()
+                SetupMulticast()
             end)
         end
         return
@@ -446,6 +444,16 @@ function addon.RefreshMulticast(fullRefresh)
         return 
     end
     
+    -- Visibility: user toggle takes priority
+    if anchor then
+        local totemConfig = GetTotemConfig()
+        if totemConfig.show == false then
+            anchor:Hide()
+        else
+            anchor:Show()
+        end
+    end
+    
     -- Update anchor position
     UpdateTotemBarPosition()
     
@@ -470,8 +478,18 @@ local function ApplyMulticastSystem()
     -- Create frames
     CreateMulticastFrames()
     
-    -- Setup shaman multicast if applicable
-    SetupShamanMulticast()
+    -- Setup multicast if applicable
+    SetupMulticast()
+    
+    -- Apply show toggle visibility
+    if anchor then
+        local totemConfig = GetTotemConfig()
+        if totemConfig.show == false then
+            anchor:Hide()
+        else
+            anchor:Show()
+        end
+    end
     
     -- Initial positioning
     UpdateTotemBarPosition()
@@ -489,9 +507,9 @@ local function ApplyMulticastSystem()
             configPath = {"additional", "totem"},
             
             editorVisible = function()
-                -- Only show totem bar in editor mode for shamans
-                local _, class = UnitClass("player")
-                return class == "SHAMAN" and MultiCastActionBarFrame ~= nil
+                -- Show totem bar in editor mode when the frame exists
+                -- No class-dependent check: works on CoA 21-classes servers
+                return MultiCastActionBarFrame ~= nil
             end,
             
             showTest = function()
@@ -561,7 +579,7 @@ local function RegisterEvents()
     eventFrame:RegisterEvent("ADDON_LOADED")
     eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     eventFrame:RegisterEvent("PLAYER_LOGOUT")
-    -- Note: PLAYER_REGEN_ENABLED is handled by SetupShamanMulticast if needed for deferred setup
+    -- Note: PLAYER_REGEN_ENABLED is handled by SetupMulticast if needed for deferred setup
     
     eventFrame:SetScript("OnEvent", function(self, event, addonName)
         if event == "ADDON_LOADED" and addonName == "DragonUI" then

@@ -140,6 +140,14 @@ local function BuildAdditionalBarsTab(scroll)
     local totem = C:AddSection(scroll, LO["Totem Bar (Shaman)"])
 
     C:AddToggle(totem, {
+        label = LO["Show Totem Bar"],
+        dbPath = "additional.totem.show",
+        callback = function()
+            if addon.RefreshMulticast then addon.RefreshMulticast(true) end
+        end,
+    })
+
+    C:AddToggle(totem, {
         label = LO["Show Hotkey Text"],
         dbPath = "additional.totem.show_hotkey",
         callback = RefreshAdditionalBarHotkeys,

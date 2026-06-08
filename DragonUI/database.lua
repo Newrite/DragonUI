@@ -396,6 +396,7 @@ local defaults = {
                 artstyle = true
             },
             totem = {
+                show = true, -- Show/hide totem bar
                 x_position = 0,
                 y_offset = 2, -- Additional Y offset for fine-tuning position
                 button_size = 34, -- Size of totem buttons (native Blizzard size)
