@@ -6,6 +6,17 @@ local CoA = {
 
 addon.CoA = CoA
 
+-- Maps server class tokens to our atlas tokens when names differ between servers.
+CoA.CLASS_ALIASES = {
+    DEMONHUNTER   = "FELSWORN",
+    SONOFARUGAL   = "PYROMANCER",
+    WILDWALKER    = "PRIMALIST",
+    PROPHET       = "VENOMANCER",
+    FLESHWARDEN   = "KNIGHT_OF_XOROTH",
+    SPIRITMAGE    = "RUNEMASTER",
+    MONK          = "TEMPLAR",
+}
+
 function CoA:Detect()
     local hasCPlayer = rawget(_G, "C_Player") ~= nil
     if not hasCPlayer then return false end
@@ -14,6 +25,11 @@ function CoA:Detect()
     if class ~= "HERO" then
         return true
     end
+
+    if self:HasAscensionUI() then
+        return true
+    end
+
     return false
 end
 
@@ -40,3 +56,29 @@ function CoA:SetupClassColors()
         CoA.herocolor = { r = 1, g = 1, b = 1 }
     end
 end
+
+function CoA:ResolvePortraitClass(unit)
+    if not self.active then return nil end
+
+    local _, classFileName = UnitClass(unit)
+    if not classFileName then return nil end
+
+    local atlasMap = addon.UF and addon.UF.CLASSES_ALPHA_MAP
+
+    if atlasMap and atlasMap[classFileName] then
+        return classFileName
+    end
+
+    local alias = self.CLASS_ALIASES[classFileName]
+    if alias and atlasMap and atlasMap[alias] then
+        return alias
+    end
+
+    return nil
+end
+
+function CoA:ResolvePlayerClass()
+    return self:ResolvePortraitClass("player")
+end
+
+

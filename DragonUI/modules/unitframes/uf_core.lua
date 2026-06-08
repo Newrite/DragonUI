@@ -94,6 +94,7 @@ UF.TEXTURES = {
     CLASS_ICON_ALTERNATIVE_PREFIX = "Interface\\AddOns\\DragonUI\\Textures\\ClassIcons\\",
     CLASS_ICON_ALTERNATIVE_SUFFIX = ".blp",
     CLASS_ICON = "Interface\\TargetingFrame\\UI-Classes-Circles",
+    CLASSES_ALPHA = "Interface\\AddOns\\DragonUI\\Textures\\ClassIcons\\classes_alpha.blp",
 }
 
 
@@ -246,6 +247,47 @@ end
 
 
 -- ============================================================================
+-- CLASSES ALPHA ATLAS MAP
+-- ============================================================================
+-- 1024x1024 atlas, 8 cols x 5 rows, 128x128 per icon.
+-- Maps class token -> {col, row} (0-indexed).
+
+UF.CLASSES_ALPHA_MAP = {
+    BARBARIAN      = {0, 0},
+    CHRONOMANCER   = {1, 0},
+    CULTIST        = {2, 0},
+    DEATHKNIGHT    = {3, 0},
+    FELSWORN       = {4, 0},
+    DRUID          = {5, 0},
+    KNIGHT_OF_XOROTH = {6, 0},
+    GUARDIAN       = {7, 0},
+    HUNTER         = {1, 1},
+    MAGE           = {2, 1},
+    TEMPLAR        = {3, 1},
+    NECROMANCER    = {4, 1},
+    PALADIN        = {5, 1},
+    PRIEST         = {6, 1},
+    VENOMANCER     = {7, 1},
+    PYROMANCER     = {0, 2},
+    RANGER         = {1, 2},
+    REAPER         = {2, 2},
+    ROGUE          = {3, 2},
+    SHAMAN         = {4, 2},
+    BLOODMAGE      = {5, 2},
+    RUNEMASTER     = {6, 2},
+    STARCALLER     = {7, 2},
+    STORMBRINGER   = {0, 3},
+    SUNCLERIC      = {1, 3},
+    TINKER         = {2, 3},
+    WARLOCK        = {3, 3},
+    WARRIOR        = {4, 3},
+    PRIMALIST      = {5, 3},
+    WITCHDOCTOR    = {6, 3},
+    WITCHHUNTER    = {7, 3},
+    HERO           = {0, 4},
+}
+
+-- ============================================================================
 -- CLASS PORTRAIT
 -- ============================================================================
 -- Overlays a class icon on the unit portrait when enabled.
@@ -255,6 +297,14 @@ function UF.UseAlternativeClassIcons(unitKey)
     local config = UF.GetConfig(unitKey)
     return config and config.classPortrait and config.alternativeClassIcons or false
 end
+
+UF.CLASSES_WITH_INDIVIDUAL_BLP = {
+    WARRIOR = true, MAGE = true, ROGUE = true, PRIEST = true,
+    PALADIN = true, SHAMAN = true, HUNTER = true, DRUID = true,
+    WARLOCK = true, DEATHKNIGHT = true,
+}
+
+local CLASSES_WITH_INDIVIDUAL_BLP = UF.CLASSES_WITH_INDIVIDUAL_BLP
 
 function UF.ApplyClassPortraitIcon(icon, classFileName, useAlternative)
     if not icon or not classFileName then
@@ -268,7 +318,7 @@ function UF.ApplyClassPortraitIcon(icon, classFileName, useAlternative)
         return inset
     end
 
-    if useAlternative then
+    if useAlternative and CLASSES_WITH_INDIVIDUAL_BLP[classFileName] then
         icon:SetTexture(
             UF.TEXTURES.CLASS_ICON_ALTERNATIVE_PREFIX
             .. classFileName
@@ -277,17 +327,30 @@ function UF.ApplyClassPortraitIcon(icon, classFileName, useAlternative)
         return true
     end
 
-    local coords = CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[classFileName]
-    if not coords then
-        return false
+    if not useAlternative then
+        local coords = CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[classFileName]
+        if coords then
+            local inset = ClampInset(UF.CLASSIC_CLASS_ICON_INSET)
+            icon:SetTexture(UF.TEXTURES.CLASS_ICON)
+            icon:SetTexCoord(
+                coords[1] + inset, coords[2] - inset,
+                coords[3] + inset, coords[4] - inset)
+            return true
+        end
     end
 
-    local inset = ClampInset(UF.CLASSIC_CLASS_ICON_INSET)
-    icon:SetTexture(UF.TEXTURES.CLASS_ICON)
-    icon:SetTexCoord(
-        coords[1] + inset, coords[2] - inset,
-        coords[3] + inset, coords[4] - inset)
-    return true
+    local atlasEntry = UF.CLASSES_ALPHA_MAP[classFileName]
+    if atlasEntry then
+        local col, row = atlasEntry[1], atlasEntry[2]
+        local cellW, cellH = 128 / 1024, 128 / 1024
+        icon:SetTexture(UF.TEXTURES.CLASSES_ALPHA)
+        icon:SetTexCoord(
+            col * cellW, (col + 1) * cellW,
+            row * cellH, (row + 1) * cellH)
+        return true
+    end
+
+    return false
 end
 
 function UF.ApplyClassPortraitToTexture(unit, portraitTexture, useAlternative)
@@ -302,6 +365,10 @@ function UF.ApplyClassPortraitToTexture(unit, portraitTexture, useAlternative)
     local _, classFileName = UnitClass(unit)
     if not classFileName then
         return false
+    end
+
+    if addon.CoA and addon.CoA.active and addon.CoA.ResolvePortraitClass then
+        classFileName = addon.CoA:ResolvePortraitClass(unit) or classFileName
     end
 
     if UF.ApplyClassPortraitIcon(portraitTexture, classFileName, useAlternative) then

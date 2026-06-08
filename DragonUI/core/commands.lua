@@ -375,6 +375,114 @@ local function SlashCommandHandler(input)
             end
         end
 
+    elseif cmd == "classdebug" then
+        local classFileName = select(2, UnitClass("player"))
+        local coa = addon.CoA
+        local isCoA = coa and coa.active
+        local resolved = classFileName
+        if coa and coa.ResolvePortraitClass then
+            resolved = coa:ResolvePortraitClass("player") or classFileName
+        end
+        local UF = addon.UF
+        local hasAtlas = UF and UF.CLASSES_ALPHA_MAP[resolved] and "YES" or "NO"
+        local hasTCoords = CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[resolved] and "YES" or "NO"
+        local hasBLP = UF and UF.CLASSES_WITH_INDIVIDUAL_BLP[resolved] and "YES" or "NO"
+        addon:Print(string.format(
+            "UnitClass(player) = %s | CoA active = %s | Resolved = %s | Atlas = %s | TCoords = %s | IndivBLP = %s",
+            tostring(classFileName), tostring(isCoA), resolved, hasAtlas, hasTCoords, hasBLP))
+
+        if _G.CUSTOM_CLASS_COLORS then
+            addon:Print("CUSTOM_CLASS_COLORS entries:")
+            local n = 0
+            for token, color in pairs(_G.CUSTOM_CLASS_COLORS) do
+                n = n + 1
+                local inAtlas = UF and UF.CLASSES_ALPHA_MAP[token] and " [IN ATLAS]" or ""
+                local atlasPos = ""
+                if UF and UF.CLASSES_ALPHA_MAP[token] then
+                    local entry = UF.CLASSES_ALPHA_MAP[token]
+                    atlasPos = string.format(" (r%02d_c%02d)", entry[2], entry[1])
+                end
+                addon:Print(string.format("  %d. %s%s%s", n, tostring(token), inAtlas, atlasPos))
+            end
+        end
+
+    elseif cmd == "classicons" then
+        local EXISTING = _G["DragonUI_ClassIconGrid"]
+        if EXISTING then
+            EXISTING:Hide()
+            EXISTING = nil
+            return
+        end
+
+        local atlasPath = "Interface\\AddOns\\DragonUI\\Textures\\ClassIcons\\classes_alpha.blp"
+        local cols, rows = 8, 5
+        local cellSize = 64
+        local scale = 0.85
+        local cellW = 128
+        local cellH = 128
+        local atlasW = 1024
+        local atlasH = 1024
+
+        local f = CreateFrame("Frame", "DragonUI_ClassIconGrid", UIParent)
+        f:SetSize(cols * cellSize * scale + 40, rows * cellSize * scale + 60)
+        f:SetPoint("CENTER")
+        f:SetBackdrop({bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+                        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+                        tile = true, tileSize = 16, edgeSize = 16,
+                        insets = {left = 4, right = 4, top = 4, bottom = 4}})
+        f:SetBackdropColor(0, 0, 0, 0.9)
+        f:SetBackdropBorderColor(1, 1, 1, 0.5)
+        f:EnableMouse(true)
+        f:SetMovable(true)
+        f:RegisterForDrag("LeftButton")
+        f:SetScript("OnDragStart", f.StartMoving)
+        f:SetScript("OnDragStop", f.StopMovingOrSizing)
+        f:SetFrameStrata("DIALOG")
+        tinsert(UISpecialFrames, "DragonUI_ClassIconGrid")
+
+        local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        title:SetPoint("TOP", f, "TOP", 0, -8)
+        title:SetText(L["Class Icons (click to print)"])
+
+        local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
+        close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -4, -4)
+
+        for row = 0, rows - 1 do
+            for col = 0, cols - 1 do
+                local cx = (col - (cols - 1) / 2) * cellSize * scale
+                local cy = (row - (rows - 1) / 2) * cellSize * scale - 10
+
+                local tex = f:CreateTexture(nil, "ARTWORK")
+                tex:SetSize(cellSize * scale, cellSize * scale)
+                tex:SetPoint("CENTER", f, "CENTER", cx, cy)
+                tex:SetTexture(atlasPath)
+                tex:SetTexCoord(
+                    (col * cellW) / atlasW, ((col + 1) * cellW) / atlasW,
+                    (row * cellH) / atlasH, ((row + 1) * cellH) / atlasH)
+                tex:SetAlpha(1)
+
+                local label = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmallOutline")
+                label:SetPoint("BOTTOM", tex, "BOTTOM", 0, -2)
+                label:SetText(string.format("r%02d_c%02d", row, col))
+                label:SetTextColor(1, 1, 0, 0.8)
+
+                local btn = CreateFrame("Button", nil, f)
+                btn:SetSize(cellSize * scale, cellSize * scale)
+                btn:SetPoint("CENTER", f, "CENTER", cx, cy)
+                btn:SetScript("OnClick", function()
+                    addon:Print(string.format("r%02d_c%02d", row, col))
+                end)
+
+                -- Highlight on hover
+                local hl = f:CreateTexture(nil, "HIGHLIGHT")
+                hl:SetAllPoints(tex)
+                hl:SetTexture(1, 1, 1, 0.15)
+                btn:SetHighlightTexture(hl)
+            end
+        end
+
+        addon:Print(L["Class icons grid opened for debugging."])
+
     else
         -- Unknown command
         addon:Print(L["Unknown command: "] .. cmd)
