@@ -1,7 +1,6 @@
 local addon = select(2,...);
 local config = addon.config;
 local event = addon.package;
-local class = addon._class;
 local unpack = unpack;
 local select = select;
 local pairs = pairs;
@@ -352,10 +351,24 @@ local function stancebutton_position()
 		end
 	end
 	
-	-- Register state driver only once
+	-- Register state driver only once — always allow visibility (with vehicleui guard)
+	-- Per-button show/hide handles form availability dynamically via GetShapeshiftFormInfo
+	-- This replaces the old class-dependent approach that broke on CoA 21-classes servers
+	-- (where custom class tokens aren't in the stance table)
 	if not StanceModule.stateDrivers.visibility then
-	    StanceModule.stateDrivers.visibility = {frame = stancebar, state = 'visibility', condition = stance[class] or 'hide'}
-	    RegisterStateDriver(stancebar, 'visibility', stance[class] or 'hide')
+	    local visCondition = '[vehicleui] hide; show'
+	    StanceModule.stateDrivers.visibility = {frame = stancebar, state = 'visibility', condition = visCondition}
+	    RegisterStateDriver(stancebar, 'visibility', visCondition)
+	end
+
+	-- Hide anchor when no forms are available, regardless of class token
+	-- This handles CoA 21-classes where custom classes may have stances
+	-- but their class token isn't in the original stance table
+	local numForms = GetNumShapeshiftForms()
+	if numForms == 0 then
+		anchor:Hide()
+	else
+		anchor:Show()
 	end
 end
 
@@ -693,6 +706,16 @@ function addon.RefreshStance()
 	
 	-- Update position
 	stancebar_update()
+
+	-- Hide/show anchor based on available forms (handles CoA 21-classes)
+	local numForms = GetNumShapeshiftForms()
+	if anchor then
+		if numForms == 0 then
+			anchor:Hide()
+		else
+			anchor:Show()
+		end
+	end
 end
 
 -- Debug function for troubleshooting stance bar issues
