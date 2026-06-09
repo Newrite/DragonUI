@@ -67,48 +67,6 @@ local function IsWeaponEnchantAtDefaultPosition()
     return not addon.db.profile.widgets.weapon_enchants.custom_position
 end
 
-local function GetBuffHorizontalGap()
-    local cfg = addon.db and addon.db.profile and addon.db.profile.buffs
-    return (cfg and tonumber(cfg.buff_horizontal_gap)) or 0
-end
-
-local function GetDebuffHorizontalGap()
-    local cfg = addon.db and addon.db.profile and addon.db.profile.buffs
-    return (cfg and tonumber(cfg.debuff_horizontal_gap)) or 0
-end
-
--- Count visible children in TemporaryEnchantFrame and VanityBuffs
--- for slack calculation. On Ascension, both frames can hold many
--- custom auras that fall outside the standard numEnchants count.
--- When weapon enchants are separated, TEF children are excluded.
-local function CountEnchantSlack()
-    local count = 0
-    -- VanityBuffs children: count ALL children regardless of IsShown.
-    -- Ascension hides/shows them on hover (tooltips, re-sort), which
-    -- would change slack and shift the grid if we checked visibility.
-    -- The count only changes when Ascension adds/removes children.
-    if VanityBuffs and VanityBuffs:IsShown() then
-        for _ in ipairs({VanityBuffs:GetChildren()}) do
-            count = count + 1
-        end
-    end
-    -- TEF children: only when still in the main chain
-    if not weaponEnchantsAreSeparated then
-        if TemporaryEnchantFrame and TemporaryEnchantFrame:IsShown() then
-            for _, child in ipairs({TemporaryEnchantFrame:GetChildren()}) do
-                if child:IsShown() then
-                    count = count + 1
-                end
-            end
-        end
-    end
-    return count
-end
-
-local function GetEnchantSlack()
-    return CountEnchantSlack()
-end
-
 -- Default weapon enchant frame position
 local WEAPON_DEFAULT_ANCHOR = "TOPRIGHT"
 local WEAPON_DEFAULT_POSX = -270
@@ -152,7 +110,6 @@ local function ReplaceBlizzardFrame(frame)
                     button:Hide()
                 end
             end
-            if VanityBuffs then VanityBuffs:Hide() end
         else
             -- SHOW buffs
             buffsHiddenByToggle = false
@@ -168,13 +125,6 @@ local function ReplaceBlizzardFrame(frame)
                 local button = _G['BuffButton' .. index]
                 if button then
                     button:Show()
-                end
-            end
-            if VanityBuffs then
-                VanityBuffs:Show()
-                -- Force re-layout so buffs anchor after VanityBuffs
-                if BuffFrame_UpdateAllBuffAnchors then
-                    BuffFrame_UpdateAllBuffAnchors()
                 end
             end
         end
@@ -370,7 +320,7 @@ end
 -- Enable the buff frame module
 function BuffFrameModule:Enable()
     if not addon.db.profile.buffs.enabled then return end
-
+    
     -- Create auxiliary frame for editor mode
     dragonUIBuffFrame = addon.CreateUIFrame(BuffFrame:GetWidth(), BuffFrame:GetHeight(), "Auras")
     
@@ -458,8 +408,8 @@ function BuffFrameModule:Enable()
     -- Used by both buff row-2 fix and debuff anchoring.
     -- ========================================================================
     local function GetBuffLayoutInfo()
-        -- Only reserve slots when enchants are currently visible in the chain.
-        local slack = GetEnchantSlack()
+        -- When weapon enchants are separated, ignore enchant slots for row math
+        local slack = weaponEnchantsAreSeparated and 0 or (BuffFrame.numEnchants or 0)
         local perRow = BUFFS_PER_ROW or 16
         local firstBuff = nil
         local lastRowStart = nil
@@ -523,140 +473,7 @@ function BuffFrameModule:Enable()
                 -- No buffs visible — anchor directly below the buff frame
                 firstDebuff:SetPoint("TOPRIGHT", dragonUIBuffFrame, "BOTTOMRIGHT", 0, -60)
             end
-
-            local debuffGap = GetDebuffHorizontalGap()
-            if debuffGap > 0 then
-                local previousDebuff = firstDebuff
-                for index = 2, (DEBUFF_MAX_DISPLAY or 16) do
-                    local debuff = _G["DebuffButton" .. index]
-                    if debuff and debuff:IsShown() then
-                        debuff:ClearAllPoints()
-                        debuff:SetPoint("TOPRIGHT", previousDebuff, "TOPLEFT", -(6 + debuffGap), 0)
-                        previousDebuff = debuff
-                    end
-                end
-            end
         end
-    end
-
-    local function ReanchorBuffButtons()
-        -- Guard: only re-anchor if something meaningful changed.
-        -- Ascension fires BuffFrame_UpdateAllBuffAnchors on hover over
-        -- VanityBuffs (tooltip, re-sort, etc.), which triggers our hook
-        -- unnecessarily. Re-anchoring on every call causes visible jumping.
-        local newState = {}
-        table.insert(newState, GetEnchantSlack())
-        if VanityBuffs and VanityBuffs:IsShown() then
-            table.insert(newState, VanityBuffs:GetLeft() or 0)
-            table.insert(newState, VanityBuffs:GetTop() or 0)
-        end
-        for i = 1, BUFF_ACTUAL_DISPLAY do
-            local btn = _G["BuffButton" .. i]
-            table.insert(newState, btn and btn:IsShown() and not btn.consolidated and "1" or "0")
-        end
-        local stateKey = table.concat(newState, "|")
-        if stateKey == ReanchorBuffButtons_lastState then return end
-        ReanchorBuffButtons_lastState = stateKey
-
-        local buffGap = GetBuffHorizontalGap()
-        local perRow = BUFFS_PER_ROW or 16
-        local slack = GetEnchantSlack()
-        local count = 0
-        local previousBuff = nil
-        local rowStarts = {}
-        local spacing = 6 + math.max(0, buffGap)
-
-        local function GetScreenLeft(frame)
-            local x = 0
-            local f = frame
-            while f and f ~= UIParent do
-                local l = f:GetLeft()
-                if not l then return nil end
-                x = x + l
-                f = f:GetParent()
-            end
-            return x
-        end
-
-        local function FindLeftmostPreBuffChild()
-            local target, minLeft = nil, math.huge
-            if TemporaryEnchantFrame and TemporaryEnchantFrame:IsShown() then
-                for _, child in ipairs({TemporaryEnchantFrame:GetChildren()}) do
-                    if child:IsShown() then
-                        local left = GetScreenLeft(child)
-                        if left and left < minLeft then
-                            minLeft = left
-                            target = child
-                        end
-                    end
-                end
-            end
-            return target
-        end
-
-        local function AnchorFirstBuff(button)
-            -- Anchor after VanityBuffs frame (not its children — Ascension
-            -- manages them internally and they shift on hover). Using the
-            -- frame itself gives a stable anchor point.
-            if VanityBuffs and VanityBuffs:IsShown() then
-                button:ClearAllPoints()
-                button:SetPoint("TOPRIGHT", VanityBuffs, "TOPLEFT", -6, 0)
-                return
-            end
-
-            -- Fallback: anchor after TEF's leftmost child
-            local lastChild = FindLeftmostPreBuffChild()
-            if lastChild then
-                button:ClearAllPoints()
-                button:SetPoint("TOPRIGHT", lastChild, "TOPLEFT", -6, 0)
-                return
-            end
-
-            -- Last resort: anchor to ConsolidatedBuffs
-            if ConsolidatedBuffs then
-                button:ClearAllPoints()
-                if ConsolidatedBuffs:IsShown() then
-                    button:SetPoint("TOPRIGHT", ConsolidatedBuffs, "TOPLEFT", -6, 0)
-                else
-                    button:SetPoint("TOPRIGHT", ConsolidatedBuffs, "TOPRIGHT", 0, 0)
-                end
-            end
-        end
-
-        for index = 1, BUFF_ACTUAL_DISPLAY do
-            local button = _G["BuffButton" .. index]
-            if button and button:IsShown() and not button.consolidated then
-                count = count + 1
-                local layoutIndex = count + slack
-                local row = math.floor((layoutIndex - 1) / perRow) + 1
-                local column = math.fmod(layoutIndex - 1, perRow) + 1
-
-                if count == 1 then
-                    AnchorFirstBuff(button)
-                    rowStarts[row] = button
-                elseif column == 1 then
-                    local previousRowStart = rowStarts[row - 1] or rowStarts[1] or previousBuff
-                    if previousRowStart then
-                        button:ClearAllPoints()
-                        button:SetPoint("TOPRIGHT", previousRowStart, "BOTTOMRIGHT", 0, -15)
-                    end
-                    rowStarts[row] = button
-                elseif previousBuff then
-                    button:ClearAllPoints()
-                    button:SetPoint("TOPRIGHT", previousBuff, "TOPLEFT", -spacing, 0)
-                end
-
-                previousBuff = button
-            end
-        end
-    end
-
-    function BuffFrameModule:RefreshAuraSpacing()
-        if BuffFrame_UpdateAllBuffAnchors then
-            BuffFrame_UpdateAllBuffAnchors()
-        end
-        self:UpdatePosition()
-        FixDebuffPositions()
     end
 
     -- ========================================================================
@@ -687,43 +504,38 @@ function BuffFrameModule:Enable()
                 end
             end
 
-            -- 2) Force-chain ALL visible children of TemporaryEnchantFrame.
-            --    On Ascension, TEF holds many custom auras that may not
-            --    follow the TempEnchant1..N naming or be properly chained,
-            --    causing them to stack at origin.
-            --    Then chain VanityBuffs after TEF's last child so it's in
-            --    the same row. VanityBuffs' OWN children are NOT rechained
-            --    here — Ascension manages them. We only need the frame
-            --    itself to be in the chain so the buff grid anchors after it.
-            local function RechainChildren(frame)
-                if not frame or not frame:IsShown() then return nil end
-                local prev = nil
-                for _, child in ipairs({frame:GetChildren()}) do
-                    if child:IsShown() then
-                        if not prev then
-                            child:ClearAllPoints()
-                            child:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
-                        else
-                            child:ClearAllPoints()
-                            child:SetPoint("TOPRIGHT", prev, "TOPLEFT", -6, 0)
+            -- 2) Fix row-2 start and BuffButton1 anchoring.
+            --    When weapon enchants are separated, BuffButton1 should anchor
+            --    directly to ConsolidatedBuffs (ignoring enchant slots), and
+            --    row calculations use slack=0 since enchants are elsewhere.
+            local firstBuff, _, numVisible = GetBuffLayoutInfo()
+            local slack = weaponEnchantsAreSeparated and 0 or (BuffFrame.numEnchants or 0)
+            if weaponEnchantsAreSeparated and firstBuff and ConsolidatedBuffs then
+                -- Re-anchor first buff directly after ConsolidatedBuffs
+                firstBuff:ClearAllPoints()
+                if ConsolidatedBuffs:IsShown() then
+                    firstBuff:SetPoint("TOPRIGHT", ConsolidatedBuffs, "TOPLEFT", -6, 0)
+                else
+                    firstBuff:SetPoint("TOPRIGHT", ConsolidatedBuffs, "TOPRIGHT", 0, 0)
+                end
+            end
+            if firstBuff then
+                local perRow = BUFFS_PER_ROW or 16
+                local count = 0
+                for i = 1, BUFF_ACTUAL_DISPLAY do
+                    local btn = _G["BuffButton" .. i]
+                    if btn and btn:IsShown() and not btn.consolidated then
+                        count = count + 1
+                        local idx = count + slack
+                        if idx == perRow + 1 then
+                            btn:ClearAllPoints()
+                            btn:SetPoint("TOPRIGHT", firstBuff, "BOTTOMRIGHT", 0, -15)
                         end
-                        prev = child
                     end
                 end
-                return prev
-            end
-            if not weaponEnchantsAreSeparated then
-                RechainChildren(TemporaryEnchantFrame)
-                -- VanityBuffs is NOT moved or rechained — Ascension manages
-                -- its position and children. We just anchor BuffButton1
-                -- after it in AnchorFirstBuff below.
             end
 
-            -- 3) Rebuild the visible buff grid every update to avoid stale
-            --    anchors from Blizzard or external addons leaving asymmetric rows.
-            ReanchorBuffButtons()
-
-            -- 4) Respect buff toggle: re-hide buffs if user collapsed them
+            -- 3) Respect buff toggle: re-hide buffs if user collapsed them
             if buffsHiddenByToggle then
                 for i = 1, BUFF_ACTUAL_DISPLAY do
                     local btn = _G["BuffButton" .. i]
@@ -731,7 +543,6 @@ function BuffFrameModule:Enable()
                         btn:Hide()
                     end
                 end
-                if VanityBuffs then VanityBuffs:Hide() end
             end
         end)
     end
@@ -815,7 +626,7 @@ function BuffFrameModule:Enable()
     if not buffFrame then
         buffFrame = CreateFrame("Frame")
         buffFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-        addon.RegisterUnitEventSafe(buffFrame, "UNIT_AURA", "player", "vehicle")
+        buffFrame:RegisterEvent("UNIT_AURA")
         buffFrame:RegisterEvent("UNIT_ENTERED_VEHICLE")
         buffFrame:RegisterEvent("UNIT_EXITED_VEHICLE")
         
@@ -838,7 +649,6 @@ function BuffFrameModule:Enable()
                         local button = _G['BuffButton' .. index]
                         if button then button:Hide() end
                     end
-                    if VanityBuffs then VanityBuffs:Hide() end
                 end
                 
                 -- Reposition the GM ticket frame so it doesn't overlap the minimap
