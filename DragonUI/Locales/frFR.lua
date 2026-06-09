@@ -63,3 +63,11 @@ L["Left"] = "Gauche"
 L["Right"] = "Droite"
 L["Error Messages"] = "Messages d'erreur"
 L["ErrorMessages"] = "Messages d'erreur"
+
+-- Bag Sort (Sell Scrap)
+L["Sell Scrap"] = "Vendre ferraille"
+L["Click to sell all gray (poor) items to vendor."] = "Cliquez pour vendre tous les objets gris (médiocres) au marchand."
+L["A merchant window must be open."] = "Une fenêtre de marchand doit être ouverte."
+L["Open a merchant window first to sell scrap items."] = "Ouvrez d'abord une fenêtre de marchand pour vendre la ferraille."
+L["Sold %d scrap item(s) for %s."] = "Vendu %d objet(s) de ferraille pour %s."
+L["No scrap items to sell."] = "Aucun objet de ferraille à vendre."

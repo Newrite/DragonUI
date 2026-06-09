@@ -286,6 +286,14 @@ L["Slot unlocked (bag %d, slot %d)."] = "ìŠ¬ë¡¯ ìž ê¸ˆ í•´ì œ
 L["Could not clear locks (config not ready)."] = "ìž ê¸ˆì„ í•´ì œí•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤ (ì„¤ì •ì´ ì•„ì§ ì¤€ë¹„ë˜ì§€ ì•ŠìŒ)."
 L["Cleared all sort-locked slots."] = "ì •ë ¬ ìž ê¸ˆ ìŠ¬ë¡¯ì„ ëª¨ë‘ í•´ì œí–ˆìŠµë‹ˆë‹¤."
 
+-- Sell Scrap
+L["Sell Scrap"] = "ê³ ì²  íŒë§¤"
+L["Click to sell all gray (poor) items to vendor."] = "í´ë¦­í•˜ì—¬ ëª¨ë“  íšŒìƒ‰(í•˜ê¸‰) ì•„ì´í…œì„ ìƒì¸ì—ê²Œ íŒë§¤í•©ë‹ˆë‹¤."
+L["A merchant window must be open."] = "ìƒì¸ ì°½ì´ ì—´ë ¤ ìžˆì–´ì•¼ í•©ë‹ˆë‹¤."
+L["Open a merchant window first to sell scrap items."] = "ê³ ì² ì„ íŒë§¤í•˜ë ¤ë©´ ë¨¼ì€€ ìƒì¸ ì°½ì„ ì—¬ì„¸ìš”."
+L["Sold %d scrap item(s) for %s."] = "ê³ ì²  ì•„ì´í…œ %dê°œë¥¼ %sì— íŒë§¤í–ˆìŠµë‹ˆë‹¤."
+L["No scrap items to sell."] = "íŒë§¤í•  ê³ ì²  ì•„ì´í…œì´ ì—†ìŠµë‹ˆë‹¤."
+
 -- Micromenu Latency
 L["Network"] = "ë„¤íŠ¸ì›Œí¬"
 L["Latency"] = "ì§€ì—° ì‹œê°„"

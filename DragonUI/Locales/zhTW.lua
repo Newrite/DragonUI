@@ -63,3 +63,11 @@ L["Left"] = "左"
 L["Right"] = "右"
 L["Error Messages"] = "錯誤訊息"
 L["ErrorMessages"] = "錯誤訊息"
+
+-- Bag Sort (Sell Scrap)
+L["Sell Scrap"] = "出售垃圾"
+L["Click to sell all gray (poor) items to vendor."] = "點擊將所有灰色（粗糙）物品出售給商人。"
+L["A merchant window must be open."] = "必須先開啟商人視窗。"
+L["Open a merchant window first to sell scrap items."] = "請先開啟商人視窗再出售垃圾物品。"
+L["Sold %d scrap item(s) for %s."] = "出售了%d件垃圾物品，獲得%s。"
+L["No scrap items to sell."] = "沒有可出售的垃圾物品。"

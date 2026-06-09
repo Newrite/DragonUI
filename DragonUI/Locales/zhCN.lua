@@ -281,6 +281,14 @@ L["Slot unlocked (bag %d, slot %d)."] = "格子已解锁（背包 %d，槽位 %d
 L["Could not clear locks (config not ready)."] = "无法清除锁定（配置尚未就绪）。"
 L["Cleared all sort-locked slots."] = "已清除所有整理锁定格子。"
 
+-- Sell Scrap
+L["Sell Scrap"] = "出售垃圾"
+L["Click to sell all gray (poor) items to vendor."] = "点击将所有灰色（粗糙）物品出售给商人。"
+L["A merchant window must be open."] = "必须先打开商人窗口。"
+L["Open a merchant window first to sell scrap items."] = "请先打开商人窗口再出售垃圾物品。"
+L["Sold %d scrap item(s) for %s."] = "出售了%d件垃圾物品，获得%s。"
+L["No scrap items to sell."] = "没有可出售的垃圾物品。"
+
 -- ============================================================================
 -- 微型菜单延迟提示
 -- ============================================================================

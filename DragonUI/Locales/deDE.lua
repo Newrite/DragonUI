@@ -286,6 +286,14 @@ L["Slot unlocked (bag %d, slot %d)."] = "Slot entsperrt (Tasche %d, Slot %d)."
 L["Could not clear locks (config not ready)."] = "Sperren konnten nicht gelöscht werden (Konfiguration nicht bereit)."
 L["Cleared all sort-locked slots."] = "Alle für das Sortieren gesperrten Slots wurden gelöscht."
 
+-- Sell Scrap
+L["Sell Scrap"] = "Schrott verkaufen"
+L["Click to sell all gray (poor) items to vendor."] = "Klicken, um alle grauen (schlechten) Gegenstände an den Händler zu verkaufen."
+L["A merchant window must be open."] = "Ein Händlerfenster muss geöffnet sein."
+L["Open a merchant window first to sell scrap items."] = "Öffne zuerst ein Händlerfenster, um Schrott zu verkaufen."
+L["Sold %d scrap item(s) for %s."] = "%d Schrott-Gegenstände für %s verkauft."
+L["No scrap items to sell."] = "Keine Schrott-Gegenstände zu verkaufen."
+
 -- Micromenu Latency
 L["Network"] = "Netzwerk"
 L["Latency"] = "Latenz"

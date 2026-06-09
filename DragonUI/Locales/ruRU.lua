@@ -286,6 +286,14 @@ L["Slot unlocked (bag %d, slot %d)."] = "Ячейка разблокирован
 L["Could not clear locks (config not ready)."] = "Не удалось очистить блокировки (конфигурация не готова)."
 L["Cleared all sort-locked slots."] = "Все заблокированные ячейки очищены."
 
+-- Sell Scrap
+L["Sell Scrap"] = "Продать хлам"
+L["Click to sell all gray (poor) items to vendor."] = "Нажмите, чтобы продать все серые (низкокачественные) предметы торговцу."
+L["A merchant window must be open."] = "Окно торговца должно быть открыто."
+L["Open a merchant window first to sell scrap items."] = "Сначала откройте окно торговца, чтобы продать хлам."
+L["Sold %d scrap item(s) for %s."] = "Продано %d предмет(ов) хлама за %s."
+L["No scrap items to sell."] = "Нет хлама для продажи."
+
 -- Micromenu Latency
 L["Network"] = "Сеть"
 L["Latency"] = "Задержка"
