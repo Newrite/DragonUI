@@ -110,6 +110,8 @@ local function ReplaceBlizzardFrame(frame)
                     button:Hide()
                 end
             end
+            if VanityBuffs then VanityBuffs:Hide() end
+            if TemporaryEnchantFrame then TemporaryEnchantFrame:Hide() end
         else
             -- SHOW buffs
             buffsHiddenByToggle = false
@@ -126,6 +128,11 @@ local function ReplaceBlizzardFrame(frame)
                 if button then
                     button:Show()
                 end
+            end
+            if VanityBuffs then VanityBuffs:Show() end
+            if TemporaryEnchantFrame then TemporaryEnchantFrame:Show() end
+            if BuffFrame_UpdateAllBuffAnchors then
+                BuffFrame_UpdateAllBuffAnchors()
             end
         end
     end)
@@ -502,6 +509,11 @@ function BuffFrameModule:Enable()
                         TemporaryEnchantFrame:SetPoint("TOPRIGHT", ConsolidatedBuffs, "TOPRIGHT", 0, 0)
                     end
                 end
+            elseif TemporaryEnchantFrame then
+                -- Re-anchor back to the weapon enchant frame (original
+                -- BuffFrame_UpdateAllBuffAnchors already placed it in the
+                -- buff chain, so we must undo that here).
+                AnchorWeaponEnchantsToFrame()
             end
 
             -- 2) Fix row-2 start and BuffButton1 anchoring.
@@ -543,6 +555,8 @@ function BuffFrameModule:Enable()
                         btn:Hide()
                     end
                 end
+                if VanityBuffs then VanityBuffs:Hide() end
+                if TemporaryEnchantFrame then TemporaryEnchantFrame:Hide() end
             end
         end)
     end
@@ -649,6 +663,8 @@ function BuffFrameModule:Enable()
                         local button = _G['BuffButton' .. index]
                         if button then button:Hide() end
                     end
+                    if VanityBuffs then VanityBuffs:Hide() end
+                    if TemporaryEnchantFrame then TemporaryEnchantFrame:Hide() end
                 end
                 
                 -- Reposition the GM ticket frame so it doesn't overlap the minimap
