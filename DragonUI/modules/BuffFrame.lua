@@ -516,6 +516,40 @@ function BuffFrameModule:Enable()
                 AnchorWeaponEnchantsToFrame()
             end
 
+            -- 1.5) Anchor VanityBuffs right next to TempEnchant3.
+            -- Use absolute positioning to avoid circular dependency:
+            -- VanityBuffs is positioned relative to UIParent (no frame dependency)
+            -- so Blizzard's TempEnchantFrame:SetPoint(..., VanityBuffs) won't loop.
+            if VanityBuffs then
+                VanityBuffs:ClearAllPoints()
+                local anchorFrame = nil
+                if _G["TempEnchant3"] and _G["TempEnchant3"]:IsShown() then
+                    anchorFrame = _G["TempEnchant3"]
+                elseif _G["TempEnchant2"] and _G["TempEnchant2"]:IsShown() then
+                    anchorFrame = _G["TempEnchant2"]
+                elseif _G["TempEnchant1"] and _G["TempEnchant1"]:IsShown() then
+                    anchorFrame = _G["TempEnchant1"]
+                elseif TemporaryEnchantFrame and TemporaryEnchantFrame:IsShown() then
+                    anchorFrame = TemporaryEnchantFrame
+                end
+                if anchorFrame then
+                    local x = anchorFrame:GetRight() or 0
+                    local y = anchorFrame:GetTop() or 0
+                    VanityBuffs:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x + 4, y)
+                end
+            end
+
+            -- 1.6) Dynamic toggle button padding: more space when VanityBuffs is shown
+            if toggleButton then
+                local vanityShown = VanityBuffs and VanityBuffs:IsShown()
+                toggleButton:ClearAllPoints()
+                if vanityShown then
+                    toggleButton:SetPoint("TOPRIGHT", dragonUIBuffFrame, "TOPRIGHT", 50, -10)
+                else
+                    toggleButton:SetPoint("TOPRIGHT", dragonUIBuffFrame, "TOPRIGHT", 12, -6)
+                end
+            end
+
             -- 2) Fix row-2 start and BuffButton1 anchoring.
             --    When weapon enchants are separated, BuffButton1 should anchor
             --    directly to ConsolidatedBuffs (ignoring enchant slots), and
@@ -555,7 +589,7 @@ function BuffFrameModule:Enable()
                         btn:Hide()
                     end
                 end
-                if VanityBuffs then VanityBuffs:Hide() end
+                if VanityBuffs then VanityBuffs:ClearAllPoints(); VanityBuffs:Hide() end
                 if TemporaryEnchantFrame then TemporaryEnchantFrame:Hide() end
             end
         end)
@@ -663,7 +697,7 @@ function BuffFrameModule:Enable()
                         local button = _G['BuffButton' .. index]
                         if button then button:Hide() end
                     end
-                    if VanityBuffs then VanityBuffs:Hide() end
+            if VanityBuffs then VanityBuffs:ClearAllPoints(); VanityBuffs:Hide() end
                     if TemporaryEnchantFrame then TemporaryEnchantFrame:Hide() end
                 end
                 

@@ -103,6 +103,17 @@ local function InstallHooks()
             if attachingContainer then return end   -- our own call
             AttachContainer()
         end)
+
+        -- Hook ClearAllPoints: when Blizzard resets the container (e.g. after
+        -- all loot rolls complete or the window is dismissed), it calls
+        -- ClearAllPoints WITHOUT a subsequent SetPoint.  Our SetPoint hook
+        -- never fires, so the container drifts back to the default (0,0)
+        -- position.  Re-attach immediately so the user never sees the jump.
+        hooksecurefunc(GroupLootContainer, "ClearAllPoints", function()
+            if not LootRollModule.applied then return end
+            if attachingContainer then return end   -- our own call
+            AttachContainer()
+        end)
     end
 
     -- Also hook GroupLootContainer_Update if it exists

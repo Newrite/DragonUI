@@ -17,5 +17,7 @@ __pycache__/
 # Reference forks
 _ref-*/
 copy-to-*.sh
+package.sh
 .atl
 docs/
+.serena/
