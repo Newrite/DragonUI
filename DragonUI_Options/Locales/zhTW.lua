@@ -418,9 +418,10 @@ L["Make the right secondary bar horizontal instead of vertical."] = "將右側�
 
 -- 按鈕外觀部分
 L["Button Appearance"] = "按鈕外觀"
-L["Main Bar Only Background"] = "僅主動作條顯示背景"
-L["If checked, only the main action bar buttons will have a background. If unchecked, all action bar buttons will have a background."] = "如果勾選，則只有主動作條的按鈕會有背景。如果不勾選，則所有動作條按鈕都有背景。"
-L["Only the main action bar buttons will have a background."] = "僅主動作條的按鈕顯示背景。"
+L["Hide Secondary Bar Background"] = "隱藏次要動作條背景"
+L["Hide the background of secondary bar buttons (stance, pet, totem, etc.)."] = "隱藏次要動作條按鈕的背景（姿態、寵物、圖騰等）。"
+L["Hide Main Bar Button Background"] = "隱藏主動作條按鈕背景"
+L["Hide the background of main action bar buttons."] = "隱藏主動作條按鈕的背景。"
 L["Hide Main Bar Background"] = "隱藏主動作條背景"
 L["Hide the background texture of the main action bar (makes it completely transparent)"] = "隱藏主動作條的背景紋理（使其完全透明）"
 L["Hide the background texture of the main action bar."] = "隱藏主動作條的背景紋理。"

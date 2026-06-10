@@ -417,9 +417,10 @@ L["Make the right secondary bar horizontal instead of vertical."] = "Сдела�
 
 -- Button Appearance section
 L["Button Appearance"] = "Внешний вид кнопок"
-L["Main Bar Only Background"] = "Фон только основной панели"
-L["If checked, only the main action bar buttons will have a background. If unchecked, all action bar buttons will have a background."] = "Если отмечено, фон будет только у кнопок основной панели. Если нет — у всех кнопок панелей действий."
-L["Only the main action bar buttons will have a background."] = "Фон будет только у кнопок основной панели действий."
+L["Hide Secondary Bar Background"] = "Скрыть фон второстепенных панелей"
+L["Hide the background of secondary bar buttons (stance, pet, totem, etc.)."] = "Скрыть фон кнопок второстепенных панелей (стойки, питомец, тотемы и т.д.)."
+L["Hide Main Bar Button Background"] = "Скрыть фон кнопок основной панели"
+L["Hide the background of main action bar buttons."] = "Скрыть фон кнопок основной панели действий."
 L["Hide Main Bar Background"] = "Скрыть фон основной панели"
 L["Hide the background texture of the main action bar (makes it completely transparent)"] = "Скрыть фоновую текстуру основной панели действий (делает полностью прозрачной)"
 L["Hide the background texture of the main action bar."] = "Скрыть фоновую текстуру основной панели действий."

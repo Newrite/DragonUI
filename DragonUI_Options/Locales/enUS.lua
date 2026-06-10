@@ -444,9 +444,10 @@ L["Make the right secondary bar horizontal instead of vertical."] = true
 
 -- Button Appearance section
 L["Button Appearance"] = true
-L["Main Bar Only Background"] = true
-L["If checked, only the main action bar buttons will have a background. If unchecked, all action bar buttons will have a background."] = true
-L["Only the main action bar buttons will have a background."] = true
+L["Hide Secondary Bar Background"] = true
+L["Hide the background of secondary bar buttons (stance, pet, totem, etc.)."] = true
+L["Hide Main Bar Button Background"] = true
+L["Hide the background of main action bar buttons."] = true
 L["Hide Main Bar Background"] = true
 L["Hide the background texture of the main action bar (makes it completely transparent)"] = true
 L["Hide the background texture of the main action bar."] = true

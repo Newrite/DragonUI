@@ -424,9 +424,10 @@ L["Make the right secondary bar horizontal instead of vertical."] = "Hacer la ba
 
 -- Button Appearance section
 L["Button Appearance"] = "Apariencia de Botones"
-L["Main Bar Only Background"] = "Fondo Solo en Barra Principal"
-L["If checked, only the main action bar buttons will have a background. If unchecked, all action bar buttons will have a background."] = "Si se marca, solo los botones de la barra principal tendrán fondo. Si se desmarca, todos los botones de barra de acción tendrán fondo."
-L["Only the main action bar buttons will have a background."] = "Solo los botones de la barra de acción principal tendrán fondo."
+L["Hide Secondary Bar Background"] = "Ocultar Fondo de Barras Secundarias"
+L["Hide the background of secondary bar buttons (stance, pet, totem, etc.)."] = "Oculta el fondo de los botones de barras secundarias (postura, mascota, tótems, etc.)."
+L["Hide Main Bar Button Background"] = "Ocultar Fondo de Botones en Barra Principal"
+L["Hide the background of main action bar buttons."] = "Oculta el fondo de los botones de la barra de acción principal."
 L["Hide Main Bar Background"] = "Ocultar Fondo de Barra Principal"
 L["Hide the background texture of the main action bar (makes it completely transparent)"] = "Ocultar la textura de fondo de la barra de acción principal (la hace completamente transparente)"
 L["Hide the background texture of the main action bar."] = "Ocultar la textura de fondo de la barra de acción principal."

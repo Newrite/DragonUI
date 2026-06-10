@@ -425,9 +425,10 @@ L["Make the right secondary bar horizontal instead of vertical."] = "우측 보�
 
 -- Button Appearance section
 L["Button Appearance"] = "버튼 외형"
-L["Main Bar Only Background"] = "주 단축바 배경만 표시"
-L["If checked, only the main action bar buttons will have a background. If unchecked, all action bar buttons will have a background."] = "체크 시 주 단축바 버튼만 배경을 가집니다. 해제 시 모든 단축바 버튼에 배경이 표시됩니다."
-L["Only the main action bar buttons will have a background."] = "주 단축바 버튼에만 배경 표시"
+L["Hide Secondary Bar Background"] = "보조 단축바 배경 숨기기"
+L["Hide the background of secondary bar buttons (stance, pet, totem, etc.)."] = "보조 단축바 버튼의 배경을 숨깁니다 (태세, 소환수, 토템 등)."
+L["Hide Main Bar Button Background"] = "주 단축바 버튼 배경 숨기기"
+L["Hide the background of main action bar buttons."] = "주 단축바 버튼의 배경을 숨깁니다."
 L["Hide Main Bar Background"] = "주 단축바 배경 숨기기"
 L["Hide the background texture of the main action bar (makes it completely transparent)"] = "주 단축바의 배경 텍스처를 숨깁니다 (완전 투명하게 만듦)"
 L["Hide the background texture of the main action bar."] = "주 단축바 배경 텍스처 숨기기"

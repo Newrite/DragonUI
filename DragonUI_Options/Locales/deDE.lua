@@ -412,9 +412,10 @@ L["Make the right secondary bar horizontal instead of vertical."] = "Rechte Nebe
 
 -- Button Appearance section
 L["Button Appearance"] = "Button-Aussehen"
-L["Main Bar Only Background"] = "Hintergrund nur für Hauptleiste"
-L["If checked, only the main action bar buttons will have a background. If unchecked, all action bar buttons will have a background."] = "Wenn aktiviert, haben nur Buttons der Hauptaktionsleiste einen Hintergrund. Wenn deaktiviert, haben alle Aktionsleisten-Buttons einen Hintergrund."
-L["Only the main action bar buttons will have a background."] = "Nur Buttons der Hauptaktionsleiste haben einen Hintergrund."
+L["Hide Secondary Bar Background"] = "Hintergrund der Nebenleisten ausblenden"
+L["Hide the background of secondary bar buttons (stance, pet, totem, etc.)."] = "Hintergrund der Nebenleisten-Buttons ausblenden (Haltung, Begleiter, Totem usw.)."
+L["Hide Main Bar Button Background"] = "Hintergrund der Hauptleisten-Buttons ausblenden"
+L["Hide the background of main action bar buttons."] = "Hintergrund der Hauptaktionsleisten-Buttons ausblenden."
 L["Hide Main Bar Background"] = "Hauptleisten-Hintergrund ausblenden"
 L["Hide the background texture of the main action bar (makes it completely transparent)"] = "Hintergrundtextur der Hauptaktionsleiste ausblenden (macht sie komplett transparent)"
 L["Hide the background texture of the main action bar."] = "Hintergrundtextur der Hauptaktionsleiste ausblenden."

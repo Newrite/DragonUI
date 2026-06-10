@@ -124,9 +124,16 @@ local function BuildGeneralTab(scroll)
     local buttons = C:AddSection(scroll, LO["Button Appearance"])
 
     C:AddToggle(buttons, {
-        label = LO["Main Bar Only Background"],
-        desc = LO["Only the main action bar buttons will have a background."],
+        label = LO["Hide Secondary Bar Background"],
+        desc = LO["Hide the background of secondary bar buttons (stance, pet, totem, etc.)."],
         dbPath = "buttons.only_actionbackground",
+        callback = RefreshButtons,
+    })
+
+    C:AddToggle(buttons, {
+        label = LO["Hide Main Bar Button Background"],
+        desc = LO["Hide the background of main action bar buttons."],
+        dbPath = "buttons.hide_main_bar_button_background",
         callback = RefreshButtons,
     })
 

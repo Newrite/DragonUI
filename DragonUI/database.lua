@@ -344,6 +344,7 @@ local defaults = {
 
         buttons = {
             only_actionbackground = true,
+            hide_main_bar_button_background = false,
             hide_main_bar_background = false,
             count = {
                 show = true

@@ -810,6 +810,8 @@ function addon.RefreshButtons()
                 -- show/hide action backgrounds
                 if db.only_actionbackground and not isMainActionButton then
                     button.background:Hide()
+                elseif db.hide_main_bar_button_background and isMainActionButton then
+                    button.background:Hide()
                 else
                     button.background:Show()
                 end
