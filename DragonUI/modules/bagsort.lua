@@ -1098,6 +1098,10 @@ end
 -- ============================================================================
 
 local function SortPlayerBags()
+    if UnitAffectingCombat("player") then
+        DEFAULT_CHAT_FRAME:AddMessage("|cff00cc66DragonUI:|r " .. T("Cannot sort bags while in combat.", "Cannot sort bags while in combat."), 1, 0.4, 0.4)
+        return
+    end
     if running then
         DEFAULT_CHAT_FRAME:AddMessage("|cff00cc66DragonUI:|r " .. T("Sort already in progress.", "Sort already in progress."), 1, 0.8, 0)
         return
@@ -1114,6 +1118,10 @@ local function SortPlayerBags()
 end
 
 local function SortBankBags()
+    if UnitAffectingCombat("player") then
+        DEFAULT_CHAT_FRAME:AddMessage("|cff00cc66DragonUI:|r " .. T("Cannot sort bags while in combat.", "Cannot sort bags while in combat."), 1, 0.4, 0.4)
+        return
+    end
     if running then
         DEFAULT_CHAT_FRAME:AddMessage("|cff00cc66DragonUI:|r " .. T("Sort already in progress.", "Sort already in progress."), 1, 0.8, 0)
         return

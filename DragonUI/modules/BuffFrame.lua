@@ -516,18 +516,18 @@ function BuffFrameModule:Enable()
                 AnchorWeaponEnchantsToFrame()
             end
 
-            -- 1.5) Anchor VanityBuffs right next to TempEnchant3.
+            -- 1.5) Anchor VanityBuffs right next to TempEnchant1.
             -- Use absolute positioning to avoid circular dependency:
             -- VanityBuffs is positioned relative to UIParent (no frame dependency)
             -- so Blizzard's TempEnchantFrame:SetPoint(..., VanityBuffs) won't loop.
             if VanityBuffs then
                 VanityBuffs:ClearAllPoints()
+                -- TempEnchant1 is ALWAYS the rightmost enchant icon.
+                -- When 2+ enchants are shown, TempEnchant3/2 extend to the LEFT
+                -- of TempEnchant1, so VanityBuffs must anchor to TempEnchant1
+                -- (the rightmost) to avoid overlapping intermediate icons.
                 local anchorFrame = nil
-                if _G["TempEnchant3"] and _G["TempEnchant3"]:IsShown() then
-                    anchorFrame = _G["TempEnchant3"]
-                elseif _G["TempEnchant2"] and _G["TempEnchant2"]:IsShown() then
-                    anchorFrame = _G["TempEnchant2"]
-                elseif _G["TempEnchant1"] and _G["TempEnchant1"]:IsShown() then
+                if _G["TempEnchant1"] and _G["TempEnchant1"]:IsShown() then
                     anchorFrame = _G["TempEnchant1"]
                 elseif TemporaryEnchantFrame and TemporaryEnchantFrame:IsShown() then
                     anchorFrame = TemporaryEnchantFrame
