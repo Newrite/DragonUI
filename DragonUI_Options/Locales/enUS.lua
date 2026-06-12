@@ -1089,3 +1089,4 @@ L["Preset imported: "] = true
 L["Invalid preset string."] = true
 L["Not a valid DragonUI preset string."] = true
 L["Failed to export preset."] = true
+L["This Fork is maintained by PentSec for AscensionWow, based on the original work by Neticsoul."] = true

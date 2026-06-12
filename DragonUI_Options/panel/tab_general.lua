@@ -373,8 +373,10 @@ local function BuildGeneralTab(scroll)
     -- ====================================================================
     local about = C:AddSection(scroll, LO["About"])
 
-    C:AddLabel(about, "|cff1784d1" .. LO["DragonUI"] .. " v2.5|r")
+    C:AddLabel(about, "|cff1784d1" .. LO["DragonUI"] .. " v0.2|r")
     C:AddDescription(about, LO["Bringing the retail WoW look to 3.3.5a, inspired by Dragonflight UI."])
+    C:AddSpacer(about)
+    C:AddDescription(about, LO["This Fork is maintained by PentSec for AscensionWow, based on the original work by Neticsoul."])
     C:AddSpacer(about)
     C:AddDescription(about, LO["Created and maintained by Neticsoul, with community contributions."])
     C:AddSpacer(about)
@@ -383,7 +385,7 @@ local function BuildGeneralTab(scroll)
     C:AddDescription(about, LO["Commands: /dragonui, /dui, /pi — /dragonui edit (editor) — /dragonui help"])
     C:AddSpacer(about)
     C:AddDescription(about, LO["GitHub (select and Ctrl+C to copy):"])
-    C:AddCopyableText(about, "https://github.com/NeticSoul/DragonUI")
+    C:AddCopyableText(about, "https://github.com/PentSec/DragonUI")
 
     C:AddSpacer(scroll)
 

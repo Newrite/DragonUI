@@ -11,7 +11,7 @@
 
 ![Interface Version](https://img.shields.io/badge/Interface-30300-blue)
 ![WoW Version](https://img.shields.io/badge/WoW-3.3.5a-orange)
-[![Version](https://img.shields.io/badge/Version-2.5-green)](https://github.com/PentSec/DragonUI/releases/tag/v2.5)
+[![Version](https://img.shields.io/badge/Version-2.5-green)](https://github.com/PentSec/DragonUI/releases/tag/v0.2)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 ![Downloads](https://img.shields.io/github/downloads/PentSec/DragonUI/total?label=Downloads&color=%23a400ff)
 

@@ -150,7 +150,7 @@ local function CreatePanel()
     local titleText = titleBar:CreateFontString(nil, "OVERLAY")
     SetSafeFont(titleText, 15, "OUTLINE")
     titleText:SetPoint("LEFT", 12, 0)
-    titleText:SetText("|cff1784d1" .. LO["DragonUI"] .. "|r |cffaaaaaa2.5|r")
+    titleText:SetText("|cff1784d1" .. LO["DragonUI"] .. "|r |cffaaaaaa0.2|r")
 
     -- Editor Mode button (in title bar) - styled pill button with neon green border
     local editorBtn = CreateFrame("Button", nil, titleBar)
