@@ -71,3 +71,11 @@ L["A merchant window must be open."] = "必須先開啟商人視窗。"
 L["Open a merchant window first to sell scrap items."] = "請先開啟商人視窗再出售垃圾物品。"
 L["Sold %d scrap item(s) for %s."] = "出售了%d件垃圾物品，獲得%s。"
 L["No scrap items to sell."] = "沒有可出售的垃圾物品。"
+
+-- BNet Toast Module
+L["BNet Toast"] = "BNet 提醒"
+L["Friend online/offline notifications with Battle.net toasts and chat messages"] = "好友上線/離線的戰網提醒和聊天通知"
+L["Position & Scale"] = "位置與縮放"
+L["Scale of the BNet toast frame."] = "戰網提示框架的縮放比例。"
+L["Horizontal position of the BNet toast from the screen center. Negative values move left, positive values move right."] = "戰網提示距螢幕中心的水平位置。負值向左移動，正值向右移動。"
+L["Vertical offset of the BNet toast frame. Negative values move down, positive values move up."] = "戰網提示框架的垂直偏移。負值向下移動，正值向上移動。"

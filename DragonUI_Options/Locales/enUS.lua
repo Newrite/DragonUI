@@ -80,6 +80,7 @@ L["Quest Tracker"] = true
 L["Unit Frames"] = true
 L["XP & Rep Bars"] = true
 L["Chat"] = true
+L["BNet Toast"] = true
 L["Bags"] = true
 L["Appearance"] = true
 L["Left Side Tabs"] = true
@@ -665,6 +666,23 @@ L["Show a safe-zone overlay based on real cast latency."] = true
 L["Latency Color"] = true
 L["Latency Alpha"] = true
 L["Opacity of the latency indicator."] = true
+
+-- ============================================================================
+-- BNET TOAST TAB
+-- ============================================================================
+
+L["Configure how DragonUI notifies you when friends come online or go offline."] = true
+L["Enable BNet Toast"] = true
+L["Display Battle.net friend online/offline notifications via toast popup and/or chat messages."] = true
+L["Notification Type"] = true
+L["Show Toast Popup"] = true
+L["Display the Battle.net toast frame when a friend comes online or goes offline."] = true
+L["Show Chat Notification"] = true
+L["Display a chat message when a friend comes online or goes offline."] = true
+L["Position & Scale"] = true
+L["Scale of the BNet toast frame."] = true
+L["Horizontal position of the BNet toast from the screen center. Negative values move left, positive values move right."] = true
+L["Vertical offset of the BNet toast frame. Negative values move down, positive values move up."] = true
 
 -- ============================================================================
 -- ENHANCEMENTS TAB
