@@ -57,6 +57,10 @@ local T = {
     bagslot           = assets .. 'bagslots2x',
     bagslot_cutout    = assets .. 'bagslotCutout',
 
+    -- Portrait metal frame
+    portrait_metal    = assets .. 'ui-frame-portraitmetal-cornertopleftsmall',
+    portrait_frame    = assets .. 'UI-Frame-PortraitMetal-CornerTopLeft',
+
     -- Bag border / mask for item slots
     bag_border        = assets .. 'bagborder2',
     bag_border_empty  = assets .. 'bagborderempty2',
@@ -90,10 +94,11 @@ local function AddNineSlice(frame)
     bg:SetFrameLevel(0)
     ns.Bg = bg
 
-    -- Solid background texture
+    -- Solid background texture (slightly transparent)
     local bgTex = bg:CreateTexture(nil, 'BACKGROUND')
     bgTex:SetTexture(T.frame_bg)
     bgTex:SetAllPoints(bg)
+    bgTex:SetAlpha(0.85)
     ns.BgTex = bgTex
 
     -- Corners
@@ -317,6 +322,18 @@ local function BlizzardSkinFrame(frame)
         port:SetDrawLayer('OVERLAY', 5)
     end
 
+    -- Portrait metal border
+    if not frame._BagSkin_PortraitBorder then
+        local pp = frame:CreateTexture(nil, 'OVERLAY')
+        pp:SetTexture(T.portrait_metal)
+        pp:SetSize(75, 76)
+        pp:SetTexCoord(0, 150 / 256, 0, 150 / 256)
+        pp:ClearAllPoints()
+        pp:SetPoint('TOPLEFT', frame, 'TOPLEFT', -13, 16)
+        pp:SetDrawLayer('OVERLAY', 7)
+        frame._BagSkin_PortraitBorder = pp
+    end
+
     -- Add nineslice border
     AddNineSlice(frame)
 
@@ -425,6 +442,18 @@ local function CombuctorSkinFrame(frame)
         icon:ClearAllPoints()
         icon:SetPoint('TOPLEFT', frame, 'TOPLEFT', -4, 1)
         icon:SetDrawLayer('OVERLAY', 5)
+    end
+
+    -- Portrait metal border
+    if not frame._BagSkin_PortraitBorder then
+        local pp = frame:CreateTexture(nil, 'OVERLAY')
+        pp:SetTexture(T.portrait_metal)
+        pp:SetSize(75, 76)
+        pp:SetTexCoord(0, 150 / 256, 0, 150 / 256)
+        pp:ClearAllPoints()
+        pp:SetPoint('TOPLEFT', frame, 'TOPLEFT', -13, 16)
+        pp:SetDrawLayer('OVERLAY', 7)
+        frame._BagSkin_PortraitBorder = pp
     end
 
     -- Title repositioning
