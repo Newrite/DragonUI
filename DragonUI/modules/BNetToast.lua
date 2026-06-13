@@ -121,7 +121,7 @@ local function BroadcastOnEnterPressed(self)
             end
         end
     end
-    FriendsFrameBroadcastInput_UpdateDisplay(self, broadcastText)
+    self:SetText("")
 end
 
 -- ============================================================================
@@ -310,7 +310,8 @@ local function ApplyBNetToast()
 
     -- Reposition broadcast input to the right of FriendsTabHeader
     FriendsFrameBroadcastInput:ClearAllPoints()
-    FriendsFrameBroadcastInput:SetPoint("LEFT", FriendsTabHeader, "RIGHT", 10, 0)
+    FriendsFrameBroadcastInput:SetPoint("LEFT", FriendsTabHeaderTab2, "RIGHT", 20, -5)
+    FriendsFrameBroadcastInput:SetWidth(150)
 
     -- Prevent broadcast input from being hidden
     if not orig.broadcastHide then
