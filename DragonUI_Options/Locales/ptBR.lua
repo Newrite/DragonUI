@@ -255,3 +255,11 @@ L["Seconds used to fade bars out when they become hidden."] = "Segundos usados p
 L["Fade Out Delay"] = "Atraso do fade out"
 L["Delay before hover-out starts fading, useful to avoid flicker between buttons."] = "Atraso antes de iniciar o fade ao sair com o cursor, util para evitar tremulacao entre botoes."
 L["This Fork is maintained by PentSec for AscensionWow, based on the original work by Neticsoul."] = "Este Fork e mantido por PentSec para AscensionWow, baseado no trabalho original de Neticsoul."
+
+-- BNet Toast Tab
+L["BNet Toast"] = "Aviso BNet"
+L["Friend online/offline notifications with Battle.net toasts and chat messages"] = "Notificações de amigos online/offline com toasts e mensagens do Battle.net"
+L["Position & Scale"] = "Posição e Escala"
+L["Scale of the BNet toast frame."] = "Escala do quadro de notificação do Battle.net."
+L["Horizontal position of the BNet toast from the screen center. Negative values move left, positive values move right."] = "Posição horizontal da notificação do Battle.net a partir do centro da tela. Valores negativos movem para a esquerda, positivos para a direita."
+L["Vertical offset of the BNet toast frame. Negative values move down, positive values move up."] = "Deslocamento vertical do quadro de notificação do Battle.net. Valores negativos movem para baixo, positivos para cima."
