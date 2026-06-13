@@ -1058,11 +1058,3 @@ L["Invalid preset string."] = "유효하지 않은 프리셋 문자열입니다.
 L["Not a valid DragonUI preset string."] = "유효한 DragonUI 프리셋 문자열이 아닙니다."
 L["Failed to export preset."] = "프리셋 내보내기에 실패했습니다."
 L["This Fork is maintained by PentSec for AscensionWow, based on the original work by Neticsoul."] = "이 포크는 Neticsoul의 원본 작업을 기반으로 AscensionWow를 위해 PentSec에서 유지 관리합니다."
-
--- BNet Toast Tab
-L["BNet Toast"] = "BNet 알림"
-L["Friend online/offline notifications with Battle.net toasts and chat messages"] = "Battle.net 토스트 및 채팅 메시지로 친구 온라인/오프라인 알림"
-L["Position & Scale"] = "위치 및 크기"
-L["Scale of the BNet toast frame."] = "배틀넷 알림 프레임의 크기 비율입니다."
-L["Horizontal position of the BNet toast from the screen center. Negative values move left, positive values move right."] = "화면 중앙에서 배틀넷 알림의 가로 위치입니다. 음수는 왼쪽, 양수는 오른쪽으로 이동합니다."
-L["Vertical offset of the BNet toast frame. Negative values move down, positive values move up."] = "배틀넷 알림 프레임의 세로 오프셋입니다. 음수는 아래로, 양수는 위로 이동합니다."

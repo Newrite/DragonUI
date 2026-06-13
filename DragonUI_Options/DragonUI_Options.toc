@@ -63,6 +63,5 @@ panel\tab_questtracker.lua
 panel\tab_enhancements.lua
 panel\tab_auras.lua
 panel\tab_bags.lua
-panel\tab_bnettoast.lua
 panel\tab_chat.lua
 panel\tab_profiles.lua

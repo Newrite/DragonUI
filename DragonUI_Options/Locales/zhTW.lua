@@ -1055,11 +1055,3 @@ L["Invalid preset string."] = "無效的預設字串。"
 L["Not a valid DragonUI preset string."] = "不是有效的 DragonUI 預設字串。"
 L["Failed to export preset."] = "匯出預設失敗。"
 L["This Fork is maintained by PentSec for AscensionWow, based on the original work by Neticsoul."] = "此分支由 PentSec 為 AscensionWow 維護，基於 Neticsoul 的原始工作。"
-
--- BNet Toast Tab
-L["BNet Toast"] = "BNet 提醒"
-L["Friend online/offline notifications with Battle.net toasts and chat messages"] = "好友上線/離線的戰網提醒和聊天通知"
-L["Position & Scale"] = "位置與縮放"
-L["Scale of the BNet toast frame."] = "戰網提示框架的縮放比例。"
-L["Horizontal position of the BNet toast from the screen center. Negative values move left, positive values move right."] = "戰網提示距螢幕中心的水平位置。負值向左移動，正值向右移動。"
-L["Vertical offset of the BNet toast frame. Negative values move down, positive values move up."] = "戰網提示框架的垂直偏移。負值向下移動，正值向上移動。"

@@ -764,14 +764,6 @@ local defaults = {
                 editboxIdleAlpha = 0, -- Editbox minimum opacity when idle (0 = fades with tabs, 1 = always visible)
                 editboxStyle = "dark", -- Editbox background style: "none", "dark", "dragon", "midnight"
             },
-            bnettoast = {
-                enabled = true, -- Friend online/offline notifications with Battle.net toasts
-                show_toast = true, -- Show the BNToastFrame popup when friends come online/go offline
-                show_chat = true, -- Show a chat notification for friend online/offline events
-                scale = 1.0, -- Scale of the BNet toast frame
-                x_position = 0, -- Horizontal position from screen center
-                y_offset = 200, -- Vertical offset
-            },
             combuctor = {
                 enabled = false -- All-in-one bag replacement with filtering and search
             },
