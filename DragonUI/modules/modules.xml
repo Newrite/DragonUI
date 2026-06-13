@@ -60,4 +60,7 @@
     
     <!-- Bag Sort module (sort buttons for bags and bank) -->
     <Script file="bagsort.lua"/>
+    
+    <!-- Bag Skin module (retail-style textures for bags) -->
+    <Script file="bags_skin.lua"/>
 </Ui>
