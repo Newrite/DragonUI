@@ -69,8 +69,299 @@ if addon.RegisterModule then
 end
 
 -- ============================================================================
--- CONFIGURATION FUNCTIONS
+-- XML TEMPLATE EQUIVALENTS (replaces combuctor.xml entirely)
+-- Builds frames with all properties previously defined in XML virtual templates.
 -- ============================================================================
+
+-- DragonUI_CombuctorSideTabButtonTemplate
+local function SetupSideTabButton(btn)
+    btn:SetSize(32, 32)
+    btn:Hide()
+
+    -- $parentBorder: SpellBook-SkillLineTab
+    local border = btn:CreateTexture(nil, "BACKGROUND")
+    border:SetTexture("Interface\\SpellBook\\SpellBook-SkillLineTab")
+    border:SetSize(64, 64)
+    border:SetPoint("TOPLEFT", btn, "TOPLEFT", -3, 11)
+    btn._BagSkin_SideBorder = border
+
+    -- NormalTexture (blank so GetNormalTexture() works)
+    btn:SetNormalTexture("")
+
+    -- HighlightTexture
+    local ht = btn:CreateTexture(nil, "HIGHLIGHT")
+    ht:SetTexture("Interface\\Buttons\\ButtonHilight-Square")
+    ht:SetBlendMode("ADD")
+    btn:SetHighlightTexture(ht)
+
+    -- CheckedTexture
+    local ct = btn:CreateTexture(nil, "HIGHLIGHT")
+    ct:SetTexture("Interface\\Buttons\\CheckButtonHilight")
+    ct:SetBlendMode("ADD")
+    btn:SetCheckedTexture(ct)
+
+    btn:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(self.tooltip)
+    end)
+    btn:SetScript("OnLeave", GameTooltip_Hide)
+end
+
+-- DragonUI_CombuctorFrameTabButtonTemplate
+local function SetupBottomTabButton(btn)
+    btn:SetFrameLevel(btn:GetFrameLevel() + 4)
+end
+
+-- DragonUI_CombuctorIconButtonTemplate (portrait)
+local function SetupIconButton(btn, parentFrame)
+    btn:SetSize(64, 64)
+    btn:SetPoint("TOPLEFT", parentFrame, "TOPLEFT", 4, -4)
+
+    -- HighlightTexture: UI-Minimap-ZoomButton-Highlight
+    local ht = btn:CreateTexture(nil, "HIGHLIGHT")
+    ht:SetTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+    ht:SetSize(78, 78)
+    ht:SetPoint("CENTER")
+    ht:SetBlendMode("ADD")
+    btn:SetHighlightTexture(ht)
+
+    btn:RegisterForClicks("anyUp")
+    btn.icon = _G[parentFrame:GetName() .. "Icon"]
+    btn.icon:ClearAllPoints()
+    btn.icon:SetPoint("CENTER", btn)
+
+    btn:SetScript("OnEvent", function(self, event, ...)
+        if self:IsShown() and arg1 == "player" then
+            SetPortraitTexture(self.icon, arg1)
+        end
+    end)
+    btn:SetScript("OnShow", function(self)
+        SetPortraitTexture(self.icon, "player")
+        self:RegisterEvent("UNIT_PORTRAIT_UPDATE")
+    end)
+    btn:SetScript("OnHide", function(self)
+        self:UnregisterEvent("UNIT_PORTRAIT_UPDATE")
+    end)
+    btn:SetScript("OnMouseDown", function(self)
+        self.icon:SetWidth(56)
+        self.icon:SetHeight(56)
+        self.icon:SetTexCoord(0.075, 0.925, 0.075, 0.925)
+    end)
+    btn:SetScript("OnMouseUp", function(self)
+        self.icon:SetWidth(62)
+        self.icon:SetHeight(62)
+        self.icon:SetTexCoord(0, 1, 0, 1)
+    end)
+    btn:SetScript("OnEnter", function() GameTooltip:Hide() end)
+    btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+end
+
+-- DragonUI_CombuctorDragFrameTemplate (title/drag bar)
+local function SetupDragFrame(btn, parentFrame)
+    btn:SetSize(262, 14)
+    btn:SetPoint("TOP", parentFrame, "TOP", 0, -16)
+
+    btn:RegisterForClicks("anyUp")
+    btn:RegisterForDrag("LeftButton")
+
+    btn:SetScript("OnClick", function(self, button)
+        if IsAltKeyDown() and button == "RightButton" then
+            self:GetParent():SavePosition(nil)
+        end
+    end)
+    btn:SetScript("OnMouseDown", function(self)
+        self.isMoving = true
+        self:GetParent():StartMoving()
+    end)
+    btn:SetScript("OnMouseUp", function(self)
+        if self.isMoving then
+            self.isMoving = nil
+            self:GetParent():StopMovingOrSizing()
+            self:GetParent():SavePosition(self:GetParent():GetPoint())
+        end
+    end)
+    btn:SetScript("OnEnter", function(self)
+        self:GetParent():OnTitleEnter(self)
+    end)
+    btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+    btn:SetNormalFontObject(GameFontNormal)
+    btn:SetHighlightFontObject(GameFontHighlight)
+end
+
+-- DragonUI_CombuctorSearchBoxTemplate
+local function SetupSearchBox(eb, parentFrame)
+    eb:SetAutoFocus(false)
+    eb:SetHeight(20)
+    eb:SetPoint("TOPLEFT",  parentFrame, "TOPLEFT",  84, -44)
+    eb:SetPoint("TOPRIGHT", parentFrame, "TOPRIGHT", -116, -44)
+
+    eb:SetScript("OnShow", function(self)
+        if self:GetText() == '' then
+            self:SetText(SEARCH)
+        end
+    end)
+    eb:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+    eb:SetScript("OnEscapePressed", function(self)
+        self:SetText(SEARCH)
+        self:ClearFocus()
+        self:GetParent():SetFilter('name', nil, true)
+    end)
+    eb:SetScript("OnTextChanged", function(self)
+        if self:HasFocus() then
+            local text = self:GetText()
+            self:GetParent():SetFilter('name', (text ~= '' and text:lower()) or nil, true)
+        end
+    end)
+    eb:SetScript("OnEditFocusLost", function(self)
+        self:HighlightText(0, 0)
+        if self:GetText() == '' then
+            self:SetText(SEARCH)
+        end
+    end)
+    eb:SetScript("OnEditFocusGained", function(self)
+        self:HighlightText()
+        if self:GetText() == SEARCH then
+            self:SetText('')
+        end
+    end)
+end
+
+-- DragonUI_CombuctorResetButtonTemplate
+local function SetupResetButton(btn)
+    btn:SetSize(39, 39)
+    btn:SetNormalTexture("Interface\\Buttons\\CancelButton-Up")
+    btn:SetPushedTexture("Interface\\Buttons\\CancelButton-Down")
+    local ht = btn:CreateTexture(nil, "HIGHLIGHT")
+    ht:SetTexture("Interface\\Buttons\\CancelButton-Highlight")
+    ht:SetBlendMode("ADD")
+    btn:SetHighlightTexture(ht)
+end
+
+-- DragonUI_CombuctorBagToggleTemplate
+local function SetupBagToggle(btn, parentFrame)
+    btn:SetSize(32, 32)
+
+    -- $parentIcon: Button-Backpack-Up
+    local icon = btn:CreateTexture(btn:GetName() .. "Icon", "BACKGROUND")
+    icon:SetTexture("Interface\\Buttons\\Button-Backpack-Up")
+    icon:SetSize(20, 20)
+    icon:SetPoint("TOPLEFT", btn, "TOPLEFT", 7, -6)
+    icon:SetTexCoord(0.075, 0.925, 0.075, 0.925)
+
+    -- $parentBorder: MiniMap-TrackingBorder
+    local border = btn:CreateTexture(btn:GetName() .. "Border", "OVERLAY")
+    border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+    border:SetSize(54, 54)
+    border:SetPoint("TOPLEFT", btn, "TOPLEFT")
+    border:SetDesaturated(true)
+    border:SetAlpha(0.6)
+
+    btn:RegisterForClicks("anyUp")
+
+    btn:SetScript("OnClick", function(self, button)
+        self:GetParent():OnBagToggleClick(self, button)
+    end)
+    btn:SetScript("OnMouseDown", function(self)
+        icon:SetTexCoord(0, 1, 0, 1)
+    end)
+    btn:SetScript("OnMouseUp", function(self)
+        icon:SetTexCoord(0.075, 0.925, 0.075, 0.925)
+    end)
+    btn:SetScript("OnEnter", function(self)
+        self:GetParent():OnBagToggleEnter(self)
+    end)
+    btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+    -- HighlightTexture
+    local ht = btn:CreateTexture(nil, "HIGHLIGHT")
+    ht:SetTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+    ht:SetBlendMode("ADD")
+    btn:SetHighlightTexture(ht)
+end
+
+-- Replaces DragonUI_CombuctorInventoryTemplate entirely
+-- Creates the main inventory/bank frame with all children in pure Lua.
+local function CreateInventoryFrame(name, parent)
+    parent = parent or UIParent
+    local f = CreateFrame("Frame", name, parent)
+    f:SetSize(384, 512)
+    f:SetResizable(true)
+    f:SetClampedToScreen(true)
+    f:EnableMouse(true)
+    f:SetMovable(true)
+    f:SetFrameStrata("HIGH")
+    f:Hide()
+    f:SetHitRectInsets(0, 35, 0, 75)
+
+    -- BACKGROUND: $parentIcon (62x62, portrait target)
+    local portraitTex = f:CreateTexture(name .. "Icon", "BACKGROUND")
+    portraitTex:SetSize(62, 62)
+
+    -- $parentCloseButton (UIPanelCloseButton)
+    local closeBtn = CreateFrame("Button", name .. "CloseButton", f, "UIPanelCloseButton")
+    closeBtn:SetPoint("TOPRIGHT", f, "TOPRIGHT", -29, -8)
+
+    -- $parentIconButton
+    local iconBtn = CreateFrame("Button", name .. "IconButton", f)
+    SetupIconButton(iconBtn, f)
+
+    -- $parentTitle
+    local titleBtn = CreateFrame("Button", name .. "Title", f)
+    SetupDragFrame(titleBtn, f)
+
+    -- $parentSearch
+    local searchEb = CreateFrame("EditBox", name .. "Search", f, "InputBoxTemplate")
+    SetupSearchBox(searchEb, f)
+
+    -- $parentBagToggle (create first, anchor from RIGHT)
+    local bagToggleBtn = CreateFrame("Button", name .. "BagToggle", f)
+    SetupBagToggle(bagToggleBtn, f)
+
+    -- $parentReset
+    local resetBtn = CreateFrame("Button", name .. "Reset", f)
+    SetupResetButton(resetBtn)
+
+    -- Anchor all header buttons for layout: search | reset | ... | bagToggle
+    bagToggleBtn:SetPoint("TOPRIGHT", f, "TOPRIGHT", -14, -38)
+    resetBtn:SetPoint("TOPRIGHT", bagToggleBtn, "TOPLEFT", -2, 0)
+
+    -- Search: left at 14, right ends before the buttons
+    searchEb:SetPoint("TOPLEFT",  f, "TOPLEFT",  14, -44)
+    searchEb:SetPoint("TOPRIGHT", resetBtn, "LEFT", -4, 0)
+
+    -- $parentResize
+    local resizeBtn = CreateFrame("Button", name .. "Resize", f)
+    resizeBtn:SetSize(16, 16)
+    resizeBtn:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", 0, 0)
+    resizeBtn:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+    resizeBtn:GetNormalTexture():SetAllPoints(resizeBtn)
+    resizeBtn:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+    resizeBtn:GetPushedTexture():SetAllPoints(resizeBtn)
+    local resizeHt = resizeBtn:CreateTexture(nil, "HIGHLIGHT")
+    resizeHt:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+    resizeHt:SetBlendMode("ADD")
+    resizeHt:SetAllPoints(resizeBtn)
+    resizeBtn:SetHighlightTexture(resizeHt)
+
+    resizeBtn:SetScript("OnLoad", function(self)
+        self:SetFrameLevel(self:GetFrameLevel() + 4)
+        self:GetNormalTexture():SetVertexColor(1, 0.82, 0)
+    end)
+    resizeBtn:SetScript("OnMouseDown", function(self)
+        self:GetParent():StartSizing()
+    end)
+    resizeBtn:SetScript("OnMouseUp", function(self)
+        self:GetParent():StopMovingOrSizing()
+    end)
+
+    -- OnSizeChanged
+    f:SetScript("OnSizeChanged", function(self)
+        self:OnSizeChanged(self:GetWidth(), self:GetHeight())
+    end)
+
+    return f
+end
 
 local function GetModuleConfig()
     return addon:GetModuleConfig("combuctor")
@@ -2260,8 +2551,9 @@ do
     local SideTab = mod:NewClass("CheckButton")
 
     function SideTab:New(parent, id)
-        local tab = self:Bind(CreateFrame("CheckButton", format("%sSideTab%d", parent:GetParent():GetName(), id), parent, "DragonUI_CombuctorSideTabButtonTemplate"))
-        tab.border = _G[tab:GetName() .. "Border"]
+        local tab = self:Bind(CreateFrame("CheckButton", format("%sSideTab%d", parent:GetParent():GetName(), id), parent))
+        SetupSideTabButton(tab)
+        tab.border = tab._BagSkin_SideBorder
         return tab
     end
 
@@ -2392,7 +2684,8 @@ do
     local BottomTab = mod:NewClass("Button")
 
     function BottomTab:New(parent, id)
-        local tab = self:Bind(CreateFrame("Button", parent:GetName() .. "Tab" .. id, parent, "DragonUI_CombuctorFrameTabButtonTemplate"))
+        local tab = self:Bind(CreateFrame("Button", parent:GetName() .. "Tab" .. id, parent, "CharacterFrameTabButtonTemplate"))
+        SetupBottomTabButton(tab)
         tab:SetID(id)
         tab:SetScript("OnClick", function(self)
             parent:GetParent():SetSubCategory(self.set.name)
@@ -2540,7 +2833,7 @@ do
 
     local lastID = 1
     function InventoryFrame:New(titleText, settings, isBank, key)
-        local f = self:Bind(CreateFrame("Frame", format("DragonUI_CombuctorFrame%d", lastID), UIParent, "DragonUI_CombuctorInventoryTemplate"))
+        local f = self:Bind(CreateInventoryFrame(format("DragonUI_CombuctorFrame%d", lastID)))
         f:SetScript("OnShow", self.OnShow)
         f:SetScript("OnHide", self.OnHide)
 
@@ -2996,32 +3289,16 @@ local function CombuctorSkinFrame(frame)
         title:SetPoint('TOP', frame, 'TOP', 0, -10)
     end
 
-    -- Search box
-    local search = _G[frame:GetName() .. 'Search']
-    if search then
-        search:ClearAllPoints()
-        search:SetPoint('TOPLEFT',  frame, 'TOPLEFT',  84, -44)
-        search:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', -116, -44)
-    end
-
-    -- Reset button
-    local reset = _G[frame:GetName() .. 'Reset']
-    if reset then
-        reset:ClearAllPoints()
-        local s = _G[frame:GetName() .. 'Search']
-        if s then
-            reset:SetPoint('LEFT', s, 'RIGHT', 2, 0)
-        end
-    end
-
-    -- Bag toggle
+    -- Bag toggle (anchored from right at -14, TOPRIGHT for Y consistency with header)
     local bagToggle = _G[frame:GetName() .. 'BagToggle']
     if bagToggle then
         bagToggle:ClearAllPoints()
-        if reset then
-            bagToggle:SetPoint('LEFT', reset, 'RIGHT', 2, 0)
-        end
+        bagToggle:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', -14, -38)
     end
+
+    -- NOTE: reset and sort buttons are positioned by bagsort from bagToggle.
+    -- NOTE: search is NOT restored here — bagsort shrinks it and
+    -- positions reset/sort buttons to its right. Keeping that layout.
 
     -- Disable portrait click
     local portBtn = _G[frame:GetName() .. 'PortraitButton']

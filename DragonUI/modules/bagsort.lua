@@ -1391,12 +1391,12 @@ local function AttachCombuctorButtons(frame, sortRef, clearRef, sellScrapRef, so
     -- Shrink the search bar to make room for the buttons
     if searchBox then
         searchBox:ClearAllPoints()
-        searchBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 84, -44)
+        searchBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -44)
 	if sellScrapBtnName then
 		searchBox:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -170, -44)
 	else
 		-- Reserve extra room for sort + clear-locks buttons.
-		searchBox:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -120, -44)
+		searchBox:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -130, -44)
 	end
     end
 
@@ -1407,18 +1407,24 @@ local function AttachCombuctorButtons(frame, sortRef, clearRef, sellScrapRef, so
 		sellScrapBtn = CreateSellScrapButton(sellScrapBtnName, frame, 0.55)
 	end
 
-	-- Anchor buttons to the right side of the frame (independent of Reset/BagToggle)
-	sortBtn:SetPoint("TOPRIGHT", resetBtn, "TOPRIGHT", 65, -9)
-	clearBtn:SetPoint("RIGHT", sortBtn, "LEFT", -2, 0)
-	if sellScrapBtn then
-		sellScrapBtn:SetPoint("RIGHT", clearBtn, "LEFT", -2, 0)
+	-- Anchor from bagToggle (rightmost) going LEFT: search | reset | [sellScrap] | clearBtn | sortBtn | bagToggle
+	-- sort/clear/sellScrap at Y offset +3 (3px lower than bagToggle/reset)
+	if bagToggle then
+		-- sortBtn
+		sortBtn:ClearAllPoints()
+		sortBtn:SetPoint("TOPRIGHT", bagToggle, "TOPLEFT", -2, 3)
+		-- clearBtn
+		clearBtn:ClearAllPoints()
+		clearBtn:SetPoint("TOPRIGHT", sortBtn, "TOPLEFT", -2, 0)
+		-- sellScrap (between clear and reset)
+		if sellScrapBtn then
+			sellScrapBtn:ClearAllPoints()
+			sellScrapBtn:SetPoint("TOPRIGHT", clearBtn, "TOPLEFT", -2, 0)
+		end
+		-- reset (back to bagToggle Y level with -3 offset)
+		resetBtn:ClearAllPoints()
+		resetBtn:SetPoint("TOPRIGHT", (sellScrapBtn or clearBtn), "TOPLEFT", -2, -3)
 	end
-
-    -- Re-anchor BagToggle to the right of our sort button
-    if bagToggle then
-        bagToggle:ClearAllPoints()
-        bagToggle:SetPoint("LEFT", sortBtn, "RIGHT", 0, 0)
-    end
 
     sortBtn:Show()
     clearBtn:Show()

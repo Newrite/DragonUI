@@ -56,7 +56,7 @@
     <Script file="BNetToast.lua"/>
     
     <!-- Combuctor bag replacement module -->
-    <Include file="combuctor\combuctor.xml"/>
+    <Script file="combuctor\combuctor.lua"/>
     
     <!-- Bag Sort module (sort buttons for bags and bank) -->
     <Script file="bagsort.lua"/>
