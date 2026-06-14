@@ -57,10 +57,6 @@ local T = {
     bagslot           = assets .. 'bagslots2x',
     bagslot_cutout    = assets .. 'bagslotCutout',
 
-    -- Portrait metal frame
-    portrait_metal    = assets .. 'ui-frame-portraitmetal-cornertopleftsmall',
-    portrait_frame    = assets .. 'UI-Frame-PortraitMetal-CornerTopLeft',
-
     -- Bag border / mask for item slots
     bag_border        = assets .. 'bagborder2',
     bag_border_empty  = assets .. 'bagborderempty2',
@@ -312,26 +308,53 @@ local function BlizzardSkinFrame(frame)
         if tex then tex:SetAlpha(0) end
     end
 
-    -- Restyle portrait
+    -- Backpack (ContainerFrame1): solo icono bigbag, sin border
+    local isBackpack = (name == 'ContainerFrame1')
+
+    -- Restyle portrait (or create one if missing, e.g. backpack)
     local port = _G[name .. 'Portrait']
-    if port then
-        port:SetAlpha(1)
-        port:SetSize(36, 36)
-        port:ClearAllPoints()
-        port:SetPoint('TOPLEFT', frame, 'TOPLEFT', -4, 1)
-        port:SetDrawLayer('OVERLAY', 5)
+    if not port then
+        port = frame:CreateTexture(name .. 'Portrait', 'ARTWORK')
+    end
+    -- Backpack siempre usa bigbag.blp
+    if isBackpack and port then
+        port:SetTexture(T.bigbag)
     end
 
-    -- Portrait metal border
-    if not frame._BagSkin_PortraitBorder then
-        local pp = frame:CreateTexture(nil, 'OVERLAY')
-        pp:SetTexture(T.portrait_metal)
-        pp:SetSize(75, 76)
-        pp:SetTexCoord(0, 150 / 256, 0, 150 / 256)
-        pp:ClearAllPoints()
-        pp:SetPoint('TOPLEFT', frame, 'TOPLEFT', -13, 16)
+    if port then
+        port:SetAlpha(1)
+        local portSize = isBackpack and 58 or 36
+        local portOffX = isBackpack and -12 or -4
+        local portOffY = isBackpack and 10 or 1
+        port:SetSize(portSize, portSize)
+        port:ClearAllPoints()
+        port:SetPoint('TOPLEFT', frame, 'TOPLEFT', portOffX, portOffY)
+        if port.SetDrawLayer then
+            port:SetDrawLayer('OVERLAY', 1)
+        end
+    end
+
+    -- Bag icon border (solo para bolsas que NO son el backpack)
+    if port and not isBackpack and not frame._BagSkin_PortraitBorder then
+        local borderFrame = CreateFrame('Frame', nil, frame)
+        borderFrame:SetSize(48, 48)
+        borderFrame:SetPoint('TOPLEFT', frame, 'TOPLEFT', -10, 5)
+
+        -- Obtener frame level de forma segura
+        local portLevel = 0
+        if port.GetFrameLevel then
+            portLevel = port:GetFrameLevel()
+        elseif frame.GetFrameLevel then
+            portLevel = frame:GetFrameLevel()
+        end
+        borderFrame:SetFrameLevel(portLevel + 10)
+
+        local pp = borderFrame:CreateTexture(nil, 'OVERLAY')
+        pp:SetTexture(T.bag_border)
+        pp:SetAllPoints(borderFrame)
         pp:SetDrawLayer('OVERLAY', 7)
-        frame._BagSkin_PortraitBorder = pp
+
+        frame._BagSkin_PortraitBorder = borderFrame
     end
 
     -- Add nineslice border
@@ -424,7 +447,7 @@ local function CombuctorSkinFrame(frame)
     if not frame or frame._BagSkin_Combuctor then return end
     frame._BagSkin_Combuctor = true
 
-    -- Hide old MerchantFrame textures
+    -- Hide old textures
     local regions = { frame:GetRegions() }
     for _, child in ipairs(regions) do
         if child:GetObjectType() == 'Texture' then
@@ -435,55 +458,102 @@ local function CombuctorSkinFrame(frame)
     -- Add nineslice border
     AddNineSlice(frame)
 
-    -- Adjust Icon/Portrait positioning
-    local icon = _G[frame:GetName() .. 'Icon']
+    -- Ajustar NineSlice para que no tape el header
+    if frame._BagSkin_NineSlice then
+        local ns = frame._BagSkin_NineSlice
+        ns.Bg:SetPoint('TOPLEFT',     frame, 'TOPLEFT',     3, -18)
+        ns.Bg:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -3, 3)
+    end
+
+    -- Icon/Portrait
+    local icon = _G[frame:GetName() .. 'IconButton']
     if icon then
         icon:SetSize(36, 36)
         icon:ClearAllPoints()
-        icon:SetPoint('TOPLEFT', frame, 'TOPLEFT', -4, 1)
-        icon:SetDrawLayer('OVERLAY', 5)
+        icon:SetPoint('TOPLEFT', frame, 'TOPLEFT', -4, 4)
+        
+        -- Ocultar la textura interna del botón de Combuctor
+        local iconTex = icon:GetNormalTexture()
+        if iconTex then iconTex:SetAlpha(0) end
+        
+        -- Crear nuestra propia textura encima
+        if not icon._BagSkin_CustomTex then
+            local tex = icon:CreateTexture(nil, 'OVERLAY', nil, 1)
+            tex:SetTexture(T.bigbag)
+            tex:SetAllPoints(icon)
+            icon._BagSkin_CustomTex = tex
+        end
+        
+        icon:EnableMouse(false) -- deshabilitar click del portrait
     end
 
-    -- Portrait metal border
-    if not frame._BagSkin_PortraitBorder then
-        local pp = frame:CreateTexture(nil, 'OVERLAY')
-        pp:SetTexture(T.portrait_metal)
-        pp:SetSize(75, 76)
-        pp:SetTexCoord(0, 150 / 256, 0, 150 / 256)
-        pp:ClearAllPoints()
-        pp:SetPoint('TOPLEFT', frame, 'TOPLEFT', -13, 16)
+    -- Borde encima del icon
+    if icon and not frame._BagSkin_PortraitBorder then
+        local borderFrame = CreateFrame('Frame', nil, frame)
+        borderFrame:SetSize(48, 48)
+        borderFrame:SetPoint('TOPLEFT', frame, 'TOPLEFT', -10, 8)
+
+        local iconLevel = 0
+        if icon.GetFrameLevel then
+            iconLevel = icon:GetFrameLevel()
+        elseif frame.GetFrameLevel then
+            iconLevel = frame:GetFrameLevel()
+        end
+        borderFrame:SetFrameLevel(iconLevel + 10)
+
+        local pp = borderFrame:CreateTexture(nil, 'OVERLAY')
+        pp:SetTexture(T.bag_border)
+        pp:SetAllPoints(borderFrame)
         pp:SetDrawLayer('OVERLAY', 7)
-        frame._BagSkin_PortraitBorder = pp
+
+        frame._BagSkin_PortraitBorder = borderFrame
     end
 
-    -- Title repositioning
+    -- CloseButton
+    local close = _G[frame:GetName() .. 'CloseButton']
+    if close then
+        close:ClearAllPoints()
+        close:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', 8, 8)
+    end
+
+    -- Title: ocultar
     local title = _G[frame:GetName() .. 'Title']
     if title then
         title:SetText('')
         title:ClearAllPoints()
+        title:SetPoint('TOP', frame, 'TOP', 0, -10)
     end
 
-    -- Search box repositioning
+    -- Search
     local search = _G[frame:GetName() .. 'Search']
     if search then
         search:ClearAllPoints()
-        search:SetPoint('TOPLEFT', frame, 'TOPLEFT', 84, -44)
+        search:SetPoint('TOPLEFT',  frame, 'TOPLEFT',  84, -44)
         search:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', -116, -44)
     end
 
-    -- Reset button
+    -- Reset: a la derecha del search
     local reset = _G[frame:GetName() .. 'Reset']
     if reset then
         reset:ClearAllPoints()
-        reset:SetPoint('LEFT', _G[frame:GetName() .. 'Search'], 'RIGHT', -2, -2)
+        local s = _G[frame:GetName() .. 'Search']
+        if s then
+            reset:SetPoint('LEFT', s, 'RIGHT', 2, 0)
+        end
     end
 
-    -- Bag toggle
+    -- BagToggle: a la derecha del reset
     local bagToggle = _G[frame:GetName() .. 'BagToggle']
     if bagToggle then
         bagToggle:ClearAllPoints()
-        bagToggle:SetPoint('LEFT', reset, 'RIGHT', 0, 0)
+        if reset then
+            bagToggle:SetPoint('LEFT', reset, 'RIGHT', 2, 0)
+        end
     end
+
+    -- Disable portrait click
+    local portBtn = _G[frame:GetName() .. 'PortraitButton']
+    if portBtn then portBtn:EnableMouse(false) end
 end
 
 local function CombuctorSkinItems(frame)
@@ -580,6 +650,7 @@ local function CombuctorApply()
     for i = 1, 2 do
         local frame = _G['DragonUI_CombuctorFrame' .. i]
         if frame then
+            
             CombuctorSkinFrame(frame)
             CombuctorSkinItems(frame)
             CombuctorSkinBagSlots(frame)
