@@ -177,16 +177,18 @@ local function RetailItemSlot(btn)
     if btn._BagSkin_Applied then return end
     btn._BagSkin_Applied = true
 
-    -- NormalTexture → BagsItemSlot2x
+    -- For Combuctor buttons, iconTexture handles everything at OVERLAY.
+    -- For Blizzard buttons (no iconTexture), NormalTexture = slot background.
     local nt = btn:GetNormalTexture()
     if nt then
         nt:SetTexture(T.slot_bg)
         nt:SetSize(37, 37)
         nt:SetPoint('CENTER', 0, 0)
-        nt:SetDrawLayer('BACKGROUND', 3)
+        nt:SetDrawLayer('ARTWORK', 0)
+        nt:Show()
+        nt:SetAlpha(1)
     end
 
-    -- PushedTexture → ui-quickslot-depress
     local pt = btn:GetPushedTexture()
     if pt then
         pt:SetTexture(T.slot_depress)
@@ -194,7 +196,6 @@ local function RetailItemSlot(btn)
         pt:SetPoint('CENTER', 0, 0)
     end
 
-    -- HighlightTexture → buttonhilight-square
     local ht = btn:GetHighlightTexture()
     if ht then
         ht:SetTexture(T.slot_highlight)
@@ -202,12 +203,8 @@ local function RetailItemSlot(btn)
         ht:SetPoint('CENTER', 0, 0)
     end
 
-    -- Hide IconBorder
-    if btn.IconBorder then
-        btn.IconBorder:Hide()
-    end
+    if btn.IconBorder then btn.IconBorder:Hide() end
 
-    -- Add border overlay
     if not btn._BagSkin_Border then
         local border = btn:CreateTexture(nil, 'BACKGROUND')
         border:SetTexture(T.slot_border)
@@ -226,6 +223,22 @@ local function RetailBagSlot(btn)
     if btn._BagSkin_Applied then return end
     btn._BagSkin_Applied = true
 
+    -- Kill any lingering UI-Quickslot2 / Depress / Hilight textures
+    for _, region in ipairs({ btn:GetRegions() }) do
+        if region:GetObjectType() == 'Texture' then
+            local tex = region:GetTexture() or ''
+            local rname = (region.GetName and region:GetName()) or ''
+            -- Keep IconTexture
+            if not rname:find('IconTexture') then
+                if tex:find('UI%-Quickslot') or tex:find('ButtonHilight') then
+                    region:SetTexture(nil)
+                    region:SetAlpha(0)
+                    region:Hide()
+                end
+            end
+        end
+    end
+
     local size = 30.5
 
     -- NormalTexture → bagslots2x
@@ -234,8 +247,11 @@ local function RetailBagSlot(btn)
         nt:SetTexture(T.bagslot)
         nt:SetTexCoord(0.576172, 0.695312, 0.5, 0.976562)
         nt:SetSize(size, size)
+        nt:ClearAllPoints()
         nt:SetPoint('CENTER', 2, -1)
         nt:SetDrawLayer('BORDER', 0)
+        nt:SetAlpha(1)
+        nt:Show()
     end
 
     -- HighlightTexture
@@ -246,6 +262,8 @@ local function RetailBagSlot(btn)
         ht:SetSize(size, size)
         ht:ClearAllPoints()
         ht:SetPoint('CENTER', 2, -1)
+        ht:SetAlpha(1)
+        ht:Show()
     end
 
     -- PushedTexture
@@ -256,6 +274,8 @@ local function RetailBagSlot(btn)
         pt:SetSize(size, size)
         pt:ClearAllPoints()
         pt:SetPoint('CENTER', 2, -1)
+        pt:SetAlpha(1)
+        pt:Show()
     end
 end
 
@@ -304,6 +324,7 @@ local BagSkinHelpers = {
     -- Texture paths used by Combuctor skinning
     tex_bigbag            = T.bigbag,
     tex_bag_border        = T.bag_border,
+    tex_slot_bg           = T.slot_bg,
 }
 addon.BagSkinHelpers = BagSkinHelpers
 

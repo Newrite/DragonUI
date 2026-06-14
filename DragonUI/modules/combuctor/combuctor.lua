@@ -107,6 +107,23 @@ local function SetupSideTabButton(btn)
     btn:SetScript("OnLeave", GameTooltip_Hide)
 end
 
+local function DebugItemSlot(btn)
+    local name = btn:GetName() or "?"
+    print("=== " .. name .. " ===")
+    print("NormalTexture:", btn:GetNormalTexture() and btn:GetNormalTexture():GetTexture() or "nil")
+    local i = 0
+    for _, region in ipairs({ btn:GetRegions() }) do
+        i = i + 1
+        if region:GetObjectType() == 'Texture' then
+            local layer, sublayer = region:GetDrawLayer()
+            print(string.format("  Region %d: layer=%s sublayer=%d tex=%s alpha=%.2f",
+                i, layer, sublayer or 0,
+                tostring(region:GetTexture()):sub(1, 40),
+                region:GetAlpha()))
+        end
+    end
+end
+
 -- DragonUI_CombuctorFrameTabButtonTemplate
 local function SetupBottomTabButton(btn)
     btn:SetFrameLevel(btn:GetFrameLevel() + 4)
@@ -1398,6 +1415,23 @@ do
     local unused = {}
     local id = 1
 
+    local function DebugItemSlot(btn)
+        local name = btn:GetName() or "?"
+        print("=== " .. name .. " ===")
+        print("NormalTexture:", btn:GetNormalTexture() and btn:GetNormalTexture():GetTexture() or "nil")
+        local i = 0
+        for _, region in ipairs({ btn:GetRegions() }) do
+            i = i + 1
+            if region:GetObjectType() == 'Texture' then
+                local layer, sublayer = region:GetDrawLayer()
+                print(string.format("  Region %d: layer=%s sublayer=%d tex=%s alpha=%.2f",
+                    i, layer, sublayer or 0,
+                    tostring(region:GetTexture()):sub(1, 40),
+                    region:GetAlpha()))
+            end
+        end
+    end
+
     function ItemSlot:GetNextItemSlotID()
         local nextID = id
         id = id + 1
@@ -1413,8 +1447,40 @@ do
 
         local itemID = self:GetNextItemSlotID()
         local item = self:Bind(CreateFrame("Button", format("DragonUI_CombuctorItem%d", itemID), nil, "ContainerFrameItemButtonTemplate"))
+        local itemName = item:GetName()
 
-        local name = item:GetName()
+-- Create icon texture at OVERLAY layer so it renders ON TOP of the
+        -- NormalTexture (which stays at ARTWORK with slot_bg / bagsitemslot2x).
+        -- The template's $parentIconTexture lives at ARTWORK and would conflict.
+        item.iconTexture = item:CreateTexture(nil, 'OVERLAY')
+        item.iconTexture:SetSize(37, 37)
+        item.iconTexture:ClearAllPoints()
+        item.iconTexture:SetPoint('CENTER', item, 'CENTER', 0, 0)
+        -- No initial texture — SetTexture() will set item icon or slot_bg for empty
+        item.iconTexture:Hide()
+
+        -- Hide the template's $parentIconTexture (ARTWORK) — we use
+        -- item.iconTexture at OVERLAY instead. SetItemButtonTexture targets
+        -- $parentIconTexture, so we bypass it entirely in our SetTexture().
+        local templateIcon = _G[itemName .. "IconTexture"]
+        if templateIcon then
+            templateIcon:SetTexture(nil)
+            templateIcon:Hide()
+        end
+
+        -- Kill ContainerFrame\Bags overlays and IconBorder (always unwanted)
+        for _, region in ipairs({ item:GetRegions() }) do
+            if region:GetObjectType() == 'Texture' then
+                local tex = region:GetTexture() or ''
+                local rname = region:GetName() or ''
+                if tex:find('ContainerFrame') or tex:find('PaperDoll') or rname:find('IconBorder') then
+                    region:SetTexture(nil)
+                    region:SetAlpha(0)
+                    region:Hide()
+                end
+            end
+        end
+
         item:SetID(itemID)
         item:SetScript("OnEnter", self.OnEnter)
         item:SetScript("OnLeave", self.OnLeave)
@@ -1443,7 +1509,8 @@ do
         item.questBorder = questBorder
 
         -- Cooldown
-        item.cooldown = _G[name .. "Cooldown"]
+        local itemName = item:GetName()
+        item.cooldown = _G[itemName .. "Cooldown"]
 
         return item
     end
@@ -1459,6 +1526,14 @@ do
         self:SetParent(ItemSlot:GetDummyBag(parent, bag))
         self:SetID(slot)
         self:Update()
+
+        -- Apply retail skin from bags_skin module (if available).
+        -- The _BagSkin_Applied guard prevents duplicate work.
+        -- This is necessary because ItemSlots are created dynamically
+        -- and CombuctorSkinItems() may run before the slot exists.
+        if not self._BagSkin_Applied and addon.BagSkinHelpers then
+            addon.BagSkinHelpers.RetailItemSlot(self)
+        end
     end
 
     function ItemSlot:OnShow()
@@ -1573,7 +1648,18 @@ do
     end
 
     function ItemSlot:SetTexture(texture)
-        SetItemButtonTexture(self, texture or self:GetEmptyItemTexture())
+        if self.iconTexture then
+            if texture then
+                -- Item icon
+                self.iconTexture:SetTexture(texture)
+            else
+                -- Empty slot: show slot background, not empty-bag icon
+                self.iconTexture:SetTexture(addon._dir .. 'bagsitemslot2x')
+            end
+            self.iconTexture:Show()
+        else
+            SetItemButtonTexture(self, texture or self:GetEmptyItemTexture())
+        end
     end
 
     function ItemSlot:GetEmptyItemTexture()
@@ -1581,20 +1667,13 @@ do
     end
 
     function ItemSlot:UpdateSlotColor()
+        local target = self.iconTexture
         if (not self:GetItem()) and self:IsTradeBagSlot() then
             local r, g, b = 0.5, 1, 0.5
-            SetItemButtonTextureVertexColor(self, r, g, b)
-            local normText = self.normText or self:GetNormalTexture()
-            if normText and normText.SetVertexColor then
-                normText:SetVertexColor(r, g, b)
-            end
+            if target then target:SetVertexColor(r, g, b) end
             return
         end
-        SetItemButtonTextureVertexColor(self, 1, 1, 1)
-        local normText = self.normText or self:GetNormalTexture()
-        if normText and normText.SetVertexColor then
-            normText:SetVertexColor(1, 1, 1)
-        end
+        if target then target:SetVertexColor(1, 1, 1) end
     end
 
     function ItemSlot:SetCount(count)
@@ -1606,7 +1685,11 @@ do
     end
 
     function ItemSlot:SetLocked(locked)
-        SetItemButtonDesaturated(self, locked)
+        if self.iconTexture then
+            self.iconTexture:SetDesaturated(locked)
+        else
+            SetItemButtonDesaturated(self, locked)
+        end
     end
 
     function ItemSlot:UpdateLocked()
@@ -1662,7 +1745,9 @@ do
             CooldownFrame_SetTimer(self.cooldown, start or 0, duration or 0, enable or 0)
         else
             CooldownFrame_SetTimer(self.cooldown, 0, 0, 0)
-            SetItemButtonTextureVertexColor(self, 1, 1, 1)
+            if self.iconTexture then
+                self.iconTexture:SetVertexColor(1, 1, 1)
+            end
         end
     end
 
@@ -2198,21 +2283,31 @@ do
         count:SetJustifyH("RIGHT")
         count:SetPoint("BOTTOMRIGHT", -2, 2)
 
+        -- NormalTexture: use blank initially, RetailBagSlot from
+        -- bags_skin.lua will apply the proper retail texture
         local nt = bag:CreateTexture(name .. "NormalTexture")
-        nt:SetTexture([[Interface\Buttons\UI-Quickslot2]])
+        nt:SetTexture(nil)
         nt:SetWidth(NORMAL_TEXTURE_SIZE)
         nt:SetHeight(NORMAL_TEXTURE_SIZE)
         nt:SetPoint("CENTER", 0, -1)
+        nt:SetAlpha(0)
+        nt:Hide()
         bag:SetNormalTexture(nt)
 
+        -- PushedTexture: use blank, RetailBagSlot replaces it
         local pt = bag:CreateTexture()
-        pt:SetTexture([[Interface\Buttons\UI-Quickslot-Depress]])
+        pt:SetTexture(nil)
         pt:SetAllPoints(bag)
+        pt:SetAlpha(0)
+        pt:Hide()
         bag:SetPushedTexture(pt)
 
+        -- HighlightTexture: use blank, RetailBagSlot replaces it
         local ht = bag:CreateTexture()
-        ht:SetTexture([[Interface\Buttons\ButtonHilight-Square]])
+        ht:SetTexture(nil)
         ht:SetAllPoints(bag)
+        ht:SetAlpha(0)
+        ht:Hide()
         bag:SetHighlightTexture(ht)
 
         bag:RegisterForClicks("anyUp")
@@ -2257,6 +2352,11 @@ do
                 self:RegisterEvent("BANKFRAME_CLOSED")
                 self:RegisterEvent("PLAYERBANKBAGSLOTS_CHANGED")
             end
+        end
+
+        -- Apply retail skin from bags_skin module (if available)
+        if not self._BagSkin_Applied and addon.BagSkinHelpers then
+            addon.BagSkinHelpers.RetailBagSlot(self)
         end
     end
 
@@ -3318,8 +3418,10 @@ local function CombuctorSkinItems(frame)
         if child:GetObjectType() == 'Frame' then
             for _, subchild in ipairs({ child:GetChildren() }) do
                 if subchild:GetObjectType() == 'Button' and subchild:GetName() then
-                    local name = subchild:GetName()
-                    if name:find('DragonUI_CombuctorItem') then
+                    if subchild:GetName():find('DragonUI_CombuctorItem') then
+                        -- Forzar re-aplicación limpiando ambos guards
+                        subchild._BagSkin_Applied = nil
+                        subchild._BagSkin_CombuctorCleaned = nil
                         helpers.RetailItemSlot(subchild)
                     end
                 end

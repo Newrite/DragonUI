@@ -55,12 +55,12 @@
     <!-- BNet Toast module (friend online/offline notifications) -->
     <Script file="BNetToast.lua"/>
     
+    <!-- Bag Skin module (retail-style textures for bags) — must load before combuctor -->
+    <Script file="bags_skin.lua"/>
+    
     <!-- Combuctor bag replacement module -->
     <Script file="combuctor\combuctor.lua"/>
     
     <!-- Bag Sort module (sort buttons for bags and bank) -->
     <Script file="bagsort.lua"/>
-    
-    <!-- Bag Skin module (retail-style textures for bags) -->
-    <Script file="bags_skin.lua"/>
 </Ui>
