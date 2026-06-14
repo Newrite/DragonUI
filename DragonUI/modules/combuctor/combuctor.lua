@@ -2327,12 +2327,12 @@ do
         if self.reversed then
             if self.buttons[1] then
                 self.buttons[1]:ClearAllPoints()
-                self.buttons[1]:SetPoint("TOPRIGHT", parent, "TOPLEFT", 10, -80)
+                self.buttons[1]:SetPoint("TOPRIGHT", parent, "TOPLEFT", -1, -60)
             end
         else
             if self.buttons[1] then
                 self.buttons[1]:ClearAllPoints()
-                self.buttons[1]:SetPoint("TOPLEFT", parent, "TOPRIGHT", -32, -65)
+                self.buttons[1]:SetPoint("TOPLEFT", parent, "TOPRIGHT", -1, -60)
             end
         end
         -- Update border flip and icon offset for all visible buttons
@@ -2426,9 +2426,9 @@ do
         f.buttons = setmetatable({}, { __index = function(t, k)
             local tab = BottomTab:New(f, k)
             if k > 1 then
-                tab:SetPoint("LEFT", f.buttons[k - 1], "RIGHT", -16, 0)
+                tab:SetPoint("LEFT", f.buttons[k - 1], "RIGHT", -16, -0)
             else
-                tab:SetPoint("CENTER", parent, "BOTTOMLEFT", 60, 46)
+                tab:SetPoint("CENTER", parent, "BOTTOMLEFT", 60, -15)
             end
             t[k] = tab
             return tab
@@ -2534,9 +2534,9 @@ do
     local FrameEvents = mod("FrameEvents")
 
     local BASE_WIDTH = 384
-    local ITEM_FRAME_WIDTH_OFFSET = 312 - BASE_WIDTH
+    local ITEM_FRAME_WIDTH_OFFSET = 354 - BASE_WIDTH
     local BASE_HEIGHT = 512
-    local ITEM_FRAME_HEIGHT_OFFSET = 346 - BASE_HEIGHT
+    local ITEM_FRAME_HEIGHT_OFFSET = 432 - BASE_HEIGHT
 
     local lastID = 1
     function InventoryFrame:New(titleText, settings, isBank, key)
@@ -2563,13 +2563,13 @@ do
         f.nameFilter = _G[f:GetName() .. "Search"]
 
         f.qualityFilter = mod.QualityFilter:New(f)
-        f.qualityFilter:SetPoint("BOTTOMLEFT", 24, 65)
+        f.qualityFilter:SetPoint("BOTTOMLEFT", 14, 10)
 
         f.itemFrame = mod.ItemFrame:New(f)
-        f.itemFrame:SetPoint("TOPLEFT", 24, -78)
+        f.itemFrame:SetPoint("TOPLEFT", 14, -70)
 
         f.moneyFrame = mod.MoneyFrame:New(f)
-        f.moneyFrame:SetPoint("BOTTOMRIGHT", -40, 67)
+        f.moneyFrame:SetPoint("BOTTOMRIGHT", -10, 10)
 
         f:UpdateTitleText()
         f:UpdateBagToggleHighlight()
@@ -2589,7 +2589,10 @@ do
 
     function InventoryFrame:OnTitleEnter(title)
         GameTooltip:SetOwner(title, "ANCHOR_LEFT")
-        GameTooltip:SetText(title:GetText(), 1, 1, 1)
+        local text = title:GetText()
+        if text then
+            GameTooltip:SetText(text, 1, 1, 1)
+        end
         GameTooltip:AddLine(L.MoveTip)
         GameTooltip:AddLine(L.ResetPositionTip)
         GameTooltip:Show()
@@ -2644,7 +2647,7 @@ do
                 if i > 1 then
                     bag:SetPoint("TOP", self.bagButtons[i - 1], "BOTTOM", 0, -6)
                 else
-                    bag:SetPoint("TOPRIGHT", -48, -82)
+                    bag:SetPoint("TOPRIGHT", -14, -70)
                 end
                 bag:Show()
             end
@@ -2798,43 +2801,7 @@ do
         local w, h = self:GetWidth(), self:GetHeight()
         self.sets.w = w
         self.sets.h = h
-        self:SizeTLTextures(w, h)
-        self:SizeBLTextures(w, h)
-        self:SizeTRTextures(w, h)
-        self:SizeBRTextures(w, h)
         self:UpdateItemFrameSize()
-    end
-
-    function InventoryFrame:SizeTLTextures(w, h)
-        local n = self:GetName()
-        _G[n .. "TLRight"]:SetWidth(128 + (w - BASE_WIDTH) / 2)
-        _G[n .. "TLBottom"]:SetHeight(128 + (h - BASE_HEIGHT) / 2)
-        _G[n .. "TLBottomRight"]:SetWidth(128 + (w - BASE_WIDTH) / 2)
-        _G[n .. "TLBottomRight"]:SetHeight(128 + (h - BASE_HEIGHT) / 2)
-    end
-
-    function InventoryFrame:SizeBLTextures(w, h)
-        local n = self:GetName()
-        _G[n .. "BLRight"]:SetWidth(128 + (w - BASE_WIDTH) / 2)
-        _G[n .. "BLTop"]:SetHeight(128 + (h - BASE_HEIGHT) / 2)
-        _G[n .. "BLTopRight"]:SetWidth(128 + (w - BASE_WIDTH) / 2)
-        _G[n .. "BLTopRight"]:SetHeight(128 + (h - BASE_HEIGHT) / 2)
-    end
-
-    function InventoryFrame:SizeTRTextures(w, h)
-        local n = self:GetName()
-        _G[n .. "TRLeft"]:SetWidth(64 + (w - BASE_WIDTH) / 2)
-        _G[n .. "TRBottom"]:SetHeight(128 + (h - BASE_HEIGHT) / 2)
-        _G[n .. "TRBottomLeft"]:SetWidth(64 + (w - BASE_WIDTH) / 2)
-        _G[n .. "TRBottomLeft"]:SetHeight(128 + (h - BASE_HEIGHT) / 2)
-    end
-
-    function InventoryFrame:SizeBRTextures(w, h)
-        local n = self:GetName()
-        _G[n .. "BRLeft"]:SetWidth(64 + (w - BASE_WIDTH) / 2)
-        _G[n .. "BRTop"]:SetHeight(128 + (h - BASE_HEIGHT) / 2)
-        _G[n .. "BRTopLeft"]:SetWidth(64 + (w - BASE_WIDTH) / 2)
-        _G[n .. "BRTopLeft"]:SetHeight(128 + (h - BASE_HEIGHT) / 2)
     end
 
     function InventoryFrame:UpdateItemFrameSize()
@@ -2952,6 +2919,178 @@ do
 end
 
 -- ============================================================================
+-- COMBUCTOR RETAIL SKINNING
+-- Uses addon.BagSkinHelpers (exported by bags_skin.lua which loads after this
+-- file). Functions reference the helpers at runtime, so they're available by
+-- the time PLAYER_ENTERING_WORLD fires.
+-- ============================================================================
+
+local function CombuctorSkinFrame(frame)
+    if not frame or frame._BagSkin_Combuctor then return end
+    frame._BagSkin_Combuctor = true
+
+    local helpers = addon.BagSkinHelpers
+    if not helpers then return end
+
+    -- Add nineslice border
+    helpers.AddNineSlice(frame)
+
+    -- Adjust NineSlice so it doesn't cover the header
+    if frame._BagSkin_NineSlice then
+        local ns = frame._BagSkin_NineSlice
+        ns.Bg:SetPoint('TOPLEFT',     frame, 'TOPLEFT',     3, -18)
+        ns.Bg:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -3, 3)
+    end
+
+    -- Icon/Portrait (DragonUI_CombuctorIconButtonTemplate)
+    -- Shows the player portrait via SetPortraitTexture (template handles it)
+    local icon = _G[frame:GetName() .. 'IconButton']
+    if icon then
+        icon:SetSize(36, 36)
+        icon:ClearAllPoints()
+        icon:SetPoint('TOPLEFT', frame, 'TOPLEFT', -4, 4)
+
+        -- Move portrait texture above nineslice background
+        if icon.icon then
+            icon.icon:SetSize(36, 36)
+            icon.icon:SetDrawLayer('ARTWORK')
+        end
+
+        icon:EnableMouse(false)
+    end
+
+    -- Bag border frame on top of icon
+    if icon and not frame._BagSkin_PortraitBorder then
+        local borderFrame = CreateFrame('Frame', nil, frame)
+        borderFrame:SetSize(48, 48)
+        borderFrame:SetPoint('TOPLEFT', frame, 'TOPLEFT', -10, 8)
+
+        local iconLevel = 0
+        if icon.GetFrameLevel then
+            iconLevel = icon:GetFrameLevel()
+        elseif frame.GetFrameLevel then
+            iconLevel = frame:GetFrameLevel()
+        end
+        borderFrame:SetFrameLevel(iconLevel + 10)
+
+        local pp = borderFrame:CreateTexture(nil, 'OVERLAY')
+        pp:SetTexture(helpers.tex_bag_border)
+        pp:SetAllPoints(borderFrame)
+        pp:SetDrawLayer('OVERLAY', 7)
+
+        frame._BagSkin_PortraitBorder = borderFrame
+    end
+
+    -- CloseButton: reposition
+    local close = _G[frame:GetName() .. 'CloseButton']
+    if close then
+        close:ClearAllPoints()
+        close:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', 8, 8)
+    end
+
+    -- Title: clear text
+    local title = _G[frame:GetName() .. 'Title']
+    if title then
+        title:SetText('')
+        title:ClearAllPoints()
+        title:SetPoint('TOP', frame, 'TOP', 0, -10)
+    end
+
+    -- Search box
+    local search = _G[frame:GetName() .. 'Search']
+    if search then
+        search:ClearAllPoints()
+        search:SetPoint('TOPLEFT',  frame, 'TOPLEFT',  84, -44)
+        search:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', -116, -44)
+    end
+
+    -- Reset button
+    local reset = _G[frame:GetName() .. 'Reset']
+    if reset then
+        reset:ClearAllPoints()
+        local s = _G[frame:GetName() .. 'Search']
+        if s then
+            reset:SetPoint('LEFT', s, 'RIGHT', 2, 0)
+        end
+    end
+
+    -- Bag toggle
+    local bagToggle = _G[frame:GetName() .. 'BagToggle']
+    if bagToggle then
+        bagToggle:ClearAllPoints()
+        if reset then
+            bagToggle:SetPoint('LEFT', reset, 'RIGHT', 2, 0)
+        end
+    end
+
+    -- Disable portrait click
+    local portBtn = _G[frame:GetName() .. 'PortraitButton']
+    if portBtn then portBtn:EnableMouse(false) end
+end
+
+local function CombuctorSkinItems(frame)
+    local helpers = addon.BagSkinHelpers
+    if not helpers then return end
+
+    for _, child in ipairs({ frame:GetChildren() }) do
+        if child:GetObjectType() == 'Frame' then
+            for _, subchild in ipairs({ child:GetChildren() }) do
+                if subchild:GetObjectType() == 'Button' and subchild:GetName() then
+                    local name = subchild:GetName()
+                    if name:find('DragonUI_CombuctorItem') then
+                        helpers.RetailItemSlot(subchild)
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function CombuctorSkinBagSlots(frame)
+    local helpers = addon.BagSkinHelpers
+    if not helpers then return end
+
+    for _, child in ipairs({ frame:GetChildren() }) do
+        if child:GetObjectType() == 'Frame' then
+            for _, subchild in ipairs({ child:GetChildren() }) do
+                if subchild:GetObjectType() == 'Button' and subchild:GetName() then
+                    local name = subchild:GetName()
+                    if name:find('DragonUI_CombuctorBag') then
+                        helpers.RetailBagSlot(subchild)
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function CombuctorApplySkin()
+    local helpers = addon.BagSkinHelpers
+    if not helpers then return end
+
+    -- Skin all existing Combuctor frames
+    for i = 1, 2 do
+        local frame = _G['DragonUI_CombuctorFrame' .. i]
+        if frame then
+            CombuctorSkinFrame(frame)
+            CombuctorSkinItems(frame)
+            CombuctorSkinBagSlots(frame)
+        end
+    end
+
+    -- Backpack button on main bar
+    helpers.RetailBackpackButton()
+
+    -- Character bag slots on action bar
+    for i = 0, 3 do
+        local slot = _G['CharacterBag' .. i .. 'Slot']
+        if slot then
+            helpers.RetailBagSlot(slot)
+        end
+    end
+end
+
+-- ============================================================================
 -- APPLY / RESTORE SYSTEM
 -- ============================================================================
 
@@ -2974,6 +3113,9 @@ local function ApplyCombuctorSystem()
     if not mod.frames[2] then
         mod.frames[2] = mod.Frame:New(L.BankTitle, DB.bank, true, "bank")
     end
+
+    -- Apply retail skin to frames (independent of bags_skin module)
+    CombuctorApplySkin()
 
     AutoShowInventory = function()
         mod:Show(BACKPACK_CONTAINER, true)
@@ -3109,6 +3251,16 @@ local function RefreshCombuctorFrames()
         end
         if frame and frame.UpdateClampInsets then
             frame:UpdateClampInsets()
+        end
+
+        -- Re-skin items and bag slots (helpers guard their own _BagSkin_Applied)
+        if frame then
+            local name = frame:GetName()
+            local gframe = _G[name]
+            if gframe then
+                CombuctorSkinItems(gframe)
+                CombuctorSkinBagSlots(gframe)
+            end
         end
     end
 end

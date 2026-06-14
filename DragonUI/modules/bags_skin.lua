@@ -291,6 +291,23 @@ local function RetailBackpackButton()
 end
 
 -- ============================================================================
+-- EXPORT SHARED HELPERS (for Combuctor module)
+-- bags_skin always loads these so they're available to combuctor.lua
+-- even when the bags_skin module is disabled.
+-- ============================================================================
+
+local BagSkinHelpers = {
+    AddNineSlice          = AddNineSlice,
+    RetailItemSlot        = RetailItemSlot,
+    RetailBagSlot         = RetailBagSlot,
+    RetailBackpackButton  = RetailBackpackButton,
+    -- Texture paths used by Combuctor skinning
+    tex_bigbag            = T.bigbag,
+    tex_bag_border        = T.bag_border,
+}
+addon.BagSkinHelpers = BagSkinHelpers
+
+-- ============================================================================
 -- BLIZZARD BAGS: Restyle ContainerFrames (when Combuctor is OFF)
 -- ============================================================================
 
@@ -440,270 +457,18 @@ local function BlizzardRestore()
 end
 
 -- ============================================================================
--- COMBUCTOR: Restyle frames (when Combuctor is ON)
--- ============================================================================
-
-local function CombuctorSkinFrame(frame)
-    if not frame or frame._BagSkin_Combuctor then return end
-    frame._BagSkin_Combuctor = true
-
-    -- Hide old textures
-    local regions = { frame:GetRegions() }
-    for _, child in ipairs(regions) do
-        if child:GetObjectType() == 'Texture' then
-            child:SetTexture('')
-        end
-    end
-
-    -- Add nineslice border
-    AddNineSlice(frame)
-
-    -- Ajustar NineSlice para que no tape el header
-    if frame._BagSkin_NineSlice then
-        local ns = frame._BagSkin_NineSlice
-        ns.Bg:SetPoint('TOPLEFT',     frame, 'TOPLEFT',     3, -18)
-        ns.Bg:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -3, 3)
-    end
-
-    -- Icon/Portrait
-    local icon = _G[frame:GetName() .. 'IconButton']
-    if icon then
-        icon:SetSize(36, 36)
-        icon:ClearAllPoints()
-        icon:SetPoint('TOPLEFT', frame, 'TOPLEFT', -4, 4)
-        
-        -- Ocultar la textura interna del botón de Combuctor
-        local iconTex = icon:GetNormalTexture()
-        if iconTex then iconTex:SetAlpha(0) end
-        
-        -- Crear nuestra propia textura encima
-        if not icon._BagSkin_CustomTex then
-            local tex = icon:CreateTexture(nil, 'OVERLAY', nil, 1)
-            tex:SetTexture(T.bigbag)
-            tex:SetAllPoints(icon)
-            icon._BagSkin_CustomTex = tex
-        end
-        
-        icon:EnableMouse(false) -- deshabilitar click del portrait
-    end
-
-    -- Borde encima del icon
-    if icon and not frame._BagSkin_PortraitBorder then
-        local borderFrame = CreateFrame('Frame', nil, frame)
-        borderFrame:SetSize(48, 48)
-        borderFrame:SetPoint('TOPLEFT', frame, 'TOPLEFT', -10, 8)
-
-        local iconLevel = 0
-        if icon.GetFrameLevel then
-            iconLevel = icon:GetFrameLevel()
-        elseif frame.GetFrameLevel then
-            iconLevel = frame:GetFrameLevel()
-        end
-        borderFrame:SetFrameLevel(iconLevel + 10)
-
-        local pp = borderFrame:CreateTexture(nil, 'OVERLAY')
-        pp:SetTexture(T.bag_border)
-        pp:SetAllPoints(borderFrame)
-        pp:SetDrawLayer('OVERLAY', 7)
-
-        frame._BagSkin_PortraitBorder = borderFrame
-    end
-
-    -- CloseButton
-    local close = _G[frame:GetName() .. 'CloseButton']
-    if close then
-        close:ClearAllPoints()
-        close:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', 8, 8)
-    end
-
-    -- Title: ocultar
-    local title = _G[frame:GetName() .. 'Title']
-    if title then
-        title:SetText('')
-        title:ClearAllPoints()
-        title:SetPoint('TOP', frame, 'TOP', 0, -10)
-    end
-
-    -- Search
-    local search = _G[frame:GetName() .. 'Search']
-    if search then
-        search:ClearAllPoints()
-        search:SetPoint('TOPLEFT',  frame, 'TOPLEFT',  84, -44)
-        search:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', -116, -44)
-    end
-
-    -- Reset: a la derecha del search
-    local reset = _G[frame:GetName() .. 'Reset']
-    if reset then
-        reset:ClearAllPoints()
-        local s = _G[frame:GetName() .. 'Search']
-        if s then
-            reset:SetPoint('LEFT', s, 'RIGHT', 2, 0)
-        end
-    end
-
-    -- BagToggle: a la derecha del reset
-    local bagToggle = _G[frame:GetName() .. 'BagToggle']
-    if bagToggle then
-        bagToggle:ClearAllPoints()
-        if reset then
-            bagToggle:SetPoint('LEFT', reset, 'RIGHT', 2, 0)
-        end
-    end
-
-    -- Disable portrait click
-    local portBtn = _G[frame:GetName() .. 'PortraitButton']
-    if portBtn then portBtn:EnableMouse(false) end
-end
-
-local function CombuctorSkinItems(frame)
-    -- Find all item buttons within this frame (children using ContainerFrameItemButtonTemplate)
-    -- They are named DragonUI_CombuctorItemX and parented to dummy bag frames
-    for _, child in ipairs({ frame:GetChildren() }) do
-        if child:GetObjectType() == 'Frame' then
-            for _, subchild in ipairs({ child:GetChildren() }) do
-                if subchild:GetObjectType() == 'Button' and subchild:GetName() then
-                    local name = subchild:GetName()
-                    if name:find('DragonUI_CombuctorItem') then
-                        RetailItemSlot(subchild)
-                    end
-                end
-            end
-        end
-    end
-end
-
-local function CombuctorSkinBagSlots(frame)
-    for _, child in ipairs({ frame:GetChildren() }) do
-        if child:GetObjectType() == 'Frame' then
-            for _, subchild in ipairs({ child:GetChildren() }) do
-                if subchild:GetObjectType() == 'Button' and subchild:GetName() then
-                    local name = subchild:GetName()
-                    if name:find('DragonUI_CombuctorBag') then
-                        RetailBagSlot(subchild)
-                        -- Re-apply here because RetailBagSlot checks _BagSkin_Applied
-                        -- Clear it so it applies again with our textures
-                    end
-                end
-            end
-        end
-    end
-end
-
-local function CombuctorApply()
-    if BagSkinModule.hooks.combuctor then return end
-
-    -- Hook Combuctor's ApplyCombuctorSystem via hooksecurefunc
-    if addon.ApplyCombuctorSystem then
-        if not BagSkinModule.originalStates.ApplyCombuctorSystem then
-            BagSkinModule.originalStates.ApplyCombuctorSystem = addon.ApplyCombuctorSystem
-        end
-
-        addon.ApplyCombuctorSystem = function(...)
-            local orig = BagSkinModule.originalStates.ApplyCombuctorSystem
-            if orig then orig(...) end
-
-            -- Apply to all Combuctor frames
-            for i = 1, 2 do
-                local frame = _G['DragonUI_CombuctorFrame' .. i]
-                if frame then
-                    CombuctorSkinFrame(frame)
-                    CombuctorSkinItems(frame)
-                    CombuctorSkinBagSlots(frame)
-                end
-            end
-
-            -- Backpack button (Combuctor shows it)
-            RetailBackpackButton()
-        end
-    end
-
-    -- Hook RefreshCombuctorFrames for dynamic items
-    if addon.RefreshCombuctorFrames then
-        if not BagSkinModule.originalStates.RefreshCombuctorFrames then
-            BagSkinModule.originalStates.RefreshCombuctorFrames = addon.RefreshCombuctorFrames
-        end
-
-        addon.RefreshCombuctorFrames = function(...)
-            local orig = BagSkinModule.originalStates.RefreshCombuctorFrames
-            if orig then orig(...) end
-
-            for i = 1, 2 do
-                local frame = _G['DragonUI_CombuctorFrame' .. i]
-                if frame then
-                    CombuctorSkinItems(frame)
-                    CombuctorSkinBagSlots(frame)
-                end
-            end
-        end
-    end
-
-    -- Apply to default character bag slots on the action bar
-    for i = 0, 3 do
-        local slot = _G['CharacterBag' .. i .. 'Slot']
-        if slot then
-            RetailBagSlot(slot)
-        end
-    end
-
-    -- Apply immediately if combuctor is already initialized
-    for i = 1, 2 do
-        local frame = _G['DragonUI_CombuctorFrame' .. i]
-        if frame then
-            
-            CombuctorSkinFrame(frame)
-            CombuctorSkinItems(frame)
-            CombuctorSkinBagSlots(frame)
-        end
-    end
-
-    RetailBackpackButton()
-
-    BagSkinModule.hooks.combuctor = true
-end
-
-local function CombuctorRestore()
-    if not BagSkinModule.hooks.combuctor then return end
-
-    -- Restore ApplyCombuctorSystem
-    if BagSkinModule.originalStates.ApplyCombuctorSystem then
-        addon.ApplyCombuctorSystem = BagSkinModule.originalStates.ApplyCombuctorSystem
-        BagSkinModule.originalStates.ApplyCombuctorSystem = nil
-    end
-
-    -- Restore RefreshCombuctorFrames
-    if BagSkinModule.originalStates.RefreshCombuctorFrames then
-        addon.RefreshCombuctorFrames = BagSkinModule.originalStates.RefreshCombuctorFrames
-        BagSkinModule.originalStates.RefreshCombuctorFrames = nil
-    end
-
-    BagSkinModule.hooks.combuctor = nil
-end
-
--- ============================================================================
 -- APPLY / RESTORE
 -- ============================================================================
 
 local function ApplyBagSkin()
     if BagSkinModule.applied then return end
-
-    local isCombuctor = addon.IsModuleEnabled and addon:IsModuleEnabled('combuctor')
-
-    if isCombuctor then
-        CombuctorApply()
-    else
-        BlizzardApply()
-    end
-
+    BlizzardApply()
     BagSkinModule.applied = true
 end
 
 local function RestoreBagSkin()
     if not BagSkinModule.applied then return end
-
-    CombuctorRestore()
     BlizzardRestore()
-
     BagSkinModule.applied = false
 end
 
