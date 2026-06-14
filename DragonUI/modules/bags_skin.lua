@@ -177,8 +177,9 @@ local function RetailItemSlot(btn)
     if btn._BagSkin_Applied then return end
     btn._BagSkin_Applied = true
 
-    -- For Combuctor buttons, iconTexture handles everything at OVERLAY.
-    -- For Blizzard buttons (no iconTexture), NormalTexture = slot background.
+    -- NormalTexture → slot background (bagsitemslot2x at ARTWORK layer).
+    -- The icon texture ($parentIconTexture) is handled by the
+    -- SetItemButtonTexture hook in BlizzardApply(), which moves it to OVERLAY.
     local nt = btn:GetNormalTexture()
     if nt then
         nt:SetTexture(T.slot_bg)
@@ -425,6 +426,23 @@ end
 
 local function BlizzardApply()
     if BagSkinModule.hooks.blizzard then return end
+
+    -- Hook SetItemButtonTexture to force icon texture to OVERLAY layer,
+    -- above NormalTexture (which stays at ARTWORK). Without this, the icon
+    -- ($parentIconTexture, also at ARTWORK) gets covered by NormalTexture
+    -- because the template creates NormalTexture after iconTexture.
+    local origSetItemButtonTexture = _G.SetItemButtonTexture
+    _G.SetItemButtonTexture = function(button, texture)
+        origSetItemButtonTexture(button, texture)
+        local name = button:GetName()
+        if name then
+            local icon = _G[name .. 'IconTexture']
+            if icon then
+                icon:SetDrawLayer('OVERLAY', 0)
+                icon:Show()
+            end
+        end
+    end
 
     -- Hook ContainerFrame_Update to restyle frames when bags open/update
     local origContainerFrameUpdate = _G.ContainerFrame_Update
