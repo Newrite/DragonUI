@@ -229,7 +229,7 @@ end
 
 -- DragonUI_CombuctorResetButtonTemplate
 local function SetupResetButton(btn)
-    btn:SetSize(39, 39)
+    btn:SetSize(32, 32)
     btn:SetNormalTexture("Interface\\Buttons\\CancelButton-Up")
     btn:SetPushedTexture("Interface\\Buttons\\CancelButton-Down")
     local ht = btn:CreateTexture(nil, "HIGHLIGHT")
@@ -300,7 +300,7 @@ local function CreateInventoryFrame(name, parent)
 
     -- $parentCloseButton (UIPanelCloseButton)
     local closeBtn = CreateFrame("Button", name .. "CloseButton", f, "UIPanelCloseButton")
-    closeBtn:SetPoint("TOPRIGHT", f, "TOPRIGHT", -29, -8)
+    closeBtn:SetPoint("TOPRIGHT", f, "TOPRIGHT", -20, -20)
 
     -- $parentIconButton
     local iconBtn = CreateFrame("Button", name .. "IconButton", f)
@@ -321,14 +321,19 @@ local function CreateInventoryFrame(name, parent)
     -- $parentReset
     local resetBtn = CreateFrame("Button", name .. "Reset", f)
     SetupResetButton(resetBtn)
+    resetBtn:SetScript("OnClick", function()
+        searchEb:SetText(SEARCH)
+        searchEb:ClearFocus()
+        f:SetFilter('name', nil, true)
+    end)
 
-    -- Anchor all header buttons for layout: search | reset | ... | bagToggle
+    -- bagToggle (32x32) and resetBtn (32x32) share same baseline Y=-38
     bagToggleBtn:SetPoint("TOPRIGHT", f, "TOPRIGHT", -14, -38)
     resetBtn:SetPoint("TOPRIGHT", bagToggleBtn, "TOPLEFT", -2, 0)
 
-    -- Search: left at 14, right ends before the buttons
+    -- searchBox (20px tall) stays at Y=-44 from frame (original position)
     searchEb:SetPoint("TOPLEFT",  f, "TOPLEFT",  14, -44)
-    searchEb:SetPoint("TOPRIGHT", resetBtn, "LEFT", -4, 0)
+    searchEb:SetPoint("TOPRIGHT", resetBtn, "TOPLEFT", -4, 0)
 
     -- $parentResize
     local resizeBtn = CreateFrame("Button", name .. "Resize", f)

@@ -1388,43 +1388,51 @@ local function AttachCombuctorButtons(frame, sortRef, clearRef, sellScrapRef, so
     local resetBtn = _G[frameName .. "Reset"]
     local bagToggle = _G[frameName .. "BagToggle"]
 
-    -- Shrink the search bar to make room for the buttons
-    if searchBox then
-        searchBox:ClearAllPoints()
-        searchBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -44)
-	if sellScrapBtnName then
-		searchBox:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -170, -44)
-	else
-		-- Reserve extra room for sort + clear-locks buttons.
-		searchBox:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -130, -44)
-	end
+    local sortBtn = sortRef or CreateSortButton(sortBtnName, frame, sortFunc, tooltipText, 0.55)
+    local clearBtn = clearRef or CreateClearLocksButton(clearBtnName, frame, 0.55)
+    local sellScrapBtn = sellScrapRef
+    if sellScrapBtnName and not sellScrapRef then
+        sellScrapBtn = CreateSellScrapButton(sellScrapBtnName, frame, 0.55)
     end
 
-	local sortBtn = sortRef or CreateSortButton(sortBtnName, frame, sortFunc, tooltipText, 0.55)
-	local clearBtn = clearRef or CreateClearLocksButton(clearBtnName, frame, 0.55)
-	local sellScrapBtn = sellScrapRef
-	if sellScrapBtnName and not sellScrapRef then
-		sellScrapBtn = CreateSellScrapButton(sellScrapBtnName, frame, 0.55)
-	end
+    -- All header elements share the same TOP Y (-38 from frame).
+    -- Small action buttons (sort, clear, sellScrap) are 18px vs 32px for bagToggle/reset,
+    -- so they need +7 vertical offset on TOPRIGHT to centre-align visually.
+    --
+    -- Layout: [ searchBox ][4][ resetBtn ][6][ sellScrap ][-2][ clearBtn ][-2][ sortBtn ][-2][ bagToggle ] RIGHT
 
-	-- Anchor from bagToggle (rightmost) going LEFT: search | reset | [sellScrap] | clearBtn | sortBtn | bagToggle
-	-- sort/clear/sellScrap at Y offset +3 (3px lower than bagToggle/reset)
-	if bagToggle then
-		-- sortBtn
-		sortBtn:ClearAllPoints()
-		sortBtn:SetPoint("TOPRIGHT", bagToggle, "TOPLEFT", -2, 3)
-		-- clearBtn
-		clearBtn:ClearAllPoints()
-		clearBtn:SetPoint("TOPRIGHT", sortBtn, "TOPLEFT", -2, 0)
-		-- sellScrap (between clear and reset)
-		if sellScrapBtn then
-			sellScrapBtn:ClearAllPoints()
-			sellScrapBtn:SetPoint("TOPRIGHT", clearBtn, "TOPLEFT", -2, 0)
-		end
-		-- reset (back to bagToggle Y level with -3 offset)
-		resetBtn:ClearAllPoints()
-		resetBtn:SetPoint("TOPRIGHT", (sellScrapBtn or clearBtn), "TOPLEFT", -2, -3)
-	end
+    -- bagToggle (32x32): rightmost
+    if bagToggle then
+        bagToggle:ClearAllPoints()
+        bagToggle:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -14, -38)
+    end
+
+    -- sortBtn (18px): left of bagToggle, anchored at Y=-45 so its centre (-54) matches bagToggle centre (-54)
+    sortBtn:ClearAllPoints()
+    sortBtn:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -46, -45)
+
+    -- clearBtn (18px): left of sortBtn
+    clearBtn:ClearAllPoints()
+    clearBtn:SetPoint("TOPRIGHT", sortBtn, "TOPLEFT", -2, 0)
+
+    -- sellScrap (18px): left of clearBtn
+    if sellScrapBtn then
+        sellScrapBtn:ClearAllPoints()
+        sellScrapBtn:SetPoint("TOPRIGHT", clearBtn, "TOPLEFT", -2, 0)
+    end
+
+    -- resetBtn (32x32): right of searchBox, anchored so its TOP (Y=-38) matches bagToggle
+    if resetBtn then
+        resetBtn:ClearAllPoints()
+        resetBtn:SetPoint("TOPRIGHT", (sellScrapBtn or clearBtn), "TOPLEFT", -42, 7)
+    end
+
+    -- searchBox (20px): TOPLEFT at (14, -44) so its centre (-54) aligns with button centres (-54)
+    if searchBox then
+        searchBox:ClearAllPoints()
+        searchBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 14, -44)
+        searchBox:SetPoint("TOPRIGHT", resetBtn, "TOPLEFT", 9, 0)
+    end
 
     sortBtn:Show()
     clearBtn:Show()
