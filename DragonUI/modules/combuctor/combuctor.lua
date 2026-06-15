@@ -1449,31 +1449,17 @@ do
         local item = self:Bind(CreateFrame("Button", format("DragonUI_CombuctorItem%d", itemID), nil, "ContainerFrameItemButtonTemplate"))
         local itemName = item:GetName()
 
--- Create icon texture at OVERLAY layer so it renders ON TOP of the
-        -- NormalTexture (which stays at ARTWORK with slot_bg / bagsitemslot2x).
-        -- The template's $parentIconTexture lives at ARTWORK and would conflict.
-        item.iconTexture = item:CreateTexture(nil, 'OVERLAY')
-        item.iconTexture:SetSize(37, 37)
-        item.iconTexture:ClearAllPoints()
-        item.iconTexture:SetPoint('CENTER', item, 'CENTER', 0, 0)
-        -- No initial texture — SetTexture() will set item icon or slot_bg for empty
-        item.iconTexture:Hide()
-
-        -- Hide the template's $parentIconTexture (ARTWORK) — we use
-        -- item.iconTexture at OVERLAY instead. SetItemButtonTexture targets
-        -- $parentIconTexture, so we bypass it entirely in our SetTexture().
+        -- Move $parentIconTexture to OVERLAY so it renders above NormalTexture
         local templateIcon = _G[itemName .. "IconTexture"]
         if templateIcon then
-            templateIcon:SetTexture(nil)
-            templateIcon:Hide()
+            templateIcon:SetDrawLayer("OVERLAY")
         end
 
-        -- Kill ContainerFrame\Bags overlays and IconBorder (always unwanted)
+        -- Kill PaperDoll overlays only (keep ContainerFrame textures intact)
         for _, region in ipairs({ item:GetRegions() }) do
             if region:GetObjectType() == 'Texture' then
                 local tex = region:GetTexture() or ''
-                local rname = region:GetName() or ''
-                if tex:find('ContainerFrame') or tex:find('PaperDoll') or rname:find('IconBorder') then
+                if tex:find('PaperDoll') then
                     region:SetTexture(nil)
                     region:SetAlpha(0)
                     region:Hide()
@@ -1490,23 +1476,21 @@ do
         item:RegisterForClicks("anyUp")
         item.UpdateTooltip = nil
 
-        -- Quality border
-        local border = item:CreateTexture(nil, "OVERLAY")
-        border:SetWidth(67)
-        border:SetHeight(67)
-        border:SetPoint("CENTER", item, "CENTER", 0, -1)
-        border:SetTexture([[Interface\Buttons\UI-ActionButton-Border]])
-        border:SetBlendMode("ADD")
-        border:Hide()
-        item.border = border
+        -- Expand hit area to cover the visual slot_border (64x64)
+        local btnSize = item:GetWidth()
+        local borderVisualSize = 64
+        local inset = floor((btnSize - borderVisualSize) / 2)
+        item:SetHitRectInsets(inset, inset, inset, inset)
 
-        -- Quest border
-        local questBorder = item:CreateTexture(nil, "OVERLAY")
-        questBorder:SetSize(item:GetWidth(), item:GetHeight())
-        questBorder:SetPoint("CENTER")
-        questBorder:SetTexture(TEXTURE_ITEM_QUEST_BORDER)
-        questBorder:Hide()
-        item.questBorder = questBorder
+        -- Quality border overlay (glow effect)
+        local qualityBorder = item:CreateTexture(nil, "OVERLAY", nil, 6)
+        qualityBorder:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
+        qualityBorder:SetBlendMode("ADD")
+        qualityBorder:SetPoint("CENTER", 0, 0)
+        qualityBorder:SetWidth(64)
+        qualityBorder:SetHeight(64)
+        qualityBorder:Hide()
+        item.qualityBorder = qualityBorder
 
         -- Cooldown
         local itemName = item:GetName()
@@ -1648,18 +1632,7 @@ do
     end
 
     function ItemSlot:SetTexture(texture)
-        if self.iconTexture then
-            if texture then
-                -- Item icon
-                self.iconTexture:SetTexture(texture)
-            else
-                -- Empty slot: show slot background, not empty-bag icon
-                self.iconTexture:SetTexture(addon._dir .. 'bagsitemslot2x')
-            end
-            self.iconTexture:Show()
-        else
-            SetItemButtonTexture(self, texture or self:GetEmptyItemTexture())
-        end
+        SetItemButtonTexture(self, texture)
     end
 
     function ItemSlot:GetEmptyItemTexture()
@@ -1667,13 +1640,11 @@ do
     end
 
     function ItemSlot:UpdateSlotColor()
-        local target = self.iconTexture
         if (not self:GetItem()) and self:IsTradeBagSlot() then
-            local r, g, b = 0.5, 1, 0.5
-            if target then target:SetVertexColor(r, g, b) end
+            SetItemButtonTextureVertexColor(self, 0.5, 1, 0.5)
             return
         end
-        if target then target:SetVertexColor(1, 1, 1) end
+        SetItemButtonTextureVertexColor(self, 1, 1, 1)
     end
 
     function ItemSlot:SetCount(count)
@@ -1685,11 +1656,7 @@ do
     end
 
     function ItemSlot:SetLocked(locked)
-        if self.iconTexture then
-            self.iconTexture:SetDesaturated(locked)
-        else
-            SetItemButtonDesaturated(self, locked)
-        end
+        SetItemButtonDesaturated(self, locked)
     end
 
     function ItemSlot:UpdateLocked()
@@ -1701,37 +1668,41 @@ do
     end
 
     function ItemSlot:SetBorderQuality(quality)
-        local border = self.border
-        local qBorder = self.questBorder
+        local border = self.qualityBorder
+        if not border then return end
 
-        -- Quest item check
+        if not self:GetItem() then
+            border:Hide()
+            return
+        end
+
         local isQuestItem, isQuestStarter = self:IsQuestItem()
         if isQuestItem then
-            qBorder:SetTexture(TEXTURE_ITEM_QUEST_BORDER)
-            qBorder:SetAlpha(0.5)
-            qBorder:Show()
-            border:Hide()
+            border:SetTexture(TEXTURE_ITEM_QUEST_BORDER)
+            border:SetBlendMode("BLEND")
+            border:SetVertexColor(1, 1, 1)
+            border:SetSize(37, 37)
+            border:Show()
             return
         end
         if isQuestStarter then
-            qBorder:SetTexture(TEXTURE_ITEM_QUEST_BANG)
-            qBorder:SetAlpha(0.5)
-            qBorder:Show()
-            border:Hide()
-            return
-        end
-
-        -- Quality border
-        if self:GetItem() and quality and quality > 1 then
-            local r, g, b = GetItemQualityColor(quality)
-            border:SetVertexColor(r, g, b, 0.5)
+            border:SetTexture(TEXTURE_ITEM_QUEST_BANG)
+            border:SetBlendMode("BLEND")
+            border:SetVertexColor(1, 1, 1)
+            border:SetSize(37, 37)
             border:Show()
-            qBorder:Hide()
             return
         end
 
-        qBorder:Hide()
-        border:Hide()
+        border:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
+        border:SetBlendMode("ADD")
+        if quality and quality > 1 then
+            local r, g, b = GetItemQualityColor(quality)
+            border:SetVertexColor(r, g, b)
+            border:Show()
+        else
+            border:Hide()
+        end
     end
 
     function ItemSlot:UpdateBorder()
@@ -1745,9 +1716,7 @@ do
             CooldownFrame_SetTimer(self.cooldown, start or 0, duration or 0, enable or 0)
         else
             CooldownFrame_SetTimer(self.cooldown, 0, 0, 0)
-            if self.iconTexture then
-                self.iconTexture:SetVertexColor(1, 1, 1)
-            end
+            SetItemButtonTextureVertexColor(self, 1, 1, 1)
         end
     end
 
