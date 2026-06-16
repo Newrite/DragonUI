@@ -920,17 +920,6 @@ do
                     mod("BankCache"):ScanBankBag(bag)
                 end
             end
-        elseif event == "UNIT_INVENTORY_CHANGED" then
-            local unit = ...
-            if unit == "player" then
-                -- Safety net: BAG_UPDATE may not fire for unequipped bag slots
-                -- on some 3.3.5a servers. getBagSize() now verifies the
-                -- inventory slot directly and returns 0 when the bag is gone,
-                -- so updateBag will clean up items and send BAG_EMPTIED.
-                for bag = 1, 4 do
-                    updateBag(bag)
-                end
-            end
         elseif event == "BAG_UPDATE_COOLDOWN" then
             forEachBag(updateCooldowns)
         elseif event == "PLAYERBANKSLOTS_CHANGED" then
@@ -950,7 +939,6 @@ do
     end)
     eventFrame:RegisterEvent("PLAYER_LOGIN")
     eventFrame:RegisterEvent("BAG_UPDATE")
-    eventFrame:RegisterEvent("UNIT_INVENTORY_CHANGED")
     eventFrame:RegisterEvent("BAG_UPDATE_COOLDOWN")
     eventFrame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
     eventFrame:RegisterEvent("PLAYERBANKBAGSLOTS_CHANGED")
@@ -1985,14 +1973,7 @@ do
     function FrameEvents:ITEM_SLOT_ADD(msg, ...) self:UpdateSlot(...) end
     function FrameEvents:ITEM_SLOT_REMOVE(msg, ...) self:RemoveItem(...) end
 
-    function FrameEvents:ITEM_SLOT_UPDATE(msg, bag, slot, link, ...)
-        if link then
-            self:UpdateSlot(bag, slot, link)
-        else
-            -- Slot became empty — remove it rather than keeping a ghost slot
-            self:RemoveItem(bag, slot)
-        end
-    end
+    function FrameEvents:ITEM_SLOT_UPDATE(msg, ...) self:UpdateSlot(...) end
     function FrameEvents:ITEM_SLOT_UPDATE_COOLDOWN(msg, ...) self:UpdateSlotCooldown(...) end
     function FrameEvents:BANK_OPENED(msg, ...) self:UpdateBankFrames(...) end
     function FrameEvents:BANK_CLOSED(msg, ...) self:UpdateBankFrames(...) end
