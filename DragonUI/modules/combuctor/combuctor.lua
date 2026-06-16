@@ -3477,7 +3477,7 @@ local function CombuctorSkinFrame(frame)
     local close = _G[frame:GetName() .. 'CloseButton']
     if close then
         close:ClearAllPoints()
-        close:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', 8, 8)
+        close:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', 0, 0)
     end
 
     -- Title: clear text
