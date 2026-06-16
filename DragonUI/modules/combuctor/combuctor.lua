@@ -737,6 +737,11 @@ do
     local BagTypes = {}
     local BagSizes = {}
 
+    -- Forward declaration for deferred cleanup (defined after updateBag).
+    -- Lua 5.1 does NOT hoist local function bindings; a forward reference
+    -- from updateBag would resolve as a global nil without this.
+    local scheduleDeferredBagCheck
+
     local function addItem(bagId, slotId)
         local texture, count, locked, quality, readable, lootable, itemLink =
             GetContainerItemInfo(bagId, slotId)
@@ -771,6 +776,16 @@ do
     end
 
     local function getBagSize(bagId)
+        -- Gate: skip cached container data if the bag is not equipped.
+        -- Some 3.3.5a servers return stale GetContainerNumSlots values
+        -- after a bag is unequipped.
+        if bagId >= 1 and bagId <= 4 then
+            local invSlot = ContainerIDToInventoryID(bagId)
+            if not GetInventoryItemLink("player", invSlot) then
+                return 0
+            end
+        end
+
         if bagId == KEYRING_CONTAINER then
             return GetKeyRingSize()
         end
@@ -804,10 +819,22 @@ do
             for slot = size + 1, prevSize do
                 removeItem(bagId, slot)
             end
+            if size == 0 then
+                sendMessage("BAG_EMPTIED", bagId, prevSize)
+            end
         end
 
         for slot = 1, size do
             updateItem(bagId, slot)
+        end
+
+        -- Deferred verification for bag slots: if the bag still appears
+        -- to have items (BagSizes > 0), schedule a re-check in 0.5s.
+        -- Some 3.3.5a servers cache GetContainerNumSlots and report the
+        -- old value at BAG_UPDATE time, so we can't always trust size==0
+        -- or size==prevSize immediately after unequip.
+        if bagId >= 1 and bagId <= 4 and BagSizes[bagId] and BagSizes[bagId] > 0 then
+            scheduleDeferredBagCheck(bagId)
         end
     end
 
@@ -822,6 +849,44 @@ do
                 sendMessage("ITEM_SLOT_UPDATE_COOLDOWN", bagId, slot)
             end
         end
+    end
+
+    -- Deferred bag cleanup: some 3.3.5a servers cache GetContainerNumSlots
+    -- at BAG_UPDATE time, so we re-verify after a short delay when we
+    -- suspect a bag may have been unequipped (size == prevSize implies
+    -- the data may be cached rather than truly unchanged).
+    local pendingCleanups = {}
+    local cleanupFrame = CreateFrame("Frame")
+    cleanupFrame:Hide()
+    cleanupFrame:SetScript("OnUpdate", function(self)
+        local now = GetTime()
+        for bagId, deadline in pairs(pendingCleanups) do
+            if now >= deadline then
+                pendingCleanups[bagId] = nil
+
+                local invSlot = ContainerIDToInventoryID(bagId)
+                if not GetInventoryItemLink("player", invSlot) then
+                    local prevSize = BagSizes[bagId] or 0
+                    if prevSize > 0 then
+                        for slot = 1, prevSize do
+                            Slots:Remove(bagId, slot)
+                        end
+                        BagSizes[bagId] = 0
+                        sendMessage("BAG_EMPTIED", bagId, prevSize)
+                    end
+                end
+
+                if not next(pendingCleanups) then
+                    self:Hide()
+                end
+            end
+        end
+    end)
+
+    scheduleDeferredBagCheck = function(bagId)
+        if pendingCleanups[bagId] then return end
+        pendingCleanups[bagId] = GetTime() + 0.5
+        cleanupFrame:Show()
     end
 
     -- Iterate bags
@@ -855,6 +920,17 @@ do
                     mod("BankCache"):ScanBankBag(bag)
                 end
             end
+        elseif event == "UNIT_INVENTORY_CHANGED" then
+            local unit = ...
+            if unit == "player" then
+                -- Safety net: BAG_UPDATE may not fire for unequipped bag slots
+                -- on some 3.3.5a servers. getBagSize() now verifies the
+                -- inventory slot directly and returns 0 when the bag is gone,
+                -- so updateBag will clean up items and send BAG_EMPTIED.
+                for bag = 1, 4 do
+                    updateBag(bag)
+                end
+            end
         elseif event == "BAG_UPDATE_COOLDOWN" then
             forEachBag(updateCooldowns)
         elseif event == "PLAYERBANKSLOTS_CHANGED" then
@@ -874,6 +950,7 @@ do
     end)
     eventFrame:RegisterEvent("PLAYER_LOGIN")
     eventFrame:RegisterEvent("BAG_UPDATE")
+    eventFrame:RegisterEvent("UNIT_INVENTORY_CHANGED")
     eventFrame:RegisterEvent("BAG_UPDATE_COOLDOWN")
     eventFrame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
     eventFrame:RegisterEvent("PLAYERBANKBAGSLOTS_CHANGED")
@@ -1100,8 +1177,33 @@ do
         return bag > 0 and bag < (NUM_BAG_SLOTS + 1)
     end
 
+    function BagSlotInfo:IsEquipped(player, bag)
+        if player ~= playerName then return false end
+        -- Non-slot containers are always "equipped" by definition.
+        if self:IsBackpack(bag) or self:IsBank(bag) or self:IsKeyRing(bag) then
+            return true
+        end
+        -- Bank bags are equipped if we're at the bank.
+        if self:IsBankBag(bag) then
+            return mod("InventoryEvents"):AtBank()
+        end
+        -- For bag slots 1-4, verify the inventory slot actually has a bag.
+        local invSlot = self:ToInventorySlot(bag)
+        if invSlot then
+            return GetInventoryItemLink("player", invSlot) ~= nil
+        end
+        return false
+    end
+
     function BagSlotInfo:GetSize(player, bag)
         if player == playerName then
+            -- If the bag is not equipped, return 0 regardless of what
+            -- GetContainerNumSlots may cache (some 3.3.5a servers return
+            -- stale values after unequip).
+            if not self:IsEquipped(player, bag) then
+                return 0
+            end
+
             if bag == KEYRING_CONTAINER then
                 return GetKeyRingSize()
             elseif bag == BANK_CONTAINER then
@@ -1186,6 +1288,13 @@ do
         end
 
         local BagSlotInfo = mod.BagSlotInfo
+        -- If the bag is not equipped, return nil immediately.
+        -- GetContainerItemInfo may return stale cached data on some
+        -- 3.3.5a servers after a bag has been unequipped.
+        if not BagSlotInfo:IsEquipped(player, bag) then
+            return nil
+        end
+
         local isBankStorage = BagSlotInfo:IsBank(bag) or BagSlotInfo:IsBankBag(bag)
         if isBankStorage and not mod("InventoryEvents"):AtBank() then
             local link, count = mod("BankCache"):GetCachedItem(bag, slot)
@@ -1452,7 +1561,13 @@ do
         -- Move $parentIconTexture to OVERLAY so it renders above NormalTexture
         local templateIcon = _G[itemName .. "IconTexture"]
         if templateIcon then
-            templateIcon:SetDrawLayer("OVERLAY")
+            templateIcon:SetDrawLayer("OVERLAY", 2)
+        end
+
+        -- Bring $parentCount above IconTexture so stack numbers are always visible
+        local templateCount = _G[itemName .. "Count"]
+        if templateCount then
+            templateCount:SetDrawLayer("OVERLAY", 5)
         end
 
         -- Kill PaperDoll overlays only (keep ContainerFrame textures intact)
@@ -1869,11 +1984,33 @@ do
     function FrameEvents:QUEST_ACCEPTED(msg, ...) self:UpdateBorder(...) end
     function FrameEvents:ITEM_SLOT_ADD(msg, ...) self:UpdateSlot(...) end
     function FrameEvents:ITEM_SLOT_REMOVE(msg, ...) self:RemoveItem(...) end
-    function FrameEvents:ITEM_SLOT_UPDATE(msg, ...) self:UpdateSlot(...) end
+
+    function FrameEvents:ITEM_SLOT_UPDATE(msg, bag, slot, link, ...)
+        if link then
+            self:UpdateSlot(bag, slot, link)
+        else
+            -- Slot became empty — remove it rather than keeping a ghost slot
+            self:RemoveItem(bag, slot)
+        end
+    end
     function FrameEvents:ITEM_SLOT_UPDATE_COOLDOWN(msg, ...) self:UpdateSlotCooldown(...) end
     function FrameEvents:BANK_OPENED(msg, ...) self:UpdateBankFrames(...) end
     function FrameEvents:BANK_CLOSED(msg, ...) self:UpdateBankFrames(...) end
     function FrameEvents:BAG_UPDATE_TYPE(msg, ...) self:UpdateSlotColor(...) end
+    function FrameEvents:BAG_EMPTIED(msg, bag, prevSize)
+        for f in self:GetFrames() do
+            if f:GetPlayer() == playerName then
+                -- Remove stale items first (Regenerate won't clean them
+                -- because GetBagSize(bag) returns 0 for unequipped bags,
+                -- so the bag's items would remain in self.items).
+                for slot = 1, prevSize do
+                    f:RemoveItem(bag, slot)
+                end
+                f:Regenerate()
+                f:RequestLayout()
+            end
+        end
+    end
 
     function FrameEvents:UpdateBorder(...)
         for f in self:GetFrames() do
@@ -1964,7 +2101,8 @@ do
         mod("InventoryEvents"):RegisterMany(
             FrameEvents,
             "ITEM_SLOT_ADD", "ITEM_SLOT_REMOVE", "ITEM_SLOT_UPDATE",
-            "ITEM_SLOT_UPDATE_COOLDOWN", "BANK_OPENED", "BANK_CLOSED", "BAG_UPDATE_TYPE"
+            "ITEM_SLOT_UPDATE_COOLDOWN", "BANK_OPENED", "BANK_CLOSED", "BAG_UPDATE_TYPE",
+            "BAG_EMPTIED"
         )
     end
 end
@@ -2252,29 +2390,23 @@ do
         count:SetJustifyH("RIGHT")
         count:SetPoint("BOTTOMRIGHT", -2, 2)
 
-        -- NormalTexture: use blank initially, RetailBagSlot from
-        -- bags_skin.lua will apply the proper retail texture
+        -- Bag toggle buttons get NO NormalTexture/PushedTexture/HighlightTexture.
+        -- Only the IconTexture (bag icon) is shown — clean, no background frame.
+        -- Retail skinning is handled independently by bags_skin.lua if enabled.
         local nt = bag:CreateTexture(name .. "NormalTexture")
         nt:SetTexture(nil)
-        nt:SetWidth(NORMAL_TEXTURE_SIZE)
-        nt:SetHeight(NORMAL_TEXTURE_SIZE)
-        nt:SetPoint("CENTER", 0, -1)
         nt:SetAlpha(0)
         nt:Hide()
         bag:SetNormalTexture(nt)
 
-        -- PushedTexture: use blank, RetailBagSlot replaces it
         local pt = bag:CreateTexture()
         pt:SetTexture(nil)
-        pt:SetAllPoints(bag)
         pt:SetAlpha(0)
         pt:Hide()
         bag:SetPushedTexture(pt)
 
-        -- HighlightTexture: use blank, RetailBagSlot replaces it
         local ht = bag:CreateTexture()
         ht:SetTexture(nil)
-        ht:SetAllPoints(bag)
         ht:SetAlpha(0)
         ht:Hide()
         bag:SetHighlightTexture(ht)
@@ -2321,11 +2453,10 @@ do
                 self:RegisterEvent("BANKFRAME_CLOSED")
                 self:RegisterEvent("PLAYERBANKBAGSLOTS_CHANGED")
             end
-        end
 
-        -- Apply retail skin from bags_skin module (if available)
-        if not self._BagSkin_Applied and addon.BagSkinHelpers then
-            addon.BagSkinHelpers.RetailBagSlot(self)
+            -- NOTE: Bag toggle dropdown buttons (DragonUI_CombuctorBag1-5)
+            -- have blank NormalTexture by default (only icon visible).
+            -- CharacterBag0-3Slot skinning is handled by bags_skin.lua.
         end
     end
 
@@ -2356,7 +2487,7 @@ do
         local id = self:GetID()
         if BagSlotInfo:IsBackpack(id) or BagSlotInfo:IsBank(id) then return end
 
-        -- Update lock
+        -- Actualizar bloqueo
         if self:IsBagSlot() then
             SetItemButtonDesaturated(self, BagSlotInfo:IsLocked(playerName, id))
         end
@@ -3287,9 +3418,8 @@ end
 
 -- ============================================================================
 -- COMBUCTOR RETAIL SKINNING
--- Uses addon.BagSkinHelpers (exported by bags_skin.lua which loads after this
--- file). Functions reference the helpers at runtime, so they're available by
--- the time PLAYER_ENTERING_WORLD fires.
+-- Uses addon.BagSkinHelpers (exported by bags_skin.lua). Functions reference
+-- the helpers at runtime and gracefully no-op when unavailable.
 -- ============================================================================
 
 local function CombuctorSkinFrame(frame)
@@ -3299,7 +3429,6 @@ local function CombuctorSkinFrame(frame)
     local helpers = addon.BagSkinHelpers
     if not helpers then return end
 
-    -- Add nineslice border
     helpers.AddNineSlice(frame)
 
     -- Adjust NineSlice so it doesn't cover the header
@@ -3309,20 +3438,16 @@ local function CombuctorSkinFrame(frame)
         ns.Bg:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -3, 3)
     end
 
-    -- Icon/Portrait (DragonUI_CombuctorIconButtonTemplate)
-    -- Shows the player portrait via SetPortraitTexture (template handles it)
+    -- Icon/Portrait — shrink, move above nineslice background
     local icon = _G[frame:GetName() .. 'IconButton']
     if icon then
         icon:SetSize(36, 36)
         icon:ClearAllPoints()
         icon:SetPoint('TOPLEFT', frame, 'TOPLEFT', -4, 4)
-
-        -- Move portrait texture above nineslice background
         if icon.icon then
             icon.icon:SetSize(36, 36)
             icon.icon:SetDrawLayer('ARTWORK')
         end
-
         icon:EnableMouse(false)
     end
 
@@ -3363,16 +3488,12 @@ local function CombuctorSkinFrame(frame)
         title:SetPoint('TOP', frame, 'TOP', 0, -10)
     end
 
-    -- Bag toggle (anchored from right at -14, TOPRIGHT for Y consistency with header)
+    -- Bag toggle — reposition
     local bagToggle = _G[frame:GetName() .. 'BagToggle']
     if bagToggle then
         bagToggle:ClearAllPoints()
         bagToggle:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', -14, -38)
     end
-
-    -- NOTE: reset and sort buttons are positioned by bagsort from bagToggle.
-    -- NOTE: search is NOT restored here — bagsort shrinks it and
-    -- positions reset/sort buttons to its right. Keeping that layout.
 
     -- Disable portrait click
     local portBtn = _G[frame:GetName() .. 'PortraitButton']
@@ -3388,7 +3509,7 @@ local function CombuctorSkinItems(frame)
             for _, subchild in ipairs({ child:GetChildren() }) do
                 if subchild:GetObjectType() == 'Button' and subchild:GetName() then
                     if subchild:GetName():find('DragonUI_CombuctorItem') then
-                        -- Forzar re-aplicación limpiando ambos guards
+                        -- Force re-apply by clearing both guards
                         subchild._BagSkin_Applied = nil
                         subchild._BagSkin_CombuctorCleaned = nil
                         helpers.RetailItemSlot(subchild)
@@ -3477,12 +3598,12 @@ local function ApplyCombuctorSystem()
         mod:Hide(BACKPACK_CONTAINER, true)
     end
 
-    -- Store originals for restore
     CombuctorModule.originalStates.OpenBackpack = _G.OpenBackpack
     CombuctorModule.originalStates.ToggleBank = _G.ToggleBank
     CombuctorModule.originalStates.ToggleBackpack = _G.ToggleBackpack
     CombuctorModule.originalStates.OpenAllBags = _G.OpenAllBags
     CombuctorModule.originalStates.ToggleAllBags = _G.ToggleAllBags
+    CombuctorModule.originalStates.ToggleBag = _G.ToggleBag
 
     -- Hook bag functions
     _G.OpenBackpack = AutoShowInventory
@@ -3493,6 +3614,13 @@ local function ApplyCombuctorSystem()
 
     _G.ToggleBank = function(bag) mod:Toggle(bag) end
     _G.ToggleBackpack = function() mod:Toggle(BACKPACK_CONTAINER) end
+    _G.ToggleBag = function(slot)
+        if slot == BACKPACK_CONTAINER then
+            mod:Toggle(BACKPACK_CONTAINER)
+        else
+            mod:Toggle(slot)
+        end
+    end
     -- Some keybind paths call OpenAllBags directly, so make it a true toggle.
     _G.OpenAllBags = function() mod:Toggle(BACKPACK_CONTAINER) end
     if _G.ToggleAllBags then
@@ -3587,6 +3715,9 @@ local function RestoreCombuctorSystem()
     if CombuctorModule.originalStates.ToggleAllBags then
         _G.ToggleAllBags = CombuctorModule.originalStates.ToggleAllBags
     end
+    if CombuctorModule.originalStates.ToggleBag then
+        _G.ToggleBag = CombuctorModule.originalStates.ToggleBag
+    end
 
     CombuctorModule.originalStates = {}
     CombuctorModule.applied = false
@@ -3606,7 +3737,7 @@ local function RefreshCombuctorFrames()
             frame:UpdateClampInsets()
         end
 
-        -- Re-skin items and bag slots (helpers guard their own _BagSkin_Applied)
+        -- Re-skin items and bag slots (local functions guard via _BagSkin_Applied)
         if frame then
             local name = frame:GetName()
             local gframe = _G[name]
