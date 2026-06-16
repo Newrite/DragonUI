@@ -2907,7 +2907,7 @@ do
             if k > 1 then
                 tab:SetPoint("LEFT", f.buttons[k - 1], "RIGHT", -16, -0)
             else
-                tab:SetPoint("CENTER", parent, "BOTTOMLEFT", 60, -15)
+                tab:SetPoint("CENTER", parent, "BOTTOMLEFT", 60, -10)
             end
             t[k] = tab
             return tab
