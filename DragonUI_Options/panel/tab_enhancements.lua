@@ -314,7 +314,7 @@ local function BuildEnhancementsTab(scroll)
     C:AddSlider(lhpSection, {
         label = LO["Flash Opacity"],
         desc = LO["Maximum opacity of the flash effect."],
-        getFunc = function() return GetModuleField("hp_low_alert", "flashOpacity") or 1.0 end,
+        getFunc = function() return GetModuleField("hp_low_alert", "flashOpacity") or 0.35 end,
         setFunc = function(val)
             EnsureModuleTable("hp_low_alert")
             addon.db.profile.modules.hp_low_alert.flashOpacity = val
@@ -328,7 +328,7 @@ local function BuildEnhancementsTab(scroll)
     C:AddSlider(lhpSection, {
         label = LO["Flash Extent"],
         desc = LO["How far the flash extends from the screen edges toward the center, in pixels."],
-        getFunc = function() return GetModuleField("hp_low_alert", "flashExtent") or 220 end,
+        getFunc = function() return GetModuleField("hp_low_alert", "flashExtent") or 40 end,
         setFunc = function(val)
             EnsureModuleTable("hp_low_alert")
             addon.db.profile.modules.hp_low_alert.flashExtent = val
@@ -343,7 +343,7 @@ local function BuildEnhancementsTab(scroll)
     C:AddSlider(lhpSection, {
         label = LO["HP Warning Threshold"],
         desc = LO["Percentage of HP at which the warning triggers."],
-        getFunc = function() return GetModuleField("hp_low_alert", "threshold") or 35 end,
+        getFunc = function() return GetModuleField("hp_low_alert", "threshold") or 30 end,
         setFunc = function(val)
             EnsureModuleTable("hp_low_alert")
             addon.db.profile.modules.hp_low_alert.threshold = val

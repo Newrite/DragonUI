@@ -10,14 +10,14 @@ local addon = select(2, ...)
 -- Defaults
 -- -----------------------------------------------
 local DEFAULTS = {
-    threshold     = 35,
+    threshold     = 30,
     enabled       = true,
     soundEnabled  = false,
     flashEnabled  = true,
     flashColor    = { r = 1, g = 0, b = 0 },
     useClassColor = false,
-    flashOpacity  = 1.0,
-    flashExtent   = 220,
+    flashOpacity  = 0.35,
+    flashExtent   = 40,
 }
 
 -- -----------------------------------------------
@@ -66,7 +66,7 @@ local function UpdateFlashVisuals()
         local cc = class and RAID_CLASS_COLORS[class]
         if cc then c = cc end
     end
-    local ext = db.flashExtent or 220
+    local ext = db.flashExtent or 40
 
     flashTextures.top:SetHeight(ext)
     flashTextures.bot:SetHeight(ext)
