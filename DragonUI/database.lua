@@ -796,6 +796,9 @@ local defaults = {
                 useClassColor = false, -- Use player class color instead of flashColor
                 flashOpacity = 0.35, -- Max alpha of the flash (0.0–1.0)
                 flashExtent = 40,  -- Pixels from screen edges toward center
+            },
+            bags_skin = {
+                enabled = true, -- Retail-style textures for bags
             }
         },
 
