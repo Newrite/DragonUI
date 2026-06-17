@@ -136,27 +136,22 @@ local function EnforceFlashStyle(flashTex, parentFrame)
     if flashTex:IsShown() then mirror:Show() else mirror:Hide() end
 end
 
--- ============================================================================
--- POSITION ENFORCEMENT
--- ============================================================================
--- Hooks SetPoint on each boss frame to block ALL Blizzard repositioning.
--- Without this, Blizzard re-positions boss frames through multiple codepaths
--- (TargetFrame_Update, XML anchors, UIParent_ManageFramePositions) that we
--- can't catch with just TargetFrame_Update hooks.
-
-local function HookBossFrameSetPoint(bossFrame, bossIndex)
+local function HookBossFrameSetPoint(bossFrame, wrapperFrame)
     if bossFrame.__DragonUI_SetPointHooked then return end
+
     hooksecurefunc(bossFrame, "SetPoint", function(self, ...)
         if self._DragonUI_SettingPoint then return end
-        local w = BossModule.wrapperFrames[bossIndex]
-        if not w then return end
         self._DragonUI_SettingPoint = true
         self:ClearAllPoints()
-        self:SetPoint("TOPLEFT", w, "TOPLEFT", 0, 0)
+        self:SetPoint("TOPLEFT", wrapperFrame, "TOPLEFT", 0, 0)
+        self:SetHitRectInsets(0, 0, 0, 0)
         self._DragonUI_SettingPoint = nil
     end)
+
     bossFrame.__DragonUI_SetPointHooked = true
 end
+
+-- ============================================================================
 
 -- ============================================================================
 -- RESKIN BLIZZARD BOSS FRAME
@@ -169,6 +164,9 @@ local function ReskinBossFrame(wrapperFrame, bossFrame)
     bossFrame:SetPoint("TOPLEFT", wrapperFrame, "TOPLEFT", 0, 0)
     bossFrame:SetHitRectInsets(0, 0, 0, 0)
     bossFrame._DragonUI_SettingPoint = nil
+
+    -- Hook SetPoint to redirect ALL subsequent Blizzard SetPoint calls to our wrapper
+    HookBossFrameSetPoint(bossFrame, wrapperFrame)
 
     local frameName = bossFrame:GetName()
 
@@ -826,18 +824,39 @@ local function HookTargetFrameUpdate()
     end
 
     hooksecurefunc("TargetFrame_Update", function(self)
+        local frameName = self and self.GetName and self:GetName()
+        if not frameName or not frameName:match("^Boss%dTargetFrame$") then
+            if not frameName then return end
+            return
+        end
+
+        local index = tonumber(frameName:match("(%d+)"))
+        local w = BossModule.wrapperFrames[index]
+
         if InCombatLockdown() then
-            if addon.CombatQueue and self and self.GetName then
-                local frameName = self:GetName()
-                if frameName and frameName:match("^Boss%dTargetFrame$") then
-                    addon.CombatQueue:Add("boss_targetframe_update_" .. frameName, function()
-                        if self and self.GetName and self:GetName() == frameName and not InCombatLockdown() then
-                            RefreshBossTargetFrameLayout(self)
-                        end
-                    end)
-                end
+            -- DURING COMBAT: HookBossFrameSetPoint already redirects ALL
+            -- SetPoint calls to our wrapper — no anchor manipulation needed
+            -- here.  Layout refresh runs after combat via the combat queue.
+            if addon.CombatQueue then
+                addon.CombatQueue:Add("boss_targetframe_update_" .. frameName, function()
+                    if self and self.GetName and self:GetName() == frameName and not InCombatLockdown() then
+                        RefreshBossTargetFrameLayout(self)
+                    end
+                end)
             end
             return
+        end
+
+        -- OUT OF COMBAT: re-anchor the boss frame to our wrapper.
+        -- ClearAllPoints and SetPoint on the secure frame are safe here
+        -- (no lockdown — no taint).
+        -- Only TOPLEFT — BOTTOMRIGHT would force the native boss frame size
+        -- to match the wrapper (200×75), causing children (healthbar,
+        -- portrait) that are anchored to the original frame size to render
+        -- at incorrect offsets.
+        if w then
+            self:ClearAllPoints()
+            self:SetPoint("TOPLEFT", w, "TOPLEFT", 0, 0)
         end
 
         RefreshBossTargetFrameLayout(self)
@@ -883,6 +902,16 @@ local function PositionBossFrames()
             end
         end
     end
+
+
+    for i = 1, NUM_BOSS_FRAMES do
+        local bossFrame = _G["Boss" .. i .. "TargetFrame"]
+        local w = BossModule.wrapperFrames[i]
+        if bossFrame and w then
+            bossFrame:ClearAllPoints()
+            bossFrame:SetPoint("TOPLEFT", w, "TOPLEFT", 0, 0)
+        end
+    end
 end
 
 -- ============================================================================
@@ -915,15 +944,14 @@ local function InitializeBossFrames()
             -- DragonflightUI Bossframe.mixin.lua uses the same pattern.
             RegisterUnitWatch(bossFrame)
 
-            -- Hook SetPoint to block ALL Blizzard repositioning
-            HookBossFrameSetPoint(bossFrame, i)
-
             -- Reskin the Blizzard boss frame
             ReskinBossFrame(wrapper, bossFrame)
 
-            -- Hook OnShow to refresh visuals when boss appears
+            -- Hook Show to refresh visuals when boss appears
+            -- Uses hooksecurefunc so the handler runs in a secure context
+            -- (avoids taint from insecure HookScript).
             if not bossFrame.__DragonUI_OnShowHooked then
-                bossFrame:HookScript("OnShow", function(self)
+                hooksecurefunc(bossFrame, "Show", function(self)
                     -- Re-hide Blizzard elements
                     local fn = self:GetName()
                     local bg = _G[fn .. "Background"]
@@ -991,6 +1019,52 @@ local function InitializeBossFrames()
     HookHealthBarColor()
     HookTargetFrameUpdate()
     PositionBossFrames()
+
+    -- DEBUG: log anchor info (callable via /bossdebug)
+    local function PrintBossDebug()
+        print("=== DragonUI Boss Debug ===")
+        -- Print MinimapCluster position (used by Blizzard's anchor 2)
+        if MinimapCluster then
+            print("MinimapCluster:", MinimapCluster:GetLeft(), MinimapCluster:GetTop(),
+                  MinimapCluster:GetRight(), MinimapCluster:GetBottom())
+        end
+        for i = 1, NUM_BOSS_FRAMES do
+            local bf = _G["Boss" .. i .. "TargetFrame"]
+            local w = BossModule.wrapperFrames[i]
+            print("Boss"..i.."Frame exists:", bf ~= nil, "Wrapper exists:", w ~= nil)
+            if bf and w then
+                print("  Wrapper pos:", w:GetLeft(), w:GetTop(), w:GetRight(), w:GetBottom())
+                print("  BossFrame pos:", bf:GetLeft(), bf:GetTop(), bf:GetRight(), bf:GetBottom())
+                local numPoints = bf:GetNumPoints()
+                print("  Num anchors:", numPoints)
+                for j = 1, numPoints do
+                    local p, r, rp, x, y = bf:GetPoint(j)
+                    print("    ["..j.."]", p, r and r:GetName() or "nil", rp, x, y)
+                end
+                print("  BossFrame size:", bf:GetWidth(), bf:GetHeight())
+            end
+        end
+        print("============================")
+    end
+
+    -- Auto-run 2s after init
+    local debugFrame = CreateFrame("Frame", nil, UIParent)
+    debugFrame.elapsed = 0
+    debugFrame:SetScript("OnUpdate", function(self, dt)
+        self.elapsed = self.elapsed + dt
+        if self.elapsed >= 2 then
+            self:SetScript("OnUpdate", nil)
+            PrintBossDebug()
+        end
+    end)
+
+    -- Slash command: /bossdebug
+    if not SlashCmdList["DRAGONUI_BOSSDEBUG"] then
+        SLASH_DRAGONUI_BOSSDEBUG1 = "/bossdebug"
+        SlashCmdList["DRAGONUI_BOSSDEBUG"] = function()
+            PrintBossDebug()
+        end
+    end
 
     BossModule.initialized = true
     BossModule.applied = true
