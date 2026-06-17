@@ -640,6 +640,27 @@ L["Visual enhancements that add Dragonflight-style polish to the UI. These are o
 
 -- (Dark Mode, Range Indicator, Item Quality, Tooltips defined above in MODULES section)
 
+-- Low HP Alert
+L["Low HP Alert"] = "Wenig HP Warnung"
+L["Plays a sound and flashes the screen edges when your HP drops below the configured threshold."] = "Spielt einen Sound und lässt die Bildschirmränder aufleuchten, wenn deine HP unter die eingestellte Schwelle fallen."
+L["Enable Low HP Alert"] = "Wenig HP Warnung aktivieren"
+L["Warning Sound (every 3 sec)"] = "Warnton (alle 3 Sek.)"
+L["Plays a warning sound every 3 seconds while HP is below threshold."] = "Spielt alle 3 Sekunden einen Warnton, solange die HP unter der Schwelle sind."
+L["Screen Edge Flash"] = "Bildschirmrand-Blitz"
+L["Flashes red at the edges of the screen while HP is below threshold."] = "Leuchtet rot an den Bildschirmrändern auf, solange die HP unter der Schwelle sind."
+L["HP Warning Threshold"] = "HP Warnschwelle"
+L["Percentage of HP at which the warning triggers."] = "Prozentsatz der HP, bei dem die Warnung ausgelöst wird."
+L["Test Warning (3 sec)"] = "Warntest (3 Sek.)"
+L["Triggers a 3-second preview of the warning state to help you adjust the threshold."] = "Startet eine 3-Sekunden-Vorschau des Warnzustands, um die Schwelle anzupassen."
+L["Flash Color"] = "Blitzfarbe"
+L["Color of the screen edge flash effect."] = "Farbe des Bildschirmrand-Blitzeffekts."
+L["Use Class Color"] = "Klassenfarbe verwenden"
+L["Use your class color (e.g. orange for Druid, yellow for Rogue) instead of the custom color."] = "Die Klassenfarbe (z.B. Orange für Druiden, Gelb für Schurken) anstelle der benutzerdefinierten Farbe verwenden."
+L["Flash Opacity"] = "Blitz-Deckkraft"
+L["Maximum opacity of the flash effect."] = "Maximale Deckkraft des Blitzeffekts."
+L["Flash Extent"] = "Blitz-Ausdehnung"
+L["How far the flash extends from the screen edges toward the center, in pixels."] = "Wie weit der Blitz von den Bildschirmrändern zur Mitte reicht, in Pixeln."
+
 -- ============================================================================
 -- MICRO MENU TAB
 -- ============================================================================

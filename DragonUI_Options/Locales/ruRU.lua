@@ -640,6 +640,27 @@ L["Visual enhancements that add Dragonflight-style polish to the UI. These are o
 
 -- (Dark Mode, Range Indicator, Item Quality, Tooltips defined above in MODULES section)
 
+-- Low HP Alert
+L["Low HP Alert"] = "Предупреждение о низком HP"
+L["Plays a sound and flashes the screen edges when your HP drops below the configured threshold."] = "Воспроизводит звук и мигает краями экрана, когда ваше HP падает ниже заданного порога."
+L["Enable Low HP Alert"] = "Включить предупреждение о низком HP"
+L["Warning Sound (every 3 sec)"] = "Звук предупреждения (каждые 3 сек.)"
+L["Plays a warning sound every 3 seconds while HP is below threshold."] = "Воспроизводит звук предупреждения каждые 3 секунды, пока HP ниже порога."
+L["Screen Edge Flash"] = "Вспышка по краям экрана"
+L["Flashes red at the edges of the screen while HP is below threshold."] = "Мигает красным по краям экрана, пока HP ниже порога."
+L["HP Warning Threshold"] = "Порог предупреждения HP"
+L["Percentage of HP at which the warning triggers."] = "Процент HP, при котором срабатывает предупреждение."
+L["Test Warning (3 sec)"] = "Тест предупреждения (3 сек.)"
+L["Triggers a 3-second preview of the warning state to help you adjust the threshold."] = "Запускает 3-секундный предварительный просмотр состояния предупреждения для настройки порога."
+L["Flash Color"] = "Цвет вспышки"
+L["Color of the screen edge flash effect."] = "Цвет эффекта вспышки по краям экрана."
+L["Use Class Color"] = "Использовать цвет класса"
+L["Use your class color (e.g. orange for Druid, yellow for Rogue) instead of the custom color."] = "Использовать цвет вашего класса (напр. оранжевый для Друида, желтый для Разбойника) вместо пользовательского цвета."
+L["Flash Opacity"] = "Непрозрачность вспышки"
+L["Maximum opacity of the flash effect."] = "Максимальная непрозрачность эффекта вспышки."
+L["Flash Extent"] = "Протяженность вспышки"
+L["How far the flash extends from the screen edges toward the center, in pixels."] = "Насколько далеко вспышка простирается от краев экрана к центру, в пикселях."
+
 -- ============================================================================
 -- MICRO MENU TAB
 -- ============================================================================

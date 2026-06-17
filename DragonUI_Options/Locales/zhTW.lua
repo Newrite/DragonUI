@@ -1056,6 +1056,27 @@ L["Not a valid DragonUI preset string."] = "不是有效的 DragonUI 預設字�
 L["Failed to export preset."] = "匯出預設失敗。"
 L["This Fork is maintained by PentSec for AscensionWow, based on the original work by Neticsoul."] = "此分支由 PentSec 為 AscensionWow 維護，基於 Neticsoul 的原始工作。"
 
+-- Low HP Alert
+L["Low HP Alert"] = "低血量警報"
+L["Plays a sound and flashes the screen edges when your HP drops below the configured threshold."] = "當你的生命值低於設定閾值時，播放聲音並閃爍螢幕邊緣。"
+L["Enable Low HP Alert"] = "啟用低血量警報"
+L["Warning Sound (every 3 sec)"] = "警告音（每3秒）"
+L["Plays a warning sound every 3 seconds while HP is below threshold."] = "當生命值低於閾值時，每3秒播放一次警告音。"
+L["Screen Edge Flash"] = "螢幕邊緣閃爍"
+L["Flashes red at the edges of the screen while HP is below threshold."] = "當生命值低於閾值時，螢幕邊緣閃爍紅色。"
+L["HP Warning Threshold"] = "血量警告閾值"
+L["Percentage of HP at which the warning triggers."] = "觸發警告的生命值百分比。"
+L["Test Warning (3 sec)"] = "測試警告（3秒）"
+L["Triggers a 3-second preview of the warning state to help you adjust the threshold."] = "觸發3秒的警告狀態預覽，幫助調整閾值。"
+L["Flash Color"] = "閃爍顏色"
+L["Color of the screen edge flash effect."] = "螢幕邊緣閃爍效果的顏色。"
+L["Use Class Color"] = "使用職業顏色"
+L["Use your class color (e.g. orange for Druid, yellow for Rogue) instead of the custom color."] = "使用你的職業顏色（例如德魯伊橙色、盜賊黃色）替代自訂顏色。"
+L["Flash Opacity"] = "閃爍不透明度"
+L["Maximum opacity of the flash effect."] = "閃爍效果的最大不透明度。"
+L["Flash Extent"] = "閃爍範圍"
+L["How far the flash extends from the screen edges toward the center, in pixels."] = "閃爍從螢幕邊緣向中心延伸的距離（像素）。"
+
 -- BNet Toast Tab
 L["BNet Toast"] = "BNet 提醒"
 L["Friend online/offline notifications with Battle.net toasts and chat messages"] = "好友上線/離線的戰網提醒和聊天通知"

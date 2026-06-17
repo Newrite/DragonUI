@@ -652,6 +652,27 @@ L["Visual enhancements that add Dragonflight-style polish to the UI. These are o
 
 -- (Dark Mode, Range Indicator, Item Quality, Tooltips defined above in MODULES section)
 
+-- Low HP Alert
+L["Low HP Alert"] = "Alerta de Poca Vida"
+L["Plays a sound and flashes the screen edges when your HP drops below the configured threshold."] = "Reproduce un sonido y destella los bordes de la pantalla cuando tu vida baja del umbral configurado."
+L["Enable Low HP Alert"] = "Activar Alerta de Poca Vida"
+L["Warning Sound (every 3 sec)"] = "Sonido de Advertencia (cada 3 s)"
+L["Plays a warning sound every 3 seconds while HP is below threshold."] = "Reproduce un sonido de advertencia cada 3 segundos mientras la vida esté por debajo del umbral."
+L["Screen Edge Flash"] = "Destello en Bordes"
+L["Flashes red at the edges of the screen while HP is below threshold."] = "Destella en rojo los bordes de la pantalla mientras la vida esté por debajo del umbral."
+L["HP Warning Threshold"] = "Umbral de Advertencia de Vida"
+L["Percentage of HP at which the warning triggers."] = "Porcentaje de vida en el que se activa la advertencia."
+L["Test Warning (3 sec)"] = "Probar Advertencia (3 s)"
+L["Triggers a 3-second preview of the warning state to help you adjust the threshold."] = "Activa una vista previa de 3 segundos del estado de advertencia para ajustar el umbral."
+L["Flash Color"] = "Color del Destello"
+L["Color of the screen edge flash effect."] = "Color del efecto de destello en los bordes de la pantalla."
+L["Use Class Color"] = "Usar Color de Clase"
+L["Use your class color (e.g. orange for Druid, yellow for Rogue) instead of the custom color."] = "Usa el color de tu clase (ej. naranja para Druida, amarillo para Pícaro) en vez del color personalizado."
+L["Flash Opacity"] = "Opacidad del Destello"
+L["Maximum opacity of the flash effect."] = "Opacidad máxima del efecto de destello."
+L["Flash Extent"] = "Extensión del Destello"
+L["How far the flash extends from the screen edges toward the center, in pixels."] = "Cuánto se extiende el destello desde los bordes hacia el centro, en píxeles."
+
 -- ============================================================================
 -- MICRO MENU TAB
 -- ============================================================================

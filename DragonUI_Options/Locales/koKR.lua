@@ -648,6 +648,27 @@ L["Visual enhancements that add Dragonflight-style polish to the UI. These are o
 
 -- (Dark Mode, Range Indicator, Item Quality, Tooltips defined above in MODULES section)
 
+-- Low HP Alert
+L["Low HP Alert"] = "낮은 HP 경고"
+L["Plays a sound and flashes the screen edges when your HP drops below the configured threshold."] = "HP가 설정된 임계값 아래로 떨어지면 소리를 재생하고 화면 가장자리를 깜빡입니다."
+L["Enable Low HP Alert"] = "낮은 HP 경고 활성화"
+L["Warning Sound (every 3 sec)"] = "경고음 (3초마다)"
+L["Plays a warning sound every 3 seconds while HP is below threshold."] = "HP가 임계값 아래인 동안 3초마다 경고음을 재생합니다."
+L["Screen Edge Flash"] = "화면 가장자리 깜빡임"
+L["Flashes red at the edges of the screen while HP is below threshold."] = "HP가 임계값 아래인 동안 화면 가장자리를 빨간색으로 깜빡입니다."
+L["HP Warning Threshold"] = "HP 경고 임계값"
+L["Percentage of HP at which the warning triggers."] = "경고가 트리거되는 HP 백분율입니다."
+L["Test Warning (3 sec)"] = "경고 테스트 (3초)"
+L["Triggers a 3-second preview of the warning state to help you adjust the threshold."] = "3초 동안 경고 상태를 미리보기하여 임계값을 조정하는 데 도움을 줍니다."
+L["Flash Color"] = "깜빡임 색상"
+L["Color of the screen edge flash effect."] = "화면 가장자리 깜빡임 효과의 색상입니다."
+L["Use Class Color"] = "직업 색상 사용"
+L["Use your class color (e.g. orange for Druid, yellow for Rogue) instead of the custom color."] = "사용자 지정 색상 대신 직업 색상(예: 드루이드 주황, 도적 노랑)을 사용합니다."
+L["Flash Opacity"] = "깜빡임 불투명도"
+L["Maximum opacity of the flash effect."] = "깜빡임 효과의 최대 불투명도입니다."
+L["Flash Extent"] = "깜빡임 범위"
+L["How far the flash extends from the screen edges toward the center, in pixels."] = "화면 가장자리에서 중앙까지 깜빡임이 확장되는 거리(픽셀)입니다."
+
 -- ============================================================================
 -- MICRO MENU TAB
 -- ============================================================================
