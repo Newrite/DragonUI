@@ -786,6 +786,16 @@ local defaults = {
                 animated_loss = true, -- Animated red health loss bar on player frame
                 builder_spender = false, -- Mana gain/loss glow feedback (experimental)
                 missing_health = false -- Show missing health deficit text on health bars
+            },
+            hp_low_alert = {
+                enabled = true, -- Screen flash and sound when HP drops below threshold
+                threshold = 35, -- HP percentage threshold to trigger warning
+                soundEnabled = false, -- Play warning sound (repeats every 3 sec)
+                flashEnabled = true, -- Flash screen edges red
+                flashColor = { r = 1, g = 0, b = 0 }, -- Color of the screen edge flash
+                useClassColor = false, -- Use player class color instead of flashColor
+                flashOpacity = 1.0, -- Max alpha of the flash (0.0–1.0)
+                flashExtent = 220,  -- Pixels from screen edges toward center
             }
         },
 

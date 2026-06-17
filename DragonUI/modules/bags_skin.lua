@@ -190,6 +190,14 @@ local function RetailItemSlot(btn)
         nt:SetAlpha(1)
     end
 
+    -- Bring Count above IconTexture so stack numbers are always visible.
+    -- The hook in BlizzardApply() moves IconTexture to OVERLAY, but the
+    -- Count font string stays at ARTWORK by default and gets hidden.
+    local count = btn:GetName() and _G[btn:GetName() .. 'Count']
+    if count then
+        count:SetDrawLayer('OVERLAY', 5)
+    end
+
     local pt = btn:GetPushedTexture()
     if pt then
         pt:SetTexture(T.slot_depress)
@@ -440,6 +448,11 @@ local function BlizzardApply()
             if icon then
                 icon:SetDrawLayer('OVERLAY', 0)
                 icon:Show()
+            end
+            -- Keep Count above icon (same as RetailItemSlot does)
+            local count = _G[name .. 'Count']
+            if count then
+                count:SetDrawLayer('OVERLAY', 5)
             end
         end
     end
