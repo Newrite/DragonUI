@@ -79,7 +79,7 @@ local PORTRAIT_MASK = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
 -- ============================================================================
 
 local function CreateBossFrameWidget(name, index)
-    -- Main frame — normal frame, NOT secure
+    -- Main frame — normal frame, no secure template
     local frame = CreateFrame("Frame", name, UIParent)
     frame:SetSize(FRAME_WIDTH, FRAME_HEIGHT)
     frame:SetFrameLevel(100)
@@ -167,11 +167,13 @@ local function CreateBossFrameWidget(name, index)
     manaBar:GetStatusBarTexture():SetVertexColor(1, 1, 1, 1)
     frame.manaBar = manaBar
 
-    -- ---- Name background ----
+    -- ---- Name background (rounded, target-style) ----
     local nameBG = frame:CreateTexture(name .. "NameBG", "BORDER")
     nameBG:SetDrawLayer("BORDER", 1)
-    nameBG:SetTexture("Interface\\Buttons\\WHITE8X8")
-    nameBG:SetVertexColor(0, 0, 0, 0.55)
+    nameBG:SetTexture("Interface\\AddOns\\DragonUI\\Textures\\UIUnitFrame2x_PTR")
+    nameBG:SetTexCoord(536 / 1024, 804 / 1024, 168 / 512, 199 / 512) -- red (hostile)
+    nameBG:SetVertexColor(1, 1, 1, 1)
+    nameBG:SetBlendMode("ADD")
     frame.nameBackground = nameBG
 
     -- ---- Name text ----
@@ -188,22 +190,34 @@ local function CreateBossFrameWidget(name, index)
     levelText:SetTextColor(1, 0.82, 0)
     frame.levelText = levelText
 
-    -- ---- Health text ----
+    -- ---- Health text (left = percentage, right = current) ----
+    local healthPct = healthBar:CreateFontString(name .. "HealthPct", "OVERLAY")
+    healthPct:SetDrawLayer("OVERLAY")
+    healthPct:SetFont("Fonts/FRIZQT__.TTF", 10, "THICK")
+    healthPct:SetTextColor(1, 1, 1)
+    healthPct:SetJustifyH("LEFT")
+    frame.healthPct = healthPct
+
     local healthText = healthBar:CreateFontString(name .. "HealthText", "OVERLAY")
     healthText:SetDrawLayer("OVERLAY")
     healthText:SetFont("Fonts/FRIZQT__.TTF", 10, "THICK")
     healthText:SetTextColor(1, 1, 1)
-    healthText:SetWidth(HEALTH_BAR_WIDTH - 4)
-    healthText:SetJustifyH("LEFT")
+    healthText:SetJustifyH("RIGHT")
     frame.healthText = healthText
 
-    -- ---- Power text ----
+    -- ---- Power text (left = percentage, right = current) ----
+    local powerPct = manaBar:CreateFontString(name .. "PowerPct", "OVERLAY")
+    powerPct:SetDrawLayer("OVERLAY")
+    powerPct:SetFont("Fonts\\FRIZQT__.TTF", 8, "THICK")
+    powerPct:SetTextColor(1, 1, 1)
+    powerPct:SetJustifyH("LEFT")
+    frame.powerPct = powerPct
+
     local powerText = manaBar:CreateFontString(name .. "PowerText", "OVERLAY")
     powerText:SetDrawLayer("OVERLAY")
     powerText:SetFont("Fonts\\FRIZQT__.TTF", 8, "THICK")
     powerText:SetTextColor(1, 1, 1)
-    powerText:SetWidth(MANA_BAR_WIDTH - 4)
-    powerText:SetJustifyH("LEFT")
+    powerText:SetJustifyH("RIGHT")
     frame.powerText = powerText
 
     -- ---- Flash texture (threat glow) — custom, hidden initially ----
@@ -253,17 +267,17 @@ local function ApplyBossFrameLayout(frame)
 
     -- Name background
     nameBG:ClearAllPoints()
-    nameBG:SetPoint("BOTTOMLEFT", healthBar, "TOPLEFT", -2, -5)
-    nameBG:SetSize(108, 14)
+    nameBG:SetPoint("BOTTOMLEFT", healthBar, "TOPLEFT", -0.5, 0.2)
+    nameBG:SetSize(135, 14)
 
     -- Name text
     nameText:ClearAllPoints()
-    nameText:SetPoint("BOTTOMLEFT", healthBar, "TOPLEFT", 32, 2)
+    nameText:SetPoint("BOTTOM", healthBar, "TOP", 10, 3)
     nameText:SetWidth(90)
 
     -- Level text
     levelText:ClearAllPoints()
-    levelText:SetPoint("BOTTOMRIGHT", healthBar, "TOPLEFT", 14, 2)
+    levelText:SetPoint("BOTTOMRIGHT", healthBar, "TOPLEFT", 18, 3)
 
     -- Elite dragon (positioned relative to portrait)
     local unit = frame.unit
@@ -291,16 +305,24 @@ local function ApplyBossFrameLayout(frame)
         elite:Show()
     end
 
-    -- Health text
+    -- Health text (left = pct, right = current)
+    if frame.healthPct then
+        frame.healthPct:ClearAllPoints()
+        frame.healthPct:SetPoint("LEFT", healthBar, "LEFT", 6, 0)
+    end
     if frame.healthText then
         frame.healthText:ClearAllPoints()
-        frame.healthText:SetPoint("LEFT", healthBar, "LEFT", 0, 0)
+        frame.healthText:SetPoint("RIGHT", healthBar, "RIGHT", -6, 0)
     end
 
-    -- Power text
+    -- Power text (left = pct, right = current)
+    if frame.powerPct then
+        frame.powerPct:ClearAllPoints()
+        frame.powerPct:SetPoint("LEFT", manaBar, "LEFT", 6, 0)
+    end
     if frame.powerText then
         frame.powerText:ClearAllPoints()
-        frame.powerText:SetPoint("LEFT", manaBar, "LEFT", 0, 0)
+        frame.powerText:SetPoint("RIGHT", manaBar, "RIGHT", -6, 0)
     end
 
 
@@ -369,9 +391,11 @@ local function UpdateBossFrame(frame)
     frame.healthBar:SetValue(curHP)
     if maxHP > 0 then
         local pct = math.floor(curHP / maxHP * 100)
-        frame.healthText:SetText(pct .. "% " .. AbbreviateNumber(curHP))
+        if frame.healthPct then frame.healthPct:SetText(pct .. "%") end
+        if frame.healthText then frame.healthText:SetText(AbbreviateNumber(curHP)) end
     else
-        frame.healthText:SetText(curHP)
+        if frame.healthPct then frame.healthPct:SetText("") end
+        if frame.healthText then frame.healthText:SetText(curHP) end
     end
 
     -- Mana / Power
@@ -382,16 +406,18 @@ local function UpdateBossFrame(frame)
         frame.manaBar:SetValue(curMP)
         frame.manaBar:Show()
         frame.manaBar:SetStatusBarColor(0.02, 0.32, 0.71)
-        if frame.powerText then
+        if frame.powerPct or frame.powerText then
             local pct = math.floor(curMP / maxMP * 100)
-            frame.powerText:SetText(pct .. "% " .. AbbreviateNumber(curMP))
-            frame.powerText:Show()
-    end
+            if frame.powerPct then frame.powerPct:SetText(pct .. "%") end
+            if frame.powerText then
+                frame.powerText:SetText(AbbreviateNumber(curMP))
+                frame.powerText:Show()
+            end
+        end
     else
         frame.manaBar:Hide()
-        if frame.powerText then
-            frame.powerText:Hide()
-        end
+        if frame.powerText then frame.powerText:Hide() end
+        if frame.powerPct then frame.powerPct:Hide() end
     end
 
 
@@ -618,7 +644,6 @@ eventsFrame:SetScript("OnEvent", function(self, event, ...)
             local w = BossModule.wrapperFrames[idx]
             if bf and w then
                 if UnitExists(unit) and not UnitIsDeadOrGhost(unit) then
-                    -- Position to wrapper, update data, show
                     bf:ClearAllPoints()
                     bf:SetPoint("TOPLEFT", w, "TOPLEFT", 0, 0)
                     bf:Show()
@@ -679,7 +704,9 @@ eventsFrame:SetScript("OnEvent", function(self, event, ...)
         -- Hide all boss frames when leaving instance/zone
         for i = 1, NUM_BOSS_FRAMES do
             local bf = BossModule.bossFrames[i]
-            if bf then bf:Hide() end
+            if bf then
+                bf:Hide()
+            end
         end
 
     elseif event == "PLAYER_REGEN_ENABLED" then
