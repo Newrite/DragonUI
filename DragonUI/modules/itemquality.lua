@@ -537,6 +537,10 @@ local function ApplyItemQualitySystem()
     -- Guild Bank: hook is installed dynamically on GUILDBANKFRAME_OPENED
     -- because Blizzard_GuildBankUI is load-on-demand (not available at startup)
 
+    -- Signal that the quality system is ready BEFORE scheduling updates.
+    -- This ensures SetCombuctorItemQualityOverlay calls are not ignored.
+    addon.ItemQualityReady = true
+
     -- Initial update
     addon:After(0.5, UpdateAllQualityBorders)
 
@@ -612,9 +616,7 @@ eventFrame:SetScript("OnEvent", function(self, event, arg1)
 
     elseif event == "PLAYER_ENTERING_WORLD" then
         if not IsModuleEnabled() then return end
-        addon:After(1.0, function()
-            ApplyItemQualitySystem()
-        end)
+        ApplyItemQualitySystem()
 
     elseif event == "PLAYER_EQUIPMENT_CHANGED" then
         if not IsModuleEnabled() then return end
@@ -665,3 +667,18 @@ end)
 addon.ApplyItemQualitySystem = ApplyItemQualitySystem
 addon.RestoreItemQualitySystem = RestoreItemQualitySystem
 addon.UpdateAllQualityBorders = UpdateAllQualityBorders
+
+-- ============================================================================
+-- COMBUCTOR INTEGRATION
+-- Allows Combuctor to delegate quality border rendering to this module.
+-- Called from ItemSlot:Update() in combuctor.lua.
+-- ============================================================================
+
+-- Set quality overlay on a Combuctor item slot button.
+-- This is called by Combuctor's ItemSlot:Update() after the item is set.
+-- Falls back gracefully if the quality system isn't applied yet.
+function addon.SetCombuctorItemQualityOverlay(button, quality)
+    if not button or not IsModuleEnabled() then return end
+    if not addon.ItemQualityReady then return end
+    SetOverlayQuality(button, quality)
+end

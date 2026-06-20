@@ -1585,16 +1585,6 @@ do
         local inset = floor((btnSize - borderVisualSize) / 2)
         item:SetHitRectInsets(inset, inset, inset, inset)
 
-        -- Quality border overlay (glow effect)
-        local qualityBorder = item:CreateTexture(nil, "OVERLAY", nil, 6)
-        qualityBorder:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
-        qualityBorder:SetBlendMode("ADD")
-        qualityBorder:SetPoint("CENTER", 0, 0)
-        qualityBorder:SetWidth(64)
-        qualityBorder:SetHeight(64)
-        qualityBorder:Hide()
-        item.qualityBorder = qualityBorder
-
         -- Cooldown
         local itemName = item:GetName()
         item.cooldown = _G[itemName .. "Cooldown"]
@@ -1718,9 +1708,10 @@ do
         self:SetCount(count)
         self:SetLocked(locked)
         self:SetReadable(readable)
-        self:SetBorderQuality(quality)
-        self:UpdateCooldown()
         self:UpdateSlotColor()
+        self:UpdateCooldown()
+        -- Delegate quality border rendering to itemquality module
+        addon.SetCombuctorItemQualityOverlay(self, quality)
         if GameTooltip:IsOwned(self) and self.UpdateTooltip then
             self:UpdateTooltip()
         end
@@ -1768,49 +1759,6 @@ do
 
     function ItemSlot:IsLocked()
         return ItemSlotInfo:IsLocked(self:GetPlayer(), self:GetBag(), self:GetID())
-    end
-
-    function ItemSlot:SetBorderQuality(quality)
-        local border = self.qualityBorder
-        if not border then return end
-
-        if not self:GetItem() then
-            border:Hide()
-            return
-        end
-
-        local isQuestItem, isQuestStarter = self:IsQuestItem()
-        if isQuestItem then
-            border:SetTexture(TEXTURE_ITEM_QUEST_BORDER)
-            border:SetBlendMode("BLEND")
-            border:SetVertexColor(1, 1, 1)
-            border:SetSize(37, 37)
-            border:Show()
-            return
-        end
-        if isQuestStarter then
-            border:SetTexture(TEXTURE_ITEM_QUEST_BANG)
-            border:SetBlendMode("BLEND")
-            border:SetVertexColor(1, 1, 1)
-            border:SetSize(37, 37)
-            border:Show()
-            return
-        end
-
-        border:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
-        border:SetBlendMode("ADD")
-        if quality and quality > 1 then
-            local r, g, b = GetItemQualityColor(quality)
-            border:SetVertexColor(r, g, b)
-            border:Show()
-        else
-            border:Hide()
-        end
-    end
-
-    function ItemSlot:UpdateBorder()
-        local _, _, _, quality = self:GetItemSlotInfo()
-        self:SetBorderQuality(quality)
     end
 
     function ItemSlot:UpdateCooldown()
@@ -1968,8 +1916,6 @@ do
     local frames = {}
 
     function FrameEvents:ITEM_LOCK_CHANGED(msg, ...) self:UpdateSlotLock(...) end
-    function FrameEvents:UNIT_QUEST_LOG_CHANGED(msg, ...) self:UpdateBorder(...) end
-    function FrameEvents:QUEST_ACCEPTED(msg, ...) self:UpdateBorder(...) end
     function FrameEvents:ITEM_SLOT_ADD(msg, ...) self:UpdateSlot(...) end
     function FrameEvents:ITEM_SLOT_REMOVE(msg, ...) self:RemoveItem(...) end
 
@@ -1990,12 +1936,6 @@ do
                 f:Regenerate()
                 f:RequestLayout()
             end
-        end
-    end
-
-    function FrameEvents:UpdateBorder(...)
-        for f in self:GetFrames() do
-            if f:GetPlayer() == playerName then f:UpdateBorder(...) end
         end
     end
 
@@ -2217,10 +2157,6 @@ do
     function ItemFrame:UpdateSlotCooldown(bag, slot)
         local item = self.items[ToIndex(bag, slot)]
         if item then item:UpdateCooldown() end
-    end
-
-    function ItemFrame:UpdateBorder()
-        for _, item in pairs(self.items) do item:UpdateBorder() end
     end
 
     function ItemFrame:UpdateSlotColor(bagId)

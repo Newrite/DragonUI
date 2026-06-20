@@ -211,17 +211,6 @@ local function RetailItemSlot(btn)
         ht:SetSize(37, 37)
         ht:SetPoint('CENTER', 0, 0)
     end
-
-    if btn.IconBorder then btn.IconBorder:Hide() end
-
-    if not btn._BagSkin_Border then
-        local border = btn:CreateTexture(nil, 'BACKGROUND')
-        border:SetTexture(T.slot_border)
-        border:SetSize(64, 64)
-        border:SetPoint('CENTER', 0, -1)
-        border:SetDrawLayer('BACKGROUND', 4)
-        btn._BagSkin_Border = border
-    end
 end
 
 -- ============================================================================
