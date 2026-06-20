@@ -620,7 +620,11 @@ eventFrame:SetScript("OnEvent", function(self, event, arg1)
 
     elseif event == "PLAYER_EQUIPMENT_CHANGED" then
         if not IsModuleEnabled() then return end
-        addon:After(0.2, UpdateAllCharacterSlots)
+        -- Call immediately AND schedule retries to handle servers that send
+        -- equipment data asynchronously after the event fires.
+        UpdateAllCharacterSlots()
+        addon:After(0.5, UpdateAllCharacterSlots)
+        addon:After(1.5, UpdateAllCharacterSlots)
 
     elseif event == "BAG_UPDATE" then
         if not IsModuleEnabled() then return end
