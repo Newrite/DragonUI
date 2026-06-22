@@ -11,7 +11,7 @@ local addon = select(2, ...)
 local L = addon.L
 
 addon.DB_SCHEMA_VERSION = 1
-addon.RELEASE_VERSION = GetAddOnMetadata("DragonUI", "Version") or "2.4.0"
+addon.RELEASE_VERSION = GetAddOnMetadata("DragonUI", "Version")
 
 -- ============================================================================
 -- TABLE UTILITIES
@@ -116,47 +116,47 @@ local NINESLICE_COORDS = {
 local function AddNineslice(frame)
     frame.NineSlice = {}
     local slice = frame.NineSlice
-    
+
     -- Top left corner (no rotation needed)
     slice.TopLeftCorner = frame:CreateTexture(nil, 'OVERLAY')
     slice.TopLeftCorner:SetSize(16, 16)
     slice.TopLeftCorner:SetPoint('TOPLEFT', -8, 8)
-    
+
     -- Top right corner (will be rotated via SetTexCoord)
     slice.TopRightCorner = frame:CreateTexture(nil, 'OVERLAY')
     slice.TopRightCorner:SetSize(16, 16)
     slice.TopRightCorner:SetPoint('TOPRIGHT', 8, 8)
-    
+
     -- Bottom left corner (will be rotated via SetTexCoord)
     slice.BottomLeftCorner = frame:CreateTexture(nil, 'OVERLAY')
     slice.BottomLeftCorner:SetSize(16, 16)
     slice.BottomLeftCorner:SetPoint('BOTTOMLEFT', -8, -8)
-    
+
     -- Bottom right corner (will be rotated via SetTexCoord)
     slice.BottomRightCorner = frame:CreateTexture(nil, 'OVERLAY')
     slice.BottomRightCorner:SetSize(16, 16)
     slice.BottomRightCorner:SetPoint('BOTTOMRIGHT', 8, -8)
-    
+
     -- Top edge (connects corners)
     slice.TopEdge = frame:CreateTexture(nil, 'OVERLAY')
     slice.TopEdge:SetPoint('TOPLEFT', slice.TopLeftCorner, 'TOPRIGHT')
     slice.TopEdge:SetPoint('BOTTOMRIGHT', slice.TopRightCorner, 'BOTTOMLEFT')
-    
+
     -- Bottom edge
     slice.BottomEdge = frame:CreateTexture(nil, 'OVERLAY')
     slice.BottomEdge:SetPoint('TOPLEFT', slice.BottomLeftCorner, 'TOPRIGHT')
     slice.BottomEdge:SetPoint('BOTTOMRIGHT', slice.BottomRightCorner, 'BOTTOMLEFT')
-    
+
     -- Left edge
     slice.LeftEdge = frame:CreateTexture(nil, 'OVERLAY')
     slice.LeftEdge:SetPoint('TOPLEFT', slice.TopLeftCorner, 'BOTTOMLEFT')
     slice.LeftEdge:SetPoint('BOTTOMRIGHT', slice.BottomLeftCorner, 'TOPRIGHT')
-    
+
     -- Right edge
     slice.RightEdge = frame:CreateTexture(nil, 'OVERLAY')
     slice.RightEdge:SetPoint('TOPLEFT', slice.TopRightCorner, 'BOTTOMLEFT')
     slice.RightEdge:SetPoint('BOTTOMRIGHT', slice.BottomRightCorner, 'TOPRIGHT')
-    
+
     -- Center (background)
     slice.Center = frame:CreateTexture(nil, 'BACKGROUND')
     slice.Center:SetPoint('TOPLEFT', 0, 0)
@@ -167,7 +167,7 @@ end
 -- SetTexCoord(ULx, ULy, LLx, LLy, URx, URy, LRx, LRy)
 local function SetTexCoordRotated(texture, coords, rotation)
     local l, r, t, b = coords[1], coords[2], coords[3], coords[4]
-    
+
     if rotation == 0 then
         -- Normal (0°): TopLeft corner
         texture:SetTexCoord(l, t, l, b, r, t, r, b)
@@ -187,40 +187,40 @@ end
 local function SetNinesliceState(frame, selected)
     local slice = frame.NineSlice
     if not slice then return end
-    
+
     local coords = selected and NINESLICE_COORDS.selected or NINESLICE_COORDS.highlight
-    
+
     -- Corners use same texture with different coords and rotations
     local cornerTexture = EDITMODE_TEXTURE_BASE .. 'EditModeUI'
-    
+
     -- TopLeft (0° - normal)
     slice.TopLeftCorner:SetTexture(cornerTexture)
     SetTexCoordRotated(slice.TopLeftCorner, coords.corner, 0)
-    
+
     -- TopRight (90° CW)
     slice.TopRightCorner:SetTexture(cornerTexture)
     SetTexCoordRotated(slice.TopRightCorner, coords.corner, 90)
-    
+
     -- BottomLeft (270° CW / -90°)
     slice.BottomLeftCorner:SetTexture(cornerTexture)
     SetTexCoordRotated(slice.BottomLeftCorner, coords.corner, 270)
-    
+
     -- BottomRight (180°)
     slice.BottomRightCorner:SetTexture(cornerTexture)
     SetTexCoordRotated(slice.BottomRightCorner, coords.corner, 180)
-    
+
     -- Edges
     slice.TopEdge:SetTexture(cornerTexture)
     slice.TopEdge:SetTexCoord(unpack(coords.topEdge))
     slice.BottomEdge:SetTexture(cornerTexture)
     slice.BottomEdge:SetTexCoord(unpack(coords.bottomEdge))
-    
+
     local verticalTexture = EDITMODE_TEXTURE_BASE .. 'EditModeUIVertical'
     slice.LeftEdge:SetTexture(verticalTexture)
     slice.LeftEdge:SetTexCoord(unpack(coords.leftEdge))
     slice.RightEdge:SetTexture(verticalTexture)
     slice.RightEdge:SetTexCoord(unpack(coords.rightEdge))
-    
+
     -- Center background
     local centerTexture = selected and 'EditModeUISelectedBackground' or 'EditModeUIHighlightBackground'
     slice.Center:SetTexture(EDITMODE_TEXTURE_BASE .. centerTexture)
@@ -231,7 +231,7 @@ end
 local function ShowNineslice(frame)
     local slice = frame.NineSlice
     if not slice then return end
-    
+
     for _, part in pairs(slice) do
         part:Show()
     end
@@ -241,7 +241,7 @@ end
 local function HideNineslice(frame)
     local slice = frame.NineSlice
     if not slice then return end
-    
+
     for _, part in pairs(slice) do
         part:Hide()
     end
@@ -259,7 +259,7 @@ function addon.CreateUIFrame(width, height, frameName)
     frame:RegisterForDrag("LeftButton")
     frame:EnableMouse(false)
     frame:SetMovable(false)
-    
+
     frame:SetScript("OnDragStart", function(self, button)
         self:StartMoving()
         -- Ensure this frame is the selected one
@@ -269,10 +269,10 @@ function addon.CreateUIFrame(width, height, frameName)
         -- While dragging: remove green tint, show default drag nineslice
         ClearSelectionTint(self)
     end)
-    
+
     frame:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
-        
+
         -- AUTO-SAVE: Find this frame in EditableFrames and save position automatically
         for name, frameData in pairs(addon.EditableFrames) do
             if frameData.frame == self then
@@ -288,7 +288,7 @@ function addon.CreateUIFrame(width, height, frameName)
         -- Re-apply green tint now that drag is done (frame stays selected)
         ApplySelectionTint(self)
     end)
-    
+
     -- Click without drag also selects the frame
     frame:SetScript("OnMouseDown", function(self, button)
         if button == "LeftButton" then
@@ -303,7 +303,7 @@ function addon.CreateUIFrame(width, height, frameName)
     AddNineslice(frame)
     SetNinesliceState(frame, false) -- Default to highlight state
     HideNineslice(frame) -- Start hidden
-    
+
     -- Legacy editorTexture reference (for backwards compatibility)
     frame.editorTexture = frame.NineSlice.Center
 
@@ -338,7 +338,7 @@ addon.HideNineslice = HideNineslice
 function addon.ShowUIFrame(frame)
     frame:SetMovable(false)
     frame:EnableMouse(false)
-    
+
     -- Hide nineslice overlay (new system)
     if frame.NineSlice then
         HideNineslice(frame)
@@ -346,7 +346,7 @@ function addon.ShowUIFrame(frame)
         -- Legacy fallback for frames not using CreateUIFrame
         frame.editorTexture:Hide()
     end
-    
+
     if frame.editorText then
         frame.editorText:Hide()
     end
@@ -366,7 +366,7 @@ ShowUIFrame = addon.ShowUIFrame
 function addon.HideUIFrame(frame, exclude)
     frame:SetMovable(true)
     frame:EnableMouse(true)
-    
+
     -- Show nineslice overlay (new system)
     if frame.NineSlice then
         SetNinesliceState(frame, false) -- Highlight state
@@ -375,7 +375,7 @@ function addon.HideUIFrame(frame, exclude)
         -- Legacy fallback for frames not using CreateUIFrame
         frame.editorTexture:Show()
     end
-    
+
     if frame.editorText then
         frame.editorText:Show()
     end
@@ -438,7 +438,7 @@ function addon.SaveUIFramePosition(frame, configPath1, configPath2)
     else
         -- Case: SaveUIFramePosition(frame, "minimap") - backwards compatibility
         local widgetName = configPath1
-        
+
         if not addon.db.profile.widgets then
             addon.db.profile.widgets = {}
         end
@@ -531,7 +531,7 @@ function addon:RegisterEditableFrame(frameInfo)
         editorVisible = frameInfo.editorVisible,  -- Function to check if frame should appear in editor mode
         module = frameInfo.module                 -- Reference to the module
     }
-    
+
     self.EditableFrames[frameInfo.name] = frameData
 end
 
@@ -1223,12 +1223,12 @@ function addon:HideAllEditableFrames(refresh)
     for name, frameData in pairs(self.EditableFrames) do
         if frameData.frame then
             addon.ShowUIFrame(frameData.frame) -- Hide green overlay
-            
+
             -- Hide fake frame if it shouldn't be visible
             if frameData.hideTest then
                 frameData.hideTest()
             end
-            
+
             if refresh then
                 -- Save position automatically (skip if configPath is nil - custom save logic)
                 if frameData.configPath then
@@ -1238,7 +1238,7 @@ function addon:HideAllEditableFrames(refresh)
                         addon.SaveUIFramePosition(frameData.frame, frameData.configPath[1])
                     end
                 end
-                
+
                 if frameData.onHide then
                     frameData.onHide()
                 end
@@ -1253,11 +1253,11 @@ end
 function addon:ShouldFrameBeVisible(frameName)
     local frameData = self.EditableFrames[frameName]
     if not frameData then return false end
-    
+
     if frameData.hasTarget then
         return frameData.hasTarget()
     end
-    
+
     -- By default, frames are always visible (player, minimap)
     return true
 end
@@ -1415,13 +1415,13 @@ function MR:Register(name, moduleTable, displayName, description, orderOrOptions
         addon:Error((L and L["ModuleRegistry:Register requires name and moduleTable"]) or "ModuleRegistry:Register requires name and moduleTable")
         return false
     end
-    
+
     -- Prevent duplicate registration
     if self.modules[name] then
         addon:Debug((L and L["ModuleRegistry: Module already registered -"]) or "ModuleRegistry: Module already registered -", name)
         return false
     end
-    
+
     -- Auto-assign order if not provided
     local options = nil
     if type(orderOrOptions) == "table" then
@@ -1435,7 +1435,7 @@ function MR:Register(name, moduleTable, displayName, description, orderOrOptions
     self.orderCounter = self.orderCounter + 1
     local assignedOrder = options.order or self.orderCounter
     local lifecycle = options.lifecycle or MODULE_LIFECYCLE_OVERRIDES[name] or {}
-    
+
     -- Store module info
     self.modules[name] = {
         module = moduleTable,
@@ -1447,10 +1447,10 @@ function MR:Register(name, moduleTable, displayName, description, orderOrOptions
         loadOnce = options.loadOnce or lifecycle.loadOnce or false,
         isEnabled = options.isEnabled or lifecycle.isEnabled,
     }
-    
+
     -- Add to load order
     table.insert(self.loadOrder, name)
-    
+
     addon:Debug((L and L["ModuleRegistry: Registered module -"]) or "ModuleRegistry: Registered module -", name, (L and L["order:"]) or "order:", assignedOrder)
     return true
 end
@@ -1676,7 +1676,7 @@ function MR:Enable(name)
         addon:Error((L and L["ModuleRegistry: Unknown module -"]) or "ModuleRegistry: Unknown module -", name)
         return false
     end
-    
+
     -- Update database
     if addon.db and addon.db.profile and addon.db.profile.modules then
         if not addon.db.profile.modules[name] then
@@ -1684,9 +1684,9 @@ function MR:Enable(name)
         end
         addon.db.profile.modules[name].enabled = true
     end
-    
+
     self:Refresh(name)
-    
+
     addon:Debug((L and L["ModuleRegistry: Enabled -"]) or "ModuleRegistry: Enabled -", name)
     return true
 end
@@ -1702,7 +1702,7 @@ function MR:Disable(name)
         addon:Error((L and L["ModuleRegistry: Unknown module -"]) or "ModuleRegistry: Unknown module -", name)
         return false
     end
-    
+
     -- Update database
     if addon.db and addon.db.profile and addon.db.profile.modules then
         if not addon.db.profile.modules[name] then
@@ -1710,7 +1710,7 @@ function MR:Disable(name)
         end
         addon.db.profile.modules[name].enabled = false
     end
-    
+
     -- hooksecurefunc / HookScript registrations are permanent for the session.
     -- Keep load-once modules active until reload instead of pretending we can fully disable them.
     if info.loadOnce and info.module and (info.module.initialized or info.module.applied) then
@@ -1718,7 +1718,7 @@ function MR:Disable(name)
     end
 
     self:Refresh(name)
-    
+
     addon:Debug((L and L["ModuleRegistry: Disabled -"]) or "ModuleRegistry: Disabled -", name)
     return true
 end
@@ -1745,14 +1745,14 @@ function MR:PrintStatus()
         print("  " .. ((L and L["No modules registered in ModuleRegistry"]) or "No modules registered in ModuleRegistry"))
         return
     end
-    
+
     print("  |cFF00FF00" .. ((L and L["Registered Modules:"]) or "Registered Modules:") .. "|r")
     for _, name in ipairs(self.loadOrder) do
         local info = self.modules[name]
         local enabled = self:IsEnabled(name)
         local status = enabled and ("|cFF00FF00" .. ((L and L["Enabled"]) or "Enabled") .. "|r") or ("|cFFFF0000" .. ((L and L["Disabled"]) or "Disabled") .. "|r")
         local loaded = info.module and (info.module.initialized or info.module.applied) and ("|cFF00FF00" .. ((L and L["Loaded"]) or "Loaded") .. "|r") or "|cFFAAAAAA-|r"
-        
+
         local mode = info.loadOnce and (" |cFFFFD200(" .. ((L and L["load-once"]) or "load-once") .. ")|r") or ""
         print(string.format("    %s: %s (%s)%s", info.displayName, status, loaded, mode))
     end
@@ -1800,7 +1800,7 @@ local CQ = addon.CombatQueue
 -- Initialize the combat queue event frame
 local function InitializeCombatQueueFrame()
     if CQ.eventFrame then return end
-    
+
     CQ.eventFrame = CreateFrame("Frame", "DragonUI_CombatQueueFrame", UIParent)
     CQ.eventFrame:Hide()
     CQ.eventFrame:SetScript("OnEvent", function(self, event)
@@ -1821,20 +1821,20 @@ function CQ:Add(id, func, ...)
         addon:Error((L and L["CombatQueue:Add requires id and func"]) or "CombatQueue:Add requires id and func")
         return false
     end
-    
+
     -- Initialize frame if needed
     InitializeCombatQueueFrame()
-    
+
     -- Store the operation with its arguments
     self.pending[id] = { func = func, args = {...} }
-    
+
     -- Register for PLAYER_REGEN_ENABLED if not already
     if not self.isRegistered then
         self.eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
         self.isRegistered = true
         addon:Debug((L and L["CombatQueue: Registered PLAYER_REGEN_ENABLED"]) or "CombatQueue: Registered PLAYER_REGEN_ENABLED")
     end
-    
+
     addon:Debug((L and L["CombatQueue: Queued operation -"]) or "CombatQueue: Queued operation -", id)
     return true
 end
@@ -1848,7 +1848,7 @@ function CQ:Remove(id)
         self.pending[id] = nil
         addon:Debug((L and L["CombatQueue: Removed operation -"]) or "CombatQueue: Removed operation -", id)
     end
-    
+
     -- If queue is empty, unregister the event
     if not next(self.pending) and self.isRegistered then
         self.eventFrame:UnregisterEvent("PLAYER_REGEN_ENABLED")
@@ -1867,23 +1867,23 @@ function CQ:ProcessQueue()
     local L = addon.L
 
     addon:Debug((L and L["CombatQueue: Processing"]) or "CombatQueue: Processing", addon:tcount(self.pending), (L and L["queued operations"]) or "queued operations")
-    
+
     -- Process all pending operations
     for id, operation in pairs(self.pending) do
         local success, err = pcall(function()
             operation.func(unpack(operation.args))
         end)
-        
+
         if not success then
             addon:Error((L and L["CombatQueue: Failed to execute"]) or "CombatQueue: Failed to execute", id, "-", err)
         else
             addon:Debug((L and L["CombatQueue: Executed -"]) or "CombatQueue: Executed -", id)
         end
     end
-    
+
     -- Clear all pending operations
     self.pending = {}
-    
+
     -- Unregister the event
     if self.isRegistered then
         self.eventFrame:UnregisterEvent("PLAYER_REGEN_ENABLED")
@@ -1909,7 +1909,7 @@ function CQ:ExecuteOrQueue(id, func, ...)
         local success, err = pcall(function()
             func(unpack(args))
         end)
-        
+
         if not success then
             addon:Error((L and L["CombatQueue: Immediate execution failed -"]) or "CombatQueue: Immediate execution failed -", id, "-", err)
         end

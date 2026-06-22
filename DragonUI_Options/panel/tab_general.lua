@@ -373,7 +373,7 @@ local function BuildGeneralTab(scroll)
     -- ====================================================================
     local about = C:AddSection(scroll, LO["About"])
 
-    C:AddLabel(about, "|cff1784d1" .. LO["DragonUI"] .. " v0.2|r")
+    C:AddLabel(about, "|cff1784d1" .. LO["DragonUI"] .. " v" .. (addon.RELEASE_VERSION or "?") .. "|r")
     C:AddDescription(about, LO["Bringing the retail WoW look to 3.3.5a, inspired by Dragonflight UI."])
     C:AddSpacer(about)
     C:AddDescription(about, LO["This Fork is maintained by PentSec for AscensionWow, based on the original work by Neticsoul."])
