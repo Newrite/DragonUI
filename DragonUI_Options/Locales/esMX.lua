@@ -284,6 +284,11 @@ L["Dark"] = "Oscuro"
 L["DragonUI Style"] = "Estilo DragonUI"
 L["Midnight"] = "Medianoche"
 
+-- Chat Tab - Recommended Addon
+L["Recommended Addon"] = "Addon Recomendado"
+L["For a smoother, more polished chat experience, check out CleanerChat-WotLK — it adds chat filter tweaks, improved chat styling, and Glass UI overlays."] = "Para una experiencia de chat más suave y pulida, probá CleanerChat-WotLK: agrega ajustes de filtros, estilo mejorado y superposiciones Glass UI."
+L["Download (select and Ctrl+C to copy):"] = "Descarga (seleccioná y Ctrl+C para copiar):"
+
 -- Combuctor
 L["Enable Combuctor"] = "Activar Combuctor"
 L["All-in-one bag replacement with item filtering, search, quality indicators, and bank integration."] = "Reemplazo de bolsas todo-en-uno con filtrado de objetos, búsqueda, indicadores de calidad e integración con el banco."

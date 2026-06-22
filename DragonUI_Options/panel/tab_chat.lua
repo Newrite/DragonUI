@@ -146,6 +146,16 @@ local function BuildChatTab(scroll)
         end,
     })
 
+    -- ====================================================================
+    -- RECOMMENDED ADDON
+    -- ====================================================================
+    local recSection = C:AddSection(scroll, LO["Recommended Addon"])
+
+    C:AddDescription(recSection, LO["For a smoother, more polished chat experience, check out CleanerChat-WotLK — it adds chat filter tweaks, improved chat styling, and Glass UI overlays."])
+    C:AddSpacer(recSection)
+    C:AddDescription(recSection, LO["Download (select and Ctrl+C to copy):"])
+    C:AddCopyableText(recSection, "https://github.com/migwynkriid/CleanerChat-WotLK")
+
 end
 
 -- Register the tab (order 14, after Bags)

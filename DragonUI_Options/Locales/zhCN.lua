@@ -287,6 +287,10 @@ L["Dark"] = "暗色"
 L["DragonUI Style"] = "DragonUI 样式"
 L["Midnight"] = "子夜"
 
+L["Recommended Addon"] = "推荐插件"
+L["For a smoother, more polished chat experience, check out CleanerChat-WotLK — it adds chat filter tweaks, improved chat styling, and Glass UI overlays."] = "想要更流畅的聊天体验，试试 CleanerChat-WotLK — 提供聊天筛选、改良样式和 Glass UI 叠层。"
+L["Download (select and Ctrl+C to copy):"] = "下载（选取后 Ctrl+C 复制）："
+
 -- 背包整合 (Combuctor)
 L["Enable Combuctor"] = "启用背包整合 (Combuctor)"
 L["All-in-one bag replacement with item filtering, search, quality indicators, and bank integration."] = "具有物品过滤、搜索、品质指示器和银行整合功能的一体化背包替代插件。"

@@ -92,6 +92,10 @@ L["Visual style for the chat input box background."] = "Style visuel du fond de 
 L["Dark"] = "Sombre"
 L["DragonUI Style"] = "Style DragonUI"
 L["Midnight"] = "Minuit"
+
+L["Recommended Addon"] = "Addon recommandé"
+L["For a smoother, more polished chat experience, check out CleanerChat-WotLK — it adds chat filter tweaks, improved chat styling, and Glass UI overlays."] = "Pour une expérience de chat plus fluide, essayez CleanerChat-WotLK — filtres de chat, style amélioré et overlays Glass UI."
+L["Download (select and Ctrl+C to copy):"] = "Téléchargement (sélectionner et Ctrl+C pour copier) :"
 L["Chat"] = "Chat"
 L["Appearance"] = "Apparence"
 

@@ -300,6 +300,11 @@ L["Dark"] = true
 L["DragonUI Style"] = true
 L["Midnight"] = true
 
+-- Chat Tab - Recommended Addon
+L["Recommended Addon"] = true
+L["For a smoother, more polished chat experience, check out CleanerChat-WotLK — it adds chat filter tweaks, improved chat styling, and Glass UI overlays."] = true
+L["Download (select and Ctrl+C to copy):"] = true
+
 -- Combuctor
 L["Combuctor"] = true
 L["Enable Combuctor"] = true

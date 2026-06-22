@@ -289,6 +289,10 @@ L["Dark"] = "Тёмный"
 L["DragonUI Style"] = "Стиль DragonUI"
 L["Midnight"] = "Полночь"
 
+L["Recommended Addon"] = "Рекомендуемый аддон"
+L["For a smoother, more polished chat experience, check out CleanerChat-WotLK — it adds chat filter tweaks, improved chat styling, and Glass UI overlays."] = "Для более плавного чата попробуйте CleanerChat-WotLK — фильтры чата, улучшенный стиль и оверлеи Glass UI."
+L["Download (select and Ctrl+C to copy):"] = "Скачать (выделить и Ctrl+C для копирования):"
+
 -- Combuctor
 L["Enable Combuctor"] = "Включить Combuctor"
 L["All-in-one bag replacement with item filtering, search, quality indicators, and bank integration."] = "Замена сумок «всё в одном» с фильтрацией, поиском, индикаторами качества и интеграцией банка."

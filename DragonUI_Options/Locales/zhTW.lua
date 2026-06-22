@@ -287,6 +287,10 @@ L["Dark"] = "\u6697\u8272"
 L["DragonUI Style"] = "DragonUI \u6a23\u5f0f"
 L["Midnight"] = "\u5b50\u591c"
 
+L["Recommended Addon"] = "推薦插件"
+L["For a smoother, more polished chat experience, check out CleanerChat-WotLK — it adds chat filter tweaks, improved chat styling, and Glass UI overlays."] = "想要更流暢的聊天體驗，試試 CleanerChat-WotLK — 提供聊天篩選、改良樣式和 Glass UI 疊層。"
+L["Download (select and Ctrl+C to copy):"] = "下載（選取後 Ctrl+C 複製）："
+
 
 -- 揹包整合 (Combuctor)
 L["Enable Combuctor"] = "啟用揹包整合 (Combuctor)"

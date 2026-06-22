@@ -294,6 +294,10 @@ L["Dark"] = "\uc5b4\ub450\uc6b4"
 L["DragonUI Style"] = "DragonUI \uc2a4\ud0c0\uc77c"
 L["Midnight"] = "\uc790\uc815"
 
+L["Recommended Addon"] = "추천 애드온"
+L["For a smoother, more polished chat experience, check out CleanerChat-WotLK — it adds chat filter tweaks, improved chat styling, and Glass UI overlays."] = "더 부드러운 채팅 경험을 원한다면 CleanerChat-WotLK를 확인해 보세요 — 채팅 필터, 개선된 스타일, Glass UI 오버레이를 제공합니다."
+L["Download (select and Ctrl+C to copy):"] = "다운로드 (선택 후 Ctrl+C로 복사):"
+
 
 -- Combuctor
 L["Enable Combuctor"] = "통합가방(Combuctor) 활성화"
