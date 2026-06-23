@@ -44,7 +44,35 @@ function addon.GenerateTxnId()
 end
 
 -- ============================================================================
--- SEND: Export current profile and send via AceComm
+-- DIFF: Only send values that differ from defaults
+-- ============================================================================
+
+--- Recursively compares profile against defaults and returns only
+--- the values that differ. This dramatically reduces payload size
+--- since most profile values are at their defaults.
+--- @param profile table Current profile
+--- @param defaults table Default profile values
+--- @return table only the values that differ (empty if identical)
+function addon.DiffProfile(profile, defaults)
+    local diff = {}
+    for k, v in pairs(profile) do
+        local def = defaults and defaults[k]
+        if type(v) == "table" and type(def) == "table" then
+            local sub = addon.DiffProfile(v, def)
+            -- Only include non-empty subtables
+            if next(sub) ~= nil then
+                diff[k] = sub
+            end
+        elseif v ~= def then
+            -- Value differs from default, or key doesn't exist in defaults
+            diff[k] = v
+        end
+    end
+    return diff
+end
+
+-- ============================================================================
+-- SEND: Export current profile (diff) and send via AceComm
 -- ============================================================================
 
 --- Sends the current profile to one or more players.
@@ -53,19 +81,35 @@ end
 -- @param txnId Unique transaction ID (generated if nil)
 -- @return true on success, nil on failure
 function addon.SendProfile(distribution, target, txnId)
-    if not addon.db or not addon.db.profile then return end
+    if not addon.db or not addon.db.profile then
+        print("|cFFFF4444[DragonUI]|r SendProfile: no profile data.")
+        return
+    end
     if InCombatLockdown() then
         print("|cFFFF0000[DragonUI]|r " .. "Cannot share profile in combat.")
         return
     end
 
-    -- Export to string (same pipeline as ExportProfileToString)
-    local serialized = Serializer:Serialize(addon.db.profile)
-    if not serialized then return end
-    local compressed = LibDeflate:CompressDeflate(serialized)
-    if not compressed then return end
+    -- Only send diff from defaults to minimize payload size
+    local diffData = addon.DiffProfile(addon.db.profile, addon.defaults.profile)
+    local serialized = Serializer:Serialize(diffData)
+    if not serialized then
+        print("|cFFFF4444[DragonUI]|r SendProfile: Serialize failed.")
+        return
+    end
+
+    -- Use max compression (level 9) to minimize fragment count
+    local compressed = LibDeflate:CompressDeflate(serialized, { level = 9 })
+    if not compressed then
+        print("|cFFFF4444[DragonUI]|r SendProfile: CompressDeflate failed.")
+        return
+    end
+
     local encoded = LibDeflate:EncodeForPrint(compressed)
-    if not encoded then return end
+    if not encoded then
+        print("|cFFFF4444[DragonUI]|r SendProfile: EncodeForPrint failed.")
+        return
+    end
 
     txnId = txnId or addon.GenerateTxnId()
 
@@ -73,6 +117,7 @@ function addon.SendProfile(distribution, target, txnId)
     local msg = txnId .. "|" .. encoded
 
     addon.core:SendCommMessage("DragonUI-Profile", msg, distribution, target or nil)
+    print("|cFF00FF00[DragonUI]|r Profile sended.")
     return true, txnId
 end
 
@@ -82,6 +127,8 @@ end
 
 addon.core:RegisterComm("DragonUI-Profile", function(prefix, data, distribution, sender)
     if not data or data == "" then return end
+    -- Don't process our own broadcast — sender sees only the "Profile sended." confirmation
+    if sender == UnitName("player") then return end
 
     -- Parse: txnId|encodedPayload
     local txnId, encoded = strmatch(data, "^([^|]+)|(.+)$")
