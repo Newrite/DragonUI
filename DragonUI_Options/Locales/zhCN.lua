@@ -987,8 +987,11 @@ L["Warning: Deleting a profile is permanent and cannot be undone."] = "警告：
 L["Delete"] = "删除"
 L["Deleted profile: "] = "已删除的配置文件："
 L["Are you sure you want to delete the profile '%s'? This cannot be undone."] = "你确定要删除配置文件 '%s' 吗？此操作无法撤销。"
-L["Reset Current Profile"] = "重置当前配置文件"
-L["Restores the current profile to its defaults. This cannot be undone."] = "将当前配置文件恢复到其默认设置。此操作无法撤销。"
+L["Profile Manager"] = true
+L["Manage your current profile: reset to defaults, export/import as text, or share in-game."] = true
+L["Restores the current profile to defaults."] = "将当前配置文件恢复到其默认设置。"
+L["Export your current profile as a text string."] = "将当前配置文件导出为文本字符串。"
+
 L["Reset Profile"] = "重置配置文件"
 L["All changes will be lost and the UI will be reloaded.\nAre you sure you want to reset your profile?"] = "所有更改都将丢失，并且界面将重新加载。\n你确定要重置你的配置文件吗？"
 L["Profile reset to defaults."] = "配置文件已重置为默认值。"
@@ -1006,34 +1009,13 @@ L["Show the health deficit (missing health) as red text on health bars. Useful f
 L["Builder/Spender Feedback"] = "资源获取/消耗反馈"
 L["Show mana gain/loss glow feedback on player mana bar (experimental)."] = "在玩家法力条上显示法力获取/消耗的发光反馈（实验性）。"
 
--- LAYOUT PRESETS
-L["Layout Presets"] = "布局预设"
-L["Save and restore complete UI layouts. Each preset captures all positions, scales, and settings."] = "保存和恢复完整的界面布局。每个预设包含所有位置、缩放和设置。"
-L["No presets saved yet."] = "尚未保存任何预设。"
-L["Save New Preset"] = "保存新预设"
-L["Save your current UI layout as a new preset."] = "将当前界面布局保存为新预设。"
+-- Preset (used by minimap tab)
 L["Preset"] = "预设"
-L["Enter a name for this preset:"] = "输入此预设的名称："
 L["Save"] = "保存"
-L["Load"] = "加载"
-L["Load preset '%s'? This will overwrite your current layout settings."] = "加载预设 '%s'？这将覆盖您当前的布局设置。"
-L["Load Preset"] = "加载预设"
-L["Delete preset '%s'? This cannot be undone."] = "删除预设 '%s'？此操作无法撤销。"
-L["Delete Preset"] = "删除预设"
-L["Duplicate Preset"] = "复制预设"
-L["Preset saved: "] = "预设已保存: "
-L["Preset loaded: "] = "预设已加载: "
-L["Preset deleted: "] = "预设已删除: "
-L["Preset duplicated: "] = "预设已复制: "
-L["Also delete all saved layout presets?"] = "是否同时删除所有已保存的布局预设？"
-L["Presets kept."] = "预设已保留。"
-
--- PRESET IMPORT / EXPORT
-L["Export Preset"] = "导出预设"
-L["Import Preset"] = "导入预设"
-L["Import a preset from a text string shared by another player."] = "从其他玩家分享的文本中导入预设。"
-L["Import"] = "导入"
 L["Select All"] = "全选"
+L["Close"] = "关闭"
+
+-- Fade / hover settings (actionbars, micromenu, bags)
 L["Hover/Combat Logic"] = "悬停/战斗逻辑"
 L["When both hover and combat are enabled, choose whether both are required (AND) or either condition is enough (OR)."] = "当悬停与战斗同时启用时，选择是需要同时满足（AND）还是满足其一即可（OR）。"
 L["AND (both required)"] = "AND（需同时满足）"
@@ -1050,17 +1032,13 @@ L["Fade Out Duration"] = "淡出时长"
 L["Seconds used to fade bars out when they become hidden."] = "动作条变为隐藏时使用的淡出秒数。"
 L["Fade Out Delay"] = "淡出延迟"
 L["Delay before hover-out starts fading, useful to avoid flicker between buttons."] = "鼠标移出后开始淡出的延迟时间，可减少按钮间闪烁。"
-L["Close"] = "关闭"
-L["Enter a name for the imported preset:"] = "为导入的预设输入名称："
-L["Imported Preset"] = "导入的预设"
-L["Preset imported: "] = "预设已导入: "
-L["Invalid preset string."] = "无效的预设字符串。"
-L["Not a valid DragonUI preset string."] = "不是有效的 DragonUI 预设字符串。"
-L["Failed to export preset."] = "导出预设失败。"
-L["Export Profile"] = "导出配置文件"
+
+-- PROFILE IMPORT/EXPORT
 L["Import Profile"] = "导入配置文件"
-L["Export your current profile as a text string to share with other users."] = "将当前配置文件导出为文本字符串以便与其他用户分享。"
-L["Export Current Profile"] = "导出当前配置文件"
+L["Import"] = "导入"
+L["Export Profile"] = "导出配置文件"
+L["Exporting..."] = true
+L["Sending..."] = true
 L["Failed to export profile."] = "导出配置文件失败。"
 L["Import a profile from a text string shared by another user."] = "从其他用户分享的文本字符串导入配置文件。"
 L["Invalid profile string."] = "无效的配置文件字符串。"
@@ -1068,6 +1046,7 @@ L["Not a valid DragonUI profile string."] = "不是有效的 DragonUI 配置文�
 L["Profile imported: "] = "配置文件已导入: "
 L["Enter a name for the imported profile:"] = "为导入的配置文件输入名称："
 L["Imported Profile"] = "导入的配置文件"
+L["Enter profile name"] = "输入配置文件名称"
 L["This Fork is maintained by PentSec for AscensionWow, based on the original work by Neticsoul."] = "此分支由 PentSec 为 AscensionWow 维护，基于 Neticsoul 的原始工作。"
 
 -- Low HP Alert

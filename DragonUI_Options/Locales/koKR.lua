@@ -1017,8 +1017,11 @@ L["Warning: Deleting a profile is permanent and cannot be undone."] = "경고: �
 L["Delete"] = "삭제"
 L["Deleted profile: "] = "삭제된 프로필: "
 L["Are you sure you want to delete the profile '%s'? This cannot be undone."] = "'%s' 프로필을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
-L["Reset Current Profile"] = "현재 프로필 초기화"
-L["Restores the current profile to its defaults. This cannot be undone."] = "현재 프로필을 기본 설정으로 복구합니다. 이 작업은 되돌릴 수 없습니다."
+L["Profile Manager"] = true
+L["Manage your current profile: reset to defaults, export/import as text, or share in-game."] = true
+L["Restores the current profile to defaults."] = "현재 프로필을 기본 설정으로 복구합니다."
+L["Export your current profile as a text string."] = "현재 프로필을 텍스트 문자열로 내보냅니다."
+
 L["Reset Profile"] = "프로필 초기화"
 L["All changes will be lost and the UI will be reloaded.\nAre you sure you want to reset your profile?"] = "모든 변경 사항이 삭제되고 UI가 재설정됩니다.\n정말로 프로필을 초기화하시겠습니까?"
 L["Profile reset to defaults."] = "프로필이 기본값으로 초기화되었습니다."
@@ -1036,34 +1039,13 @@ L["Show the health deficit (missing health) as red text on health bars. Useful f
 L["Builder/Spender Feedback"] = "자원 획득/소모 효과"
 L["Show mana gain/loss glow feedback on player mana bar (experimental)."] = "플레이어 마나 바에 마나 획득/소모 효과를 표시합니다 (실험적)."
 
--- LAYOUT PRESETS
-L["Layout Presets"] = "레이아웃 프리셋"
-L["Save and restore complete UI layouts. Each preset captures all positions, scales, and settings."] = "완전한 UI 레이아웃을 저장하고 복원합니다. 각 프리셋은 모든 위치, 배율, 설정을 포함합니다."
-L["No presets saved yet."] = "아직 저장된 프리셋이 없습니다."
-L["Save New Preset"] = "새 프리셋 저장"
-L["Save your current UI layout as a new preset."] = "현재 UI 레이아웃을 새 프리셋으로 저장합니다."
+-- Preset (used by minimap tab)
 L["Preset"] = "프리셋"
-L["Enter a name for this preset:"] = "프리셋 이름을 입력하세요:"
 L["Save"] = "저장"
-L["Load"] = "불러오기"
-L["Load preset '%s'? This will overwrite your current layout settings."] = "'%s' 프리셋을 불러올까요? 현재 레이아웃 설정이 덮어씁니다."
-L["Load Preset"] = "프리셋 불러오기"
-L["Delete preset '%s'? This cannot be undone."] = "'%s' 프리셋을 삭제할까요? 이 작업은 되돌릴 수 없습니다."
-L["Delete Preset"] = "프리셋 삭제"
-L["Duplicate Preset"] = "프리셋 복제"
-L["Preset saved: "] = "프리셋 저장됨: "
-L["Preset loaded: "] = "프리셋 불러옴: "
-L["Preset deleted: "] = "프리셋 삭제됨: "
-L["Preset duplicated: "] = "프리셋 복제됨: "
-L["Also delete all saved layout presets?"] = "저장된 레이아웃 프리셋도 모두 삭제할까요?"
-L["Presets kept."] = "프리셋이 유지되었습니다."
-
--- PRESET IMPORT / EXPORT
-L["Export Preset"] = "프리셋 내보내기"
-L["Import Preset"] = "프리셋 가져오기"
-L["Import a preset from a text string shared by another player."] = "다른 플레이어가 공유한 텍스트에서 프리셋을 가져옵니다."
-L["Import"] = "가져오기"
 L["Select All"] = "모두 선택"
+L["Close"] = "닫기"
+
+-- Fade / hover settings (actionbars, micromenu, bags)
 L["Hover Fade"] = "마우스오버 페이드"
 L["Visible Alpha"] = "표시 알파"
 L["Opacity when a bar is considered visible by hover/combat rules."] = "바가 마우스오버/전투 규칙으로 표시 상태일 때의 투명도입니다."
@@ -1075,17 +1057,13 @@ L["Fade Out Duration"] = "페이드 아웃 시간"
 L["Seconds used to fade bars out when they become hidden."] = "바가 숨겨질 때 페이드 아웃에 사용하는 시간(초)입니다."
 L["Fade Out Delay"] = "페이드 아웃 지연"
 L["Delay before hover-out starts fading, useful to avoid flicker between buttons."] = "마우스가 벗어난 뒤 페이드 시작 전 지연 시간입니다. 버튼 사이 깜박임을 줄이는 데 유용합니다."
-L["Close"] = "닫기"
-L["Enter a name for the imported preset:"] = "가져온 프리셋의 이름을 입력하세요:"
-L["Imported Preset"] = "가져온 프리셋"
-L["Preset imported: "] = "프리셋 가져옴: "
-L["Invalid preset string."] = "유효하지 않은 프리셋 문자열입니다."
-L["Not a valid DragonUI preset string."] = "유효한 DragonUI 프리셋 문자열이 아닙니다."
-L["Failed to export preset."] = "프리셋 내보내기에 실패했습니다."
-L["Export Profile"] = "프로필 내보내기"
+
+-- PROFILE IMPORT/EXPORT
 L["Import Profile"] = "프로필 가져오기"
-L["Export your current profile as a text string to share with other users."] = "현재 프로필을 텍스트 문자열로 내보내어 다른 사용자와 공유합니다."
-L["Export Current Profile"] = "현재 프로필 내보내기"
+L["Import"] = "가져오기"
+L["Export Profile"] = "프로필 내보내기"
+L["Exporting..."] = true
+L["Sending..."] = true
 L["Failed to export profile."] = "프로필 내보내기에 실패했습니다."
 L["Import a profile from a text string shared by another user."] = "다른 사용자가 공유한 텍스트 문자열에서 프로필을 가져옵니다."
 L["Invalid profile string."] = "유효하지 않은 프로필 문자열입니다."
@@ -1093,6 +1071,7 @@ L["Not a valid DragonUI profile string."] = "유효한 DragonUI 프로필 문자
 L["Profile imported: "] = "프로필 가져옴: "
 L["Enter a name for the imported profile:"] = "가져온 프로필의 이름을 입력하세요:"
 L["Imported Profile"] = "가져온 프로필"
+L["Enter profile name"] = "프로필 이름 입력"
 L["This Fork is maintained by PentSec for AscensionWow, based on the original work by Neticsoul."] = "이 포크는 Neticsoul의 원본 작업을 기반으로 AscensionWow를 위해 PentSec에서 유지 관리합니다."
 
 -- BNet Toast Tab

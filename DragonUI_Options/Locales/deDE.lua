@@ -1013,8 +1013,11 @@ L["Warning: Deleting a profile is permanent and cannot be undone."] = "Warnung: 
 L["Delete"] = "Löschen"
 L["Deleted profile: "] = "Profil gelöscht: "
 L["Are you sure you want to delete the profile '%s'? This cannot be undone."] = "Möchtest du das Profil '%s' wirklich löschen? Dies kann nicht rückgängig gemacht werden."
-L["Reset Current Profile"] = "Aktuelles Profil zurücksetzen"
-L["Restores the current profile to its defaults. This cannot be undone."] = "Setzt das aktuelle Profil auf Standardwerte zurück. Das kann nicht rückgängig gemacht werden."
+L["Profile Manager"] = "Profilmanager"
+L["Manage your current profile: reset to defaults, export/import as text, or share in-game."] = true
+L["Restores the current profile to defaults."] = "Setzt das aktuelle Profil auf Standardwerte zurück."
+L["Export your current profile as a text string."] = "Exportiere dein aktuelles Profil als Text."
+
 L["Reset Profile"] = "Profil zurücksetzen"
 L["All changes will be lost and the UI will be reloaded.\nAre you sure you want to reset your profile?"] = "Alle Änderungen gehen verloren und die UI wird neu geladen.\nBist du sicher, dass du dein Profil zurücksetzen möchtest?"
 L["Profile reset to defaults."] = "Profil auf Standard zurückgesetzt."
@@ -1032,34 +1035,13 @@ L["Show the health deficit (missing health) as red text on health bars. Useful f
 L["Builder/Spender Feedback"] = "Generator/Verbraucher-Feedback"
 L["Show mana gain/loss glow feedback on player mana bar (experimental)."] = "Zeigt Leuchteffekte für Mana-Gewinn/-Verlust auf der Manaleiste des Spielers an (experimentell)."
 
--- LAYOUT PRESETS
-L["Layout Presets"] = "Layout-Vorlagen"
-L["Save and restore complete UI layouts. Each preset captures all positions, scales, and settings."] = "Speichern und Wiederherstellen kompletter UI-Layouts. Jede Vorlage erfasst alle Positionen, Skalierungen und Einstellungen."
-L["No presets saved yet."] = "Noch keine Vorlagen gespeichert."
-L["Save New Preset"] = "Neue Vorlage speichern"
-L["Save your current UI layout as a new preset."] = "Aktuelles UI-Layout als neue Vorlage speichern."
+-- Preset (used by minimap tab)
 L["Preset"] = "Vorlage"
-L["Enter a name for this preset:"] = "Namen für diese Vorlage eingeben:"
 L["Save"] = "Speichern"
-L["Load"] = "Laden"
-L["Load preset '%s'? This will overwrite your current layout settings."] = "Vorlage '%s' laden? Aktuelle Layout-Einstellungen werden überschrieben."
-L["Load Preset"] = "Vorlage laden"
-L["Delete preset '%s'? This cannot be undone."] = "Vorlage '%s' löschen? Dies kann nicht rückgängig gemacht werden."
-L["Delete Preset"] = "Vorlage löschen"
-L["Duplicate Preset"] = "Vorlage duplizieren"
-L["Preset saved: "] = "Vorlage gespeichert: "
-L["Preset loaded: "] = "Vorlage geladen: "
-L["Preset deleted: "] = "Vorlage gelöscht: "
-L["Preset duplicated: "] = "Vorlage dupliziert: "
-L["Also delete all saved layout presets?"] = "Auch alle gespeicherten Layout-Vorlagen löschen?"
-L["Presets kept."] = "Vorlagen beibehalten."
-
--- PRESET IMPORT / EXPORT
-L["Export Preset"] = "Vorlage exportieren"
-L["Import Preset"] = "Vorlage importieren"
-L["Import a preset from a text string shared by another player."] = "Importiere eine Vorlage aus einem Textstring, der von einem anderen Spieler geteilt wurde."
-L["Import"] = "Importieren"
 L["Select All"] = "Alles auswählen"
+L["Close"] = "Schließen"
+
+-- Fade / hover settings (actionbars, micromenu, bags)
 L["Hover Fade"] = "Hover-Ausblendung"
 L["Visible Alpha"] = "Sichtbares Alpha"
 L["Opacity when a bar is considered visible by hover/combat rules."] = "Deckkraft, wenn eine Leiste laut Hover/Kampf-Regeln als sichtbar gilt."
@@ -1071,17 +1053,13 @@ L["Fade Out Duration"] = "Ausblenden-Dauer"
 L["Seconds used to fade bars out when they become hidden."] = "Sekunden zum Ausblenden der Leisten, wenn sie verborgen werden."
 L["Fade Out Delay"] = "Ausblenden-Verzoegerung"
 L["Delay before hover-out starts fading, useful to avoid flicker between buttons."] = "Verzoegerung, bevor nach dem Verlassen ausgeblendet wird. Hilft Flackern zwischen Buttons zu vermeiden."
-L["Close"] = "Schließen"
-L["Enter a name for the imported preset:"] = "Gib einen Namen für die importierte Vorlage ein:"
-L["Imported Preset"] = "Importierte Vorlage"
-L["Preset imported: "] = "Vorlage importiert: "
-L["Invalid preset string."] = "Ungültiger Vorlagen-String."
-L["Not a valid DragonUI preset string."] = "Kein gültiger DragonUI-Vorlagen-String."
-L["Failed to export preset."] = "Vorlage konnte nicht exportiert werden."
-L["Export Profile"] = "Profil exportieren"
+
+-- PROFILE IMPORT/EXPORT
 L["Import Profile"] = "Profil importieren"
-L["Export your current profile as a text string to share with other users."] = "Exportiere dein aktuelles Profil als Text, um es mit anderen Benutzern zu teilen."
-L["Export Current Profile"] = "Aktuelles Profil exportieren"
+L["Import"] = "Importieren"
+L["Export Profile"] = "Profil exportieren"
+L["Exporting..."] = true
+L["Sending..."] = true
 L["Failed to export profile."] = "Profil konnte nicht exportiert werden."
 L["Import a profile from a text string shared by another user."] = "Importiere ein Profil aus einem Text, den ein anderer Benutzer geteilt hat."
 L["Invalid profile string."] = "Ungültiger Profil-String."
@@ -1089,6 +1067,7 @@ L["Not a valid DragonUI profile string."] = "Kein gültiger DragonUI-Profil-Stri
 L["Profile imported: "] = "Profil importiert: "
 L["Enter a name for the imported profile:"] = "Gib einen Namen für das importierte Profil ein:"
 L["Imported Profile"] = "Importiertes Profil"
+L["Enter profile name"] = "Profilname eingeben"
 L["This Fork is maintained by PentSec for AscensionWow, based on the original work by Neticsoul."] = "Dieser Fork wird von PentSec für AscensionWow gepflegt, basierend auf der ursprünglichen Arbeit von Neticsoul."
 
 -- BNet Toast Tab

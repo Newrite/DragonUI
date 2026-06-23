@@ -53,6 +53,9 @@
     <!-- Chat Mods module -->
     <Script file="chatmods.lua"/>
     
+    <!-- Profile Sync module (AceComm-based profile sharing) -->
+    <Script file="profilesync.lua"/>
+    
     <!-- BNet Toast module (friend online/offline notifications) -->
     <Script file="BNetToast.lua"/>
     

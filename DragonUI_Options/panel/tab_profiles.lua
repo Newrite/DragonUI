@@ -238,10 +238,7 @@ local function ShowProfileImportFrame()
         end
         f:Hide()
         -- Ask for a profile name
-        local dialog = StaticPopup_Show("DRAGONUI_PROFILE_IMPORT_NAME")
-        if dialog then
-            dialog.data = data
-        end
+        ShowProfileImportNameFrame(data)
     end)
     f.btn2Text:SetText(LO["Cancel"] or "Cancel")
     f.btn2:SetScript("OnClick", function() f:Hide() end)
@@ -250,65 +247,188 @@ local function ShowProfileImportFrame()
 end
 
 -- ============================================================================
--- STATIC POPUP: Import profile name
+-- CUSTOM FRAME: Import profile name (dark theme, same as GetProfileIEFrame)
 -- ============================================================================
 
-StaticPopupDialogs["DRAGONUI_PROFILE_IMPORT_NAME"] = {
-    text = LO["Enter a name for the imported profile:"],
-    button1 = LO["Save"],
-    button2 = LO["Cancel"],
-    hasEditBox = true,
-    maxLetters = 40,
-    OnShow = function(self)
-        local eb = self.editBox or _G[self:GetName() .. "EditBox"]
-        if eb then
-            eb:SetText(LO["Imported Profile"] or "Imported Profile")
-            eb:HighlightText()
-            eb:SetFocus()
+local profileImportNameFrame
+
+local function DoImportProfile(data, name)
+    if not data or type(data) ~= "table" then return end
+    if not name or name == "" then return end
+    name = name:gsub("|", "")
+    if name == "" then return end
+
+    local db = addon.db
+    if not db then return end
+
+    db:SetProfile(name)
+    db:ResetProfile()
+
+    for key, value in pairs(data) do
+        if type(value) == "table" then
+            db.profile[key] = addon.DeepCopy(value)
+        else
+            db.profile[key] = value
         end
-    end,
-    OnAccept = function(self)
-        local eb = self.editBox or _G[self:GetName() .. "EditBox"]
-        local name = eb and eb:GetText() and strtrim(eb:GetText())
-        if not name or name == "" then return end
-        name = name:gsub("|", "") -- sanitize pipe chars
+    end
+
+    print("|cFF00FF00[DragonUI]|r " .. (LO["Profile imported: "] or "Profile imported: ") .. name)
+    ReloadUI()
+end
+
+local function GetProfileImportNameFrame()
+    if profileImportNameFrame then return profileImportNameFrame end
+
+    local f = CreateFrame("Frame", "DragonUI_ProfileImportNameFrame", UIParent)
+    f:SetSize(400, 210)
+    f:SetPoint("CENTER")
+    f:SetFrameStrata("FULLSCREEN_DIALOG")
+    f:EnableMouse(true)
+    f:SetMovable(true)
+    f:RegisterForDrag("LeftButton")
+    f:SetScript("OnDragStart", f.StartMoving)
+    f:SetScript("OnDragStop", f.StopMovingOrSizing)
+    f:SetBackdrop(BD_IE)
+    f:SetBackdropColor(0.06, 0.06, 0.08, 0.96)
+    f:SetBackdropBorderColor(0.20, 0.20, 0.22, 1)
+    f:Hide()
+    tinsert(UISpecialFrames, "DragonUI_ProfileImportNameFrame")
+
+    -- Title bar
+    local titleBar = CreateFrame("Frame", nil, f)
+    titleBar:SetPoint("TOPLEFT", 1, -1)
+    titleBar:SetPoint("TOPRIGHT", -1, -1)
+    titleBar:SetHeight(32)
+    titleBar:SetBackdrop(BD_IE)
+    titleBar:SetBackdropColor(0.08, 0.08, 0.10, 1)
+    titleBar:SetBackdropBorderColor(0, 0, 0, 0)
+
+    local titleText = titleBar:CreateFontString(nil, "OVERLAY")
+    SetSafeFont(titleText, 15, "OUTLINE")
+    titleText:SetPoint("LEFT", 12, 0)
+    titleText:SetTextColor(1, 1, 1, 1)
+    f.titleText = titleText
+
+    -- Accent line under title bar
+    local accent = f:CreateTexture(nil, "OVERLAY")
+    accent:SetTexture("Interface\\ChatFrame\\ChatFrameBackground")
+    accent:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 0, 0)
+    accent:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", 0, 0)
+    accent:SetHeight(2)
+    accent:SetVertexColor(0.09, 0.52, 0.82, 1)
+
+    -- Close button
+    local close = CreateFrame("Button", nil, titleBar)
+    close:SetSize(20, 20)
+    close:SetPoint("RIGHT", -8, 0)
+    local closeText = close:CreateFontString(nil, "OVERLAY")
+    SetSafeFont(closeText, 16, "OUTLINE")
+    closeText:SetPoint("CENTER")
+    closeText:SetText("|cffccccccx|r")
+    close:SetScript("OnClick", function() f:Hide() end)
+    close:SetScript("OnEnter", function() closeText:SetText("|cffff4444x|r") end)
+    close:SetScript("OnLeave", function() closeText:SetText("|cffccccccx|r") end)
+
+    -- Content backdrop
+    local contentBg = CreateFrame("Frame", nil, f)
+    contentBg:SetPoint("TOPLEFT", 6, -38)
+    contentBg:SetPoint("BOTTOMRIGHT", -6, 48)
+    contentBg:SetBackdrop(BD_IE)
+    contentBg:SetBackdropColor(0.09, 0.09, 0.11, 1)
+    contentBg:SetBackdropBorderColor(0, 0, 0, 0)
+
+    -- Description text
+    local desc = f:CreateFontString(nil, "OVERLAY")
+    SetSafeFont(desc, 12, "")
+    desc:SetPoint("TOPLEFT", 16, -48)
+    desc:SetTextColor(0.85, 0.85, 0.85, 1)
+    f.desc = desc
+
+    -- EditBox for profile name
+    local eb = CreateFrame("EditBox", nil, f, "InputBoxTemplate")
+    eb:SetSize(340, 28)
+    eb:SetPoint("TOP", f, "TOP", 0, -80)
+    eb:SetAutoFocus(false)
+    SetSafeFont(eb, 13, "")
+    eb:SetTextColor(0.85, 0.85, 0.85, 1)
+    eb:SetMaxLetters(40)
+    f.editBox = eb
+
+    -- Save button
+    local btn1 = CreateFrame("Button", nil, f)
+    btn1:SetSize(120, 24)
+    btn1:SetPoint("BOTTOMLEFT", 40, 16)
+    btn1:SetBackdrop(BD_IE)
+    btn1:SetBackdropColor(0.16, 0.16, 0.18, 1)
+    btn1:SetBackdropBorderColor(0.25, 0.25, 0.28, 1)
+    local btn1hl = btn1:CreateTexture(nil, "HIGHLIGHT")
+    btn1hl:SetTexture("Interface\\ChatFrame\\ChatFrameBackground")
+    btn1hl:SetVertexColor(0.09, 0.52, 0.82, 0.25)
+    btn1hl:SetAllPoints()
+    local btn1text = btn1:CreateFontString(nil, "OVERLAY")
+    SetSafeFont(btn1text, 12, "")
+    btn1text:SetPoint("CENTER")
+    btn1text:SetTextColor(1, 1, 1, 1)
+    f.btn1 = btn1
+    f.btn1Text = btn1text
+
+    -- Cancel button
+    local btn2 = CreateFrame("Button", nil, f)
+    btn2:SetSize(120, 24)
+    btn2:SetPoint("BOTTOMRIGHT", -40, 16)
+    btn2:SetBackdrop(BD_IE)
+    btn2:SetBackdropColor(0.16, 0.16, 0.18, 1)
+    btn2:SetBackdropBorderColor(0.25, 0.25, 0.28, 1)
+    local btn2hl = btn2:CreateTexture(nil, "HIGHLIGHT")
+    btn2hl:SetTexture("Interface\\ChatFrame\\ChatFrameBackground")
+    btn2hl:SetVertexColor(0.09, 0.52, 0.82, 0.25)
+    btn2hl:SetAllPoints()
+    local btn2text = btn2:CreateFontString(nil, "OVERLAY")
+    SetSafeFont(btn2text, 12, "")
+    btn2text:SetPoint("CENTER")
+    btn2text:SetTextColor(1, 1, 1, 1)
+    f.btn2 = btn2
+    f.btn2Text = btn2text
+
+    profileImportNameFrame = f
+    return f
+end
+
+local function ShowProfileImportNameFrame(importedData)
+    local f = GetProfileImportNameFrame()
+    f.data = importedData
+    f.titleText:SetText(LO["Import Profile"] or "Import Profile")
+    f.desc:SetText(LO["Enter a name for the imported profile:"] or "Enter a name for the imported profile:")
+    f.btn1Text:SetText(LO["Save"] or "Save")
+    f.btn2Text:SetText(LO["Cancel"] or "Cancel")
+
+    f.editBox:SetText(LO["Enter profile name"] or "Enter profile name")
+    f.editBox:HighlightText()
+    f.editBox:SetFocus()
+
+    f.btn1:SetScript("OnClick", function()
+        local name = strtrim(f.editBox:GetText() or "")
         if name == "" then return end
-        local importedData = self.data
-        if not importedData or type(importedData) ~= "table" then return end
+        DoImportProfile(f.data, name)
+    end)
+    f.btn2:SetScript("OnClick", function()
+        f:Hide()
+    end)
+    f.editBox:SetScript("OnEnterPressed", function()
+        local name = strtrim(f.editBox:GetText() or "")
+        if name == "" then return end
+        DoImportProfile(f.data, name)
+    end)
+    f.editBox:SetScript("OnEscapePressed", function()
+        f:Hide()
+    end)
 
-        local db = addon.db
-        if not db then return end
+    f:Show()
+    f.editBox:SetFocus()
+end
 
-        -- Switch to profile (creates it if new) then reset to defaults
-        -- so keys not in the imported data keep default values
-        db:SetProfile(name)
-        db:ResetProfile()
-
-        -- Deep copy imported data ON TOP of defaults
-        for key, value in pairs(importedData) do
-            if type(value) == "table" then
-                db.profile[key] = addon.DeepCopy(value)
-            else
-                db.profile[key] = value
-            end
-        end
-
-        print("|cFF00FF00[DragonUI]|r " .. (LO["Profile imported: "] or "Profile imported: ") .. name)
-        ReloadUI()
-    end,
-    EditBoxOnEnterPressed = function(self)
-        local parent = self:GetParent()
-        StaticPopupDialogs["DRAGONUI_PROFILE_IMPORT_NAME"].OnAccept(parent)
-        parent:Hide()
-    end,
-    EditBoxOnEscapePressed = function(self)
-        self:GetParent():Hide()
-    end,
-    timeout = 0,
-    whileDead = 1,
-    hideOnEscape = 1,
-    preferredIndex = 3,
-}
+-- Expose for profilesync.lua (core module) to use when Options is loaded
+DragonUI._showProfileImportFrame = ShowProfileImportNameFrame
 
 -- ============================================================================
 -- PROFILES TAB BUILDER
@@ -427,57 +547,28 @@ local function BuildProfilesTab(scroll)
     })
 
     -- ====================================================================
-    -- RESET
+    -- PROFILE MANAGER — Reset / Export / Import / Share
     -- ====================================================================
-    local resetSection = C:AddSection(scroll, LO["Reset Current Profile"])
+    local manager = C:AddSection(scroll, LO["Profile Manager"])
 
-    C:AddDescription(resetSection, LO["Restores the current profile to its defaults. This cannot be undone."])
+    C:AddDescription(manager, LO["Manage your current profile: reset to defaults, export/import as text, or share in-game."])
 
-    C:AddButton(resetSection, {
+    local btnRow1 = C:AddRow(manager)
+
+    C:AddButton(btnRow1, {
         label = LO["Reset Profile"],
         width = 160,
+        desc = LO["Restores the current profile to defaults."],
         callback = function()
-            -- Show confirmation dialog before resetting
             StaticPopupDialogs["DRAGONUI_RESET_PROFILE"] = StaticPopupDialogs["DRAGONUI_RESET_PROFILE"] or {
                 text = LO["All changes will be lost and the UI will be reloaded.\nAre you sure you want to reset your profile?"],
                 button1 = LO["Yes"],
                 button2 = LO["No"],
                 OnAccept = function()
                     if not addon.db then return end
-                    -- Preserve presets before reset
-                    local savedPresets = addon.db.profile.presets
-                    if savedPresets then
-                        savedPresets = addon.DeepCopy(savedPresets)
-                    end
                     addon.db:ResetProfile()
-                    -- Ask about presets only if there were any
-                    if savedPresets and next(savedPresets) then
-                        addon.db.profile.presets = savedPresets
-                        StaticPopupDialogs["DRAGONUI_RESET_PRESETS"] = StaticPopupDialogs["DRAGONUI_RESET_PRESETS"] or {
-                            text = LO["Also delete all saved layout presets?"],
-                            button1 = LO["Yes"],
-                            button2 = LO["No"],
-                            OnAccept = function()
-                                if addon.db and addon.db.profile then
-                                    addon.db.profile.presets = {}
-                                end
-                                print("|cFF00FF00[DragonUI]|r " .. LO["Profile reset to defaults."])
-                                ReloadUI()
-                            end,
-                            OnCancel = function()
-                                print("|cFF00FF00[DragonUI]|r " .. LO["Profile reset to defaults."] .. " " .. (LO["Presets kept."] or "Presets kept."))
-                                ReloadUI()
-                            end,
-                            timeout = 0,
-                            whileDead = true,
-                            hideOnEscape = false,
-                            preferredIndex = 3,
-                        }
-                        StaticPopup_Show("DRAGONUI_RESET_PRESETS")
-                    else
-                        print("|cFF00FF00[DragonUI]|r " .. LO["Profile reset to defaults."])
-                        ReloadUI()
-                    end
+                    print("|cFF00FF00[DragonUI]|r " .. LO["Profile reset to defaults."])
+                    ReloadUI()
                 end,
                 timeout = 0,
                 whileDead = true,
@@ -487,41 +578,110 @@ local function BuildProfilesTab(scroll)
             StaticPopup_Show("DRAGONUI_RESET_PROFILE")
         end,
     })
-    -- ====================================================================
-    -- EXPORT PROFILE
-    -- ====================================================================
-    local exportSection = C:AddSection(scroll, LO["Export Profile"])
 
-    C:AddDescription(exportSection, LO["Export your current profile as a text string to share with other users."])
-
-    C:AddButton(exportSection, {
-        label = LO["Export Current Profile"],
-        width = 200,
+    local exportBtn
+    exportBtn = C:AddButton(btnRow1, {
+        label = LO["Export Profile"],
+        width = 160,
+        desc = LO["Export your current profile as a text string."],
         callback = function()
             local db = addon.db
             if not db or not db.profile then return end
 
-            local exportStr = ExportProfileToString(db.profile)
-            if exportStr then
-                ShowProfileExportFrame(exportStr)
-            else
-                print("|cFFFF4444[DragonUI]|r " .. (LO["Failed to export profile."] or "Failed to export profile."))
-            end
+            -- Disable button and show feedback before heavy work
+            exportBtn:SetDisabled(true)
+            exportBtn:SetText(LO["Exporting..."] or "Exporting...")
+
+            -- Defer to next frame so the UI refreshes before serialization
+            C_Timer.After(0.1, function()
+                local exportStr = ExportProfileToString(db.profile)
+                if exportStr then
+                    ShowProfileExportFrame(exportStr)
+                else
+                    print("|cFFFF4444[DragonUI]|r " .. (LO["Failed to export profile."] or "Failed to export profile."))
+                end
+                exportBtn:SetDisabled(false)
+                exportBtn:SetText(LO["Export Profile"])
+            end)
         end,
     })
 
-    -- ====================================================================
-    -- IMPORT PROFILE
-    -- ====================================================================
-    local importSection = C:AddSection(scroll, LO["Import Profile"])
-
-    C:AddDescription(importSection, LO["Import a profile from a text string shared by another user."])
-
-    C:AddButton(importSection, {
+    C:AddButton(btnRow1, {
         label = LO["Import Profile"],
-        width = 200,
+        width = 160,
+        desc = LO["Import a profile from a text string shared by another user."],
         callback = function()
             ShowProfileImportFrame()
+        end,
+    })
+
+    C:AddSpacer(manager)
+
+    -- Share inline controls
+    local shareChannel = "Party"
+    local shareRow = C:AddRow(manager)
+
+    C:AddDropdown(shareRow, {
+        label = LO["Share to:"] or "Share to:",
+        getFunc = function() return shareChannel end,
+        setFunc = function(val) shareChannel = val end,
+        values = {
+            [LO["Whisper"] or "Whisper"] = "Whisper",
+            [LO["Party"] or "Party"]     = "Party",
+            [LO["Raid"] or "Raid"]       = "Raid",
+            [LO["Guild"] or "Guild"]     = "Guild",
+        },
+        width = 140,
+    })
+
+    local shareBtn
+    shareBtn = C:AddButton(shareRow, {
+        label = LO["Share"] or "Share",
+        width = 100,
+        callback = function()
+            local db = addon.db
+            if not db or not db.profile then return end
+
+            -- Disable and show feedback
+            shareBtn:SetDisabled(true)
+            shareBtn:SetText(LO["Sending..."] or "Sending...")
+
+            C_Timer.After(0.1, function()
+                if shareChannel == "Whisper" then
+                    -- Use a simple popup to ask for the target
+                    StaticPopupDialogs["DRAGONUI_WHISPER_TARGET"] = StaticPopupDialogs["DRAGONUI_WHISPER_TARGET"] or {
+                        text = LO["Enter a target player name for whisper."] or "Enter a target player name for whisper.",
+                        button1 = LO["Share"] or "Share",
+                        button2 = LO["Cancel"] or "Cancel",
+                        hasEditBox = true,
+                        maxLetters = 32,
+                        OnAccept = function(self)
+                            local eb = self.editBox or _G[self:GetName() .. "EditBox"]
+                            local target = eb and strtrim(eb:GetText() or "")
+                            if target and target ~= "" then
+                                DragonUI.SendProfile("WHISPER", target)
+                            end
+                        end,
+                        timeout = 0,
+                        whileDead = 1,
+                        hideOnEscape = 1,
+                        preferredIndex = 3,
+                    }
+                    StaticPopup_Show("DRAGONUI_WHISPER_TARGET")
+                    -- Re-enable immediately since the popup handles interaction
+                    shareBtn:SetDisabled(false)
+                    shareBtn:SetText(LO["Share"] or "Share")
+                else
+                    local distMap = { Party = "PARTY", Raid = "RAID", Guild = "GUILD" }
+                    DragonUI.SendProfile(distMap[shareChannel])
+                    -- Keep the button showing "Sending..." so the user sees
+                    -- the profile actually arrive in chat before re-enabling
+                    C_Timer.After(4.0, function()
+                        shareBtn:SetDisabled(false)
+                        shareBtn:SetText(LO["Share"] or "Share")
+                    end)
+                end
+            end)
         end,
     })
 end

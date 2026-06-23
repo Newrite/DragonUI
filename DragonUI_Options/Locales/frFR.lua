@@ -20,45 +20,23 @@ L["Arrow"] = "Flèche"
 -- Example:
 -- L["General"] = "Général"
 
--- LAYOUT PRESETS
-L["Layout Presets"] = "Préréglages de disposition"
-L["Save and restore complete UI layouts. Each preset captures all positions, scales, and settings."] = "Sauvegardez et restaurez des dispositions d'interface complètes. Chaque préréglage capture toutes les positions, échelles et paramètres."
-L["No presets saved yet."] = "Aucun préréglage sauvegardé."
-L["Save New Preset"] = "Nouveau préréglage"
-L["Save your current UI layout as a new preset."] = "Sauvegarder votre disposition actuelle comme nouveau préréglage."
+-- Preset (used by minimap tab)
 L["Preset"] = "Préréglage"
-L["Enter a name for this preset:"] = "Entrez un nom pour ce préréglage :"
 L["Save"] = "Sauvegarder"
-L["Load"] = "Charger"
-L["Load preset '%s'? This will overwrite your current layout settings."] = "Charger le préréglage '%s' ? Cela écrasera vos paramètres de disposition actuels."
-L["Load Preset"] = "Charger un préréglage"
-L["Delete preset '%s'? This cannot be undone."] = "Supprimer le préréglage '%s' ? Cette action est irréversible."
-L["Delete Preset"] = "Supprimer un préréglage"
-L["Duplicate Preset"] = "Dupliquer un préréglage"
-L["Preset saved: "] = "Préréglage sauvegardé : "
-L["Preset loaded: "] = "Préréglage chargé : "
-L["Preset deleted: "] = "Préréglage supprimé : "
-L["Preset duplicated: "] = "Préréglage dupliqué : "
-L["Also delete all saved layout presets?"] = "Supprimer également tous les préréglages de disposition sauvegardés ?"
-L["Presets kept."] = "Préréglages conservés."
-
--- PRESET IMPORT / EXPORT
-L["Export Preset"] = "Exporter le préréglage"
-L["Import Preset"] = "Importer un préréglage"
-L["Import a preset from a text string shared by another player."] = "Importer un préréglage depuis un texte partagé par un autre joueur."
-L["Import"] = "Importer"
 L["Select All"] = "Tout sélectionner"
 L["Close"] = "Fermer"
-L["Enter a name for the imported preset:"] = "Entrez un nom pour le préréglage importé :"
-L["Imported Preset"] = "Préréglage importé"
-L["Preset imported: "] = "Préréglage importé : "
-L["Invalid preset string."] = "Texte de préréglage invalide."
-L["Not a valid DragonUI preset string."] = "Ce n'est pas un texte de préréglage DragonUI valide."
-L["Failed to export preset."] = "Échec de l'exportation du préréglage."
-L["Export Profile"] = "Exporter le profil"
+
+L["Profile Manager"] = true
+L["Manage your current profile: reset to defaults, export/import as text, or share in-game."] = true
+L["Restores the current profile to defaults."] = true
+L["Export your current profile as a text string."] = true
+
+-- PROFILE IMPORT/EXPORT
 L["Import Profile"] = "Importer le profil"
-L["Export your current profile as a text string to share with other users."] = "Exportez votre profil actuel sous forme de texte pour le partager avec d'autres utilisateurs."
-L["Export Current Profile"] = "Exporter le profil actuel"
+L["Import"] = "Importer"
+L["Export Profile"] = "Exporter le profil"
+L["Exporting..."] = true
+L["Sending..."] = true
 L["Failed to export profile."] = "Échec de l'exportation du profil."
 L["Import a profile from a text string shared by another user."] = "Importez un profil à partir d'un texte partagé par un autre utilisateur."
 L["Invalid profile string."] = "Texte de profil invalide."
@@ -66,6 +44,7 @@ L["Not a valid DragonUI profile string."] = "Ce n'est pas un texte de profil Dra
 L["Profile imported: "] = "Profil importé : "
 L["Enter a name for the imported profile:"] = "Entrez un nom pour le profil importé :"
 L["Imported Profile"] = "Profil importé"
+L["Enter profile name"] = "Nom du profil"
 L["Animated Border"] = "Bordure animée"
 L["Minimap Decorations"] = "Décorations de mini-carte"
 L["Adds decorative animated texture layers around the DragonUI minimap."] = "Ajoute des couches de textures animées décoratives autour de la mini-carte DragonUI."

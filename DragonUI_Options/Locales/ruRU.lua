@@ -1009,8 +1009,11 @@ L["Warning: Deleting a profile is permanent and cannot be undone."] = "Вним�
 L["Delete"] = "Удалить"
 L["Deleted profile: "] = "Удалён профиль: "
 L["Are you sure you want to delete the profile '%s'? This cannot be undone."] = "Вы уверены, что хотите удалить профиль «%s»? Это действие необратимо."
-L["Reset Current Profile"] = "Сбросить текущий профиль"
-L["Restores the current profile to its defaults. This cannot be undone."] = "Восстанавливает текущий профиль до настроек по умолчанию. Это действие необратимо."
+L["Profile Manager"] = "Менеджер профилей"
+L["Manage your current profile: reset to defaults, export/import as text, or share in-game."] = true
+L["Restores the current profile to defaults."] = "Восстанавливает текущий профиль до настроек по умолчанию."
+L["Export your current profile as a text string."] = "Экспортируйте ваш текущий профиль как текстовую строку."
+
 L["Reset Profile"] = "Сбросить профиль"
 L["All changes will be lost and the UI will be reloaded.\nAre you sure you want to reset your profile?"] = "Все изменения будут потеряны и интерфейс будет перезагружен.\nВы уверены, что хотите сбросить профиль?"
 L["Profile reset to defaults."] = "Профиль сброшен до настроек по умолчанию."
@@ -1028,34 +1031,13 @@ L["Show the health deficit (missing health) as red text on health bars. Useful f
 L["Builder/Spender Feedback"] = "Обратная связь ресурсов"
 L["Show mana gain/loss glow feedback on player mana bar (experimental)."] = "Показать свечение при получении/расходе маны на полосе игрока (экспериментально)."
 
--- LAYOUT PRESETS
-L["Layout Presets"] = "Шаблоны раскладки"
-L["Save and restore complete UI layouts. Each preset captures all positions, scales, and settings."] = "Сохраняйте и восстанавливайте полные раскладки интерфейса. Каждый шаблон сохраняет все позиции, масштабы и настройки."
-L["No presets saved yet."] = "Шаблоны ещё не сохранены."
-L["Save New Preset"] = "Сохранить новый шаблон"
-L["Save your current UI layout as a new preset."] = "Сохранить текущую раскладку интерфейса как новый шаблон."
+-- Preset (used by minimap tab)
 L["Preset"] = "Шаблон"
-L["Enter a name for this preset:"] = "Введите имя для этого шаблона:"
 L["Save"] = "Сохранить"
-L["Load"] = "Загрузить"
-L["Load preset '%s'? This will overwrite your current layout settings."] = "Загрузить шаблон '%s'? Текущие настройки раскладки будут перезаписаны."
-L["Load Preset"] = "Загрузить шаблон"
-L["Delete preset '%s'? This cannot be undone."] = "Удалить шаблон '%s'? Это действие нельзя отменить."
-L["Delete Preset"] = "Удалить шаблон"
-L["Duplicate Preset"] = "Дублировать шаблон"
-L["Preset saved: "] = "Шаблон сохранён: "
-L["Preset loaded: "] = "Шаблон загружен: "
-L["Preset deleted: "] = "Шаблон удалён: "
-L["Preset duplicated: "] = "Шаблон дублирован: "
-L["Also delete all saved layout presets?"] = "Также удалить все сохранённые шаблоны раскладки?"
-L["Presets kept."] = "Шаблоны сохранены."
-
--- PRESET IMPORT / EXPORT
-L["Export Preset"] = "Экспорт шаблона"
-L["Import Preset"] = "Импорт шаблона"
-L["Import a preset from a text string shared by another player."] = "Импортировать шаблон из текста, которым поделился другой игрок."
-L["Import"] = "Импорт"
 L["Select All"] = "Выбрать всё"
+L["Close"] = "Закрыть"
+
+-- Fade / hover settings (actionbars, micromenu, bags)
 L["Hover/Combat Logic"] = "Логика Наведение/Бой"
 L["When both hover and combat are enabled, choose whether both are required (AND) or either condition is enough (OR)."] = "Когда включены и наведение, и бой, выберите: нужны обе условия (AND) или достаточно одного (OR)."
 L["AND (both required)"] = "AND (нужны оба условия)"
@@ -1072,17 +1054,13 @@ L["Fade Out Duration"] = "Длительность исчезновения"
 L["Seconds used to fade bars out when they become hidden."] = "Секунды для плавного скрытия панелей."
 L["Fade Out Delay"] = "Задержка перед скрытием"
 L["Delay before hover-out starts fading, useful to avoid flicker between buttons."] = "Задержка перед началом скрытия после ухода курсора. Помогает избежать мерцания между кнопками."
-L["Close"] = "Закрыть"
-L["Enter a name for the imported preset:"] = "Введите имя для импортированного шаблона:"
-L["Imported Preset"] = "Импортированный шаблон"
-L["Preset imported: "] = "Шаблон импортирован: "
-L["Invalid preset string."] = "Недопустимая строка шаблона."
-L["Not a valid DragonUI preset string."] = "Не является допустимой строкой шаблона DragonUI."
-L["Failed to export preset."] = "Не удалось экспортировать шаблон."
-L["Export Profile"] = "Экспорт профиля"
+
+-- PROFILE IMPORT/EXPORT
 L["Import Profile"] = "Импорт профиля"
-L["Export your current profile as a text string to share with other users."] = "Экспортируйте ваш текущий профиль как текстовую строку, чтобы поделиться с другими пользователями."
-L["Export Current Profile"] = "Экспортировать текущий профиль"
+L["Import"] = "Импорт"
+L["Export Profile"] = "Экспорт профиля"
+L["Exporting..."] = true
+L["Sending..."] = true
 L["Failed to export profile."] = "Не удалось экспортировать профиль."
 L["Import a profile from a text string shared by another user."] = "Импортируйте профиль из текстовой строки, полученной от другого пользователя."
 L["Invalid profile string."] = "Недопустимая строка профиля."
@@ -1090,6 +1068,7 @@ L["Not a valid DragonUI profile string."] = "Не является допуст�
 L["Profile imported: "] = "Профиль импортирован: "
 L["Enter a name for the imported profile:"] = "Введите имя для импортированного профиля:"
 L["Imported Profile"] = "Импортированный профиль"
+L["Enter profile name"] = "Введите имя профиля"
 L["This Fork is maintained by PentSec for AscensionWow, based on the original work by Neticsoul."] = "Этот форк поддерживается PentSec для AscensionWow, на основе оригинальной работы Neticsoul."
 
 -- BNet Toast Tab
