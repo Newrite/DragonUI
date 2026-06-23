@@ -16,8 +16,7 @@ __pycache__/
 *.bak2
 # Reference forks
 _ref-*/
-copy-to-*.sh
-package.sh
+*.sh
 .atl
 docs/
 .serena/

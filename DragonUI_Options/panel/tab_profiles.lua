@@ -1,10 +1,10 @@
 --[[
-================================================================================
+===============================================================================
 DragonUI Options Panel - Profiles Tab
-================================================================================
+===============================================================================
 Profile management using AceDB-3.0 API directly.
-Provides: select profile, copy, delete, reset.
-================================================================================
+Provides: select profile, copy, delete, reset, export, import.
+===============================================================================
 ]]
 
 local addon = DragonUI
@@ -15,6 +15,300 @@ local LO = addon.LO
 local AceGUI = LibStub("AceGUI-3.0")
 local C = addon.PanelControls
 local Panel = addon.OptionsPanel
+
+-- ============================================================================
+-- SERIALIZATION (same pattern as preset export in tab_general.lua)
+-- Uses AceSerializer-3.0 + LibDeflate for compressed, text-safe strings.
+-- ============================================================================
+
+local Serializer = {}
+LibStub("AceSerializer-3.0"):Embed(Serializer)
+local LibDeflate = LibStub("LibDeflate")
+local EXPORT_HEADER = "!DUIP1!" -- DragonUI Profile v1
+
+local function ExportProfileToString(profileData)
+    local serialized = Serializer:Serialize(profileData)
+    if not serialized then return nil end
+    local compressed = LibDeflate:CompressDeflate(serialized)
+    if not compressed then return nil end
+    local encoded = LibDeflate:EncodeForPrint(compressed)
+    if not encoded then return nil end
+    return EXPORT_HEADER .. encoded
+end
+
+local function ImportProfileFromString(str)
+    if type(str) ~= "string" then return nil, "empty" end
+    str = strtrim(str)
+    if str == "" then return nil, "empty" end
+    if str:sub(1, #EXPORT_HEADER) ~= EXPORT_HEADER then return nil, "header" end
+    local payload = str:sub(#EXPORT_HEADER + 1)
+    if payload == "" then return nil, "payload" end
+    local decoded = LibDeflate:DecodeForPrint(payload)
+    if not decoded then return nil, "decode" end
+    local decompressed = LibDeflate:DecompressDeflate(decoded)
+    if not decompressed then return nil, "decompress" end
+    local ok, data = Serializer:Deserialize(decompressed)
+    if not ok or type(data) ~= "table" then return nil, "deserialize" end
+    return data
+end
+
+-- ============================================================================
+-- IMPORT / EXPORT POPUP FRAME (panel-themed dark style)
+-- ============================================================================
+
+-- Backdrop definition matching the main panel (panel.lua)
+local BD_IE = {
+    bgFile   = "Interface\\ChatFrame\\ChatFrameBackground",
+    edgeFile = "Interface\\ChatFrame\\ChatFrameBackground",
+    tile = false, edgeSize = 1,
+    insets = { left = 0, right = 0, top = 0, bottom = 0 },
+}
+
+local function SetSafeFont(fs, size, flags)
+    if not fs then return end
+    local tryFonts = {
+        C.Theme.font,
+        addon.Fonts and addon.Fonts.PRIMARY,
+        STANDARD_TEXT_FONT,
+        "Fonts\\FRIZQT__.TTF",
+    }
+    for _, path in ipairs(tryFonts) do
+        if path and fs:SetFont(path, size or 12, flags or "") then
+            return
+        end
+    end
+end
+
+local profileIEFrame
+
+local function GetProfileIEFrame()
+    if profileIEFrame then return profileIEFrame end
+
+    local f = CreateFrame("Frame", "DragonUI_ProfileIEFrame", UIParent)
+    f:SetSize(520, 360)
+    f:SetPoint("CENTER")
+    f:SetFrameStrata("FULLSCREEN_DIALOG")
+    f:EnableMouse(true)
+    f:SetMovable(true)
+    f:RegisterForDrag("LeftButton")
+    f:SetScript("OnDragStart", f.StartMoving)
+    f:SetScript("OnDragStop", f.StopMovingOrSizing)
+    f:SetBackdrop(BD_IE)
+    f:SetBackdropColor(0.06, 0.06, 0.08, 0.96)
+    f:SetBackdropBorderColor(0.20, 0.20, 0.22, 1)
+    f:Hide()
+    tinsert(UISpecialFrames, "DragonUI_ProfileIEFrame")
+
+    -- Title bar
+    local titleBar = CreateFrame("Frame", nil, f)
+    titleBar:SetPoint("TOPLEFT", 1, -1)
+    titleBar:SetPoint("TOPRIGHT", -1, -1)
+    titleBar:SetHeight(32)
+    titleBar:SetBackdrop(BD_IE)
+    titleBar:SetBackdropColor(0.08, 0.08, 0.10, 1)
+    titleBar:SetBackdropBorderColor(0, 0, 0, 0)
+
+    local titleText = titleBar:CreateFontString(nil, "OVERLAY")
+    SetSafeFont(titleText, 15, "OUTLINE")
+    titleText:SetPoint("LEFT", 12, 0)
+    titleText:SetTextColor(1, 1, 1, 1)
+    f.title = titleText
+
+    -- Accent line under title bar
+    local accent = f:CreateTexture(nil, "OVERLAY")
+    accent:SetTexture("Interface\\ChatFrame\\ChatFrameBackground")
+    accent:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 0, 0)
+    accent:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", 0, 0)
+    accent:SetHeight(2)
+    accent:SetVertexColor(0.09, 0.52, 0.82, 1)
+
+    -- Close button (top-right X) — same style as panel
+    local close = CreateFrame("Button", nil, titleBar)
+    close:SetSize(20, 20)
+    close:SetPoint("RIGHT", -8, 0)
+    local closeText = close:CreateFontString(nil, "OVERLAY")
+    SetSafeFont(closeText, 16, "OUTLINE")
+    closeText:SetPoint("CENTER", 0, 0)
+    closeText:SetText("|cffccccccx|r")
+    close:SetScript("OnClick", function() f:Hide() end)
+    close:SetScript("OnEnter", function() closeText:SetText("|cffff4444x|r") end)
+    close:SetScript("OnLeave", function() closeText:SetText("|cffccccccx|r") end)
+
+    -- Content backdrop (dark area behind the edit box)
+    local contentBg = CreateFrame("Frame", nil, f)
+    contentBg:SetPoint("TOPLEFT", 6, -38)
+    contentBg:SetPoint("BOTTOMRIGHT", -6, 48)
+    contentBg:SetBackdrop(BD_IE)
+    contentBg:SetBackdropColor(0.09, 0.09, 0.11, 1)
+    contentBg:SetBackdropBorderColor(0, 0, 0, 0)
+
+    -- ScrollFrame + Multi-line EditBox
+    local sf = CreateFrame("ScrollFrame", "DragonUI_ProfileIEScroll", f, "UIPanelScrollFrameTemplate")
+    sf:SetPoint("TOPLEFT", 10, -42)
+    sf:SetPoint("BOTTOMRIGHT", -28, 52)
+
+    local eb = CreateFrame("EditBox", "DragonUI_ProfileIEEditBox", sf)
+    eb:SetMultiLine(true)
+    eb:SetAutoFocus(false)
+    SetSafeFont(eb, 12, "")
+    eb:SetTextColor(0.85, 0.85, 0.85, 1)
+    eb:SetWidth(440)
+    eb:SetScript("OnEscapePressed", function(self) self:ClearFocus(); f:Hide() end)
+    sf:SetScrollChild(eb)
+    f.editBox = eb
+    f.scrollFrame = sf
+
+    -- Left action button (Select All / Import) — styled like panel's SkinButton
+    local btn1 = CreateFrame("Button", nil, f)
+    btn1:SetSize(120, 24)
+    btn1:SetPoint("BOTTOMLEFT", 20, 16)
+    btn1:SetBackdrop(BD_IE)
+    btn1:SetBackdropColor(0.16, 0.16, 0.18, 1)
+    btn1:SetBackdropBorderColor(0.25, 0.25, 0.28, 1)
+    local btn1hl = btn1:CreateTexture(nil, "HIGHLIGHT")
+    btn1hl:SetTexture("Interface\\ChatFrame\\ChatFrameBackground")
+    btn1hl:SetVertexColor(0.09, 0.52, 0.82, 0.25)
+    btn1hl:SetAllPoints()
+    local btn1text = btn1:CreateFontString(nil, "OVERLAY")
+    SetSafeFont(btn1text, 12, "")
+    btn1text:SetPoint("CENTER")
+    btn1text:SetTextColor(1, 1, 1, 1)
+    f.btn1 = btn1
+    f.btn1Text = btn1text
+
+    -- Right action button (Close / Cancel)
+    local btn2 = CreateFrame("Button", nil, f)
+    btn2:SetSize(120, 24)
+    btn2:SetPoint("BOTTOMRIGHT", -20, 16)
+    btn2:SetBackdrop(BD_IE)
+    btn2:SetBackdropColor(0.16, 0.16, 0.18, 1)
+    btn2:SetBackdropBorderColor(0.25, 0.25, 0.28, 1)
+    local btn2hl = btn2:CreateTexture(nil, "HIGHLIGHT")
+    btn2hl:SetTexture("Interface\\ChatFrame\\ChatFrameBackground")
+    btn2hl:SetVertexColor(0.09, 0.52, 0.82, 0.25)
+    btn2hl:SetAllPoints()
+    local btn2text = btn2:CreateFontString(nil, "OVERLAY")
+    SetSafeFont(btn2text, 12, "")
+    btn2text:SetPoint("CENTER")
+    btn2text:SetTextColor(1, 1, 1, 1)
+    f.btn2 = btn2
+    f.btn2Text = btn2text
+
+    profileIEFrame = f
+    return f
+end
+
+local function ShowProfileExportFrame(exportString)
+    local f = GetProfileIEFrame()
+    f.title:SetText(LO["Export Profile"] or "Export Profile")
+    f.editBox:SetText(exportString)
+    f.editBox:SetScript("OnTextChanged", function(self)
+        self:SetText(exportString) -- prevent editing
+    end)
+    f.editBox:SetCursorPosition(0)
+    f.btn1Text:SetText(LO["Select All"] or "Select All")
+    f.btn1:SetScript("OnClick", function()
+        f.editBox:SetFocus()
+        f.editBox:HighlightText()
+    end)
+    f.btn2Text:SetText(LO["Close"] or "Close")
+    f.btn2:SetScript("OnClick", function() f:Hide() end)
+    f:Show()
+    f.editBox:SetFocus()
+    f.editBox:HighlightText()
+end
+
+local function ShowProfileImportFrame()
+    local f = GetProfileIEFrame()
+    f.title:SetText(LO["Import Profile"] or "Import Profile")
+    f.editBox:SetText("")
+    f.editBox:SetScript("OnTextChanged", nil) -- allow editing
+    f.btn1Text:SetText(LO["Import"] or "Import")
+    f.btn1:SetScript("OnClick", function()
+        local text = strtrim(f.editBox:GetText())
+        if text == "" then return end
+        local data, errType = ImportProfileFromString(text)
+        if not data then
+            local msg = LO["Invalid profile string."] or "Invalid profile string."
+            if errType == "header" then
+                msg = LO["Not a valid DragonUI profile string."] or "Not a valid DragonUI profile string."
+            end
+            print("|cFFFF4444[DragonUI]|r " .. msg)
+            return
+        end
+        f:Hide()
+        -- Ask for a profile name
+        local dialog = StaticPopup_Show("DRAGONUI_PROFILE_IMPORT_NAME")
+        if dialog then
+            dialog.data = data
+        end
+    end)
+    f.btn2Text:SetText(LO["Cancel"] or "Cancel")
+    f.btn2:SetScript("OnClick", function() f:Hide() end)
+    f:Show()
+    f.editBox:SetFocus()
+end
+
+-- ============================================================================
+-- STATIC POPUP: Import profile name
+-- ============================================================================
+
+StaticPopupDialogs["DRAGONUI_PROFILE_IMPORT_NAME"] = {
+    text = LO["Enter a name for the imported profile:"],
+    button1 = LO["Save"],
+    button2 = LO["Cancel"],
+    hasEditBox = true,
+    maxLetters = 40,
+    OnShow = function(self)
+        local eb = self.editBox or _G[self:GetName() .. "EditBox"]
+        if eb then
+            eb:SetText(LO["Imported Profile"] or "Imported Profile")
+            eb:HighlightText()
+            eb:SetFocus()
+        end
+    end,
+    OnAccept = function(self)
+        local eb = self.editBox or _G[self:GetName() .. "EditBox"]
+        local name = eb and eb:GetText() and strtrim(eb:GetText())
+        if not name or name == "" then return end
+        name = name:gsub("|", "") -- sanitize pipe chars
+        if name == "" then return end
+        local importedData = self.data
+        if not importedData or type(importedData) ~= "table" then return end
+
+        local db = addon.db
+        if not db then return end
+
+        -- Switch to profile (creates it if new) then reset to defaults
+        -- so keys not in the imported data keep default values
+        db:SetProfile(name)
+        db:ResetProfile()
+
+        -- Deep copy imported data ON TOP of defaults
+        for key, value in pairs(importedData) do
+            if type(value) == "table" then
+                db.profile[key] = addon.DeepCopy(value)
+            else
+                db.profile[key] = value
+            end
+        end
+
+        print("|cFF00FF00[DragonUI]|r " .. (LO["Profile imported: "] or "Profile imported: ") .. name)
+        ReloadUI()
+    end,
+    EditBoxOnEnterPressed = function(self)
+        local parent = self:GetParent()
+        StaticPopupDialogs["DRAGONUI_PROFILE_IMPORT_NAME"].OnAccept(parent)
+        parent:Hide()
+    end,
+    EditBoxOnEscapePressed = function(self)
+        self:GetParent():Hide()
+    end,
+    timeout = 0,
+    whileDead = 1,
+    hideOnEscape = 1,
+    preferredIndex = 3,
+}
 
 -- ============================================================================
 -- PROFILES TAB BUILDER
@@ -191,6 +485,43 @@ local function BuildProfilesTab(scroll)
                 preferredIndex = 3,
             }
             StaticPopup_Show("DRAGONUI_RESET_PROFILE")
+        end,
+    })
+    -- ====================================================================
+    -- EXPORT PROFILE
+    -- ====================================================================
+    local exportSection = C:AddSection(scroll, LO["Export Profile"])
+
+    C:AddDescription(exportSection, LO["Export your current profile as a text string to share with other users."])
+
+    C:AddButton(exportSection, {
+        label = LO["Export Current Profile"],
+        width = 200,
+        callback = function()
+            local db = addon.db
+            if not db or not db.profile then return end
+
+            local exportStr = ExportProfileToString(db.profile)
+            if exportStr then
+                ShowProfileExportFrame(exportStr)
+            else
+                print("|cFFFF4444[DragonUI]|r " .. (LO["Failed to export profile."] or "Failed to export profile."))
+            end
+        end,
+    })
+
+    -- ====================================================================
+    -- IMPORT PROFILE
+    -- ====================================================================
+    local importSection = C:AddSection(scroll, LO["Import Profile"])
+
+    C:AddDescription(importSection, LO["Import a profile from a text string shared by another user."])
+
+    C:AddButton(importSection, {
+        label = LO["Import Profile"],
+        width = 200,
+        callback = function()
+            ShowProfileImportFrame()
         end,
     })
 end

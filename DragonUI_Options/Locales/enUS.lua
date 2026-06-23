@@ -1133,4 +1133,19 @@ L["Preset imported: "] = true
 L["Invalid preset string."] = true
 L["Not a valid DragonUI preset string."] = true
 L["Failed to export preset."] = true
+
+-- PROFILE IMPORT/EXPORT
+L["Export Profile"] = true
+L["Import Profile"] = true
+L["Export your current profile as a text string to share with other users."] = true
+L["Export Current Profile"] = true
+L["Failed to export profile."] = true
+L["Import a profile from a text string shared by another user."] = true
+L["Invalid profile string."] = true
+L["Not a valid DragonUI profile string."] = true
+L["Profile imported: "] = true
+L["Enter a name for the imported profile:"] = true
+L["Imported Profile"] = true
+L["A profile with this name already exists. Overwrite it?"] = true
+
 L["This Fork is maintained by PentSec for AscensionWow, based on the original work by Neticsoul."] = true
