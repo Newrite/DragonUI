@@ -46,6 +46,7 @@
     <Script file="panel\tab_additionalbars.lua"/>
     <Script file="panel\tab_xprepbars.lua"/>
     <Script file="panel\tab_unitframes.lua"/>
+    <Script file="panel\tab_nameplates.lua"/>
     <Script file="panel\tab_castbars.lua"/>
     <Script file="panel\tab_minimap.lua"/>
     <Script file="panel\tab_micromenu.lua"/>

@@ -1,4 +1,4 @@
-﻿--[[
+--[[
 ================================================================================
 DragonUI - English Locale (Default)
 ================================================================================
@@ -437,6 +437,8 @@ L["Custom minimap styling, positioning, tracking icons and calendar"] = true
 L["Quest tracker positioning and styling"] = true
 L["Tooltip"] = true
 L["Enhanced tooltip styling with class colors and health bars"] = true
+L["Nameplates"] = true
+L["Apply DragonUI nameplate styling."] = true
 L["Unit Frame Layers"] = true
 L["Heal prediction, absorb shields, and animated health loss on unit frames"] = true
 L["Stance/shapeshift bar positioning and styling"] = true

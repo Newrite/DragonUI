@@ -1,4 +1,4 @@
-﻿-- ============================================================================
+-- ============================================================================
 -- DragonUI - Database Defaults
 -- Defines default profile values for AceDB-3.0. All configurable settings
 -- live here as the single source of truth for new/reset profiles.
@@ -743,6 +743,100 @@ local defaults = {
                 use_custom_color = false, -- Override presets with custom color
                 custom_color = { r = 0.15, g = 0.15, b = 0.15 } -- Custom tint RGB
             },
+            nameplates = {
+                enabled = true,
+                barWidth = 150, -- ~Blizzard plate width
+                barHeight = 9, -- height of the nameplate in pixels
+                fontSize = 2, -- Scale 1-10, maps to name/HP font px
+                nameFont = "primary", -- font for name/level text (primary, actionbar, narrow, arial, system)
+                showHealthPercent = true,
+                nameOverlayHealthBar = false, -- anchor name/level/percent/elite icon centered on the health bar instead of above it
+                nameOverlayOffsetY = 0, -- vertical (Y) offset applied when nameOverlayHealthBar is enabled
+                nameRowPaddingX = 0, -- horizontal inset (left & right) applied to name/level/percent row; does not affect the elite icon
+                eliteIconOffsetY = 0, -- additional vertical offset for the elite/rare icon, independent of the name row / overlay offset
+                healthBarBackground = "black", -- black | castbar. "black" uses the dedicated bar-bg-health texture (hand-editable copy); "castbar" reuses bar-bg.
+                showPowerBar = false,
+                showPowerBarText = true, -- show numeric values on power bar
+                powerPlayersOnly = false, -- Hide mana on NPCs
+                powerBarBackground = "black", -- black | castbar. "black" uses the dedicated bar-bg-power texture (hand-editable copy); "castbar" reuses bar-bg.
+                showCastBar = true,
+                castBarOffTargetMode = "safe", -- off | safe | aggressive | hybrid. UI: enable=safe, +aggressive=aggressive, +players-only=hybrid
+                castBarHidePetCasts = true, -- all modes: hide cast bars on player pets/guardians (Water Elemental, mirror images, etc.)
+                castBarOffTarget = false, -- legacy mirror of aggressive mode
+                castBarOffTargetHostileOnly = false, -- legacy reaction filter (no longer exposed in UI; 3.3.5a shows enemy OR ally plates only)
+                castBarOffTargetSafeOnly = true, -- legacy mirror of safe mode (now the default)
+                castBarPvPAggressive = false, -- legacy reaction filter (no longer exposed in UI)
+                showPartyRaidCastBars = false, -- show cast bars on party/raid member nameplates
+                castBarHeight = 9, -- height of the cast bar in pixels
+                castBarGap = 3, -- vertical gap between health, power, and cast bars
+                threatGlow = true, -- show threat glow indicator (colored border)
+                tankMode = false, -- invert threat colors for a tank perspective (holding aggro = green)
+                raidMarkHealthColor = false, -- tint health bar by raid marker, allies and enemies alike
+                showTargetHighlight = true,
+                showTargetArrows = false,
+                showDebuffs = true,
+                maxDebuffs = 5,
+                debuffIconSize = 24, -- debuff icon size in pixels
+                showDebuffCooldown = true, -- show remaining debuff time text on icons
+                debuffCooldownSwipe = true, -- also show a radial cooldown swipe on debuff icons
+                debuffCooldownSwipeStyle = "squareSwirl", -- "vertical" | "pie" | "squareSwirl"
+                debuffCooldownFontSize = 10, -- font size for debuff remaining time text
+                debuffCooldownTextAnchor = "center", -- "center" | "topleft" | "topright" | "bottomleft" | "bottomright"
+                debuffOnlyTargetFocus = false, -- only show debuffs on target/focus plates
+                debuffOnlyMine = false, -- only show debuffs the player applied
+                debuffFilterMode = "all", -- "all" | "whitelist" | "blacklist"
+                debuffFilterList = "", -- comma-separated spell IDs for whitelist/blacklist
+                debuffHighlightCC = false, -- colored border for crowd-control/lockout debuffs (curated spell list)
+                showRaidMarkers = true, -- show raid target markers (skull, cross, etc.)
+                showEliteIcon = true, -- show elite/rare dragon icon on nameplates
+                eliteIconStyle = "dragon", -- "dragon" | "star" (star uses *-icon-old textures)
+                showComboPoints = false, -- show combo points on target nameplate
+                showTotemIcons = false, -- show totem icon on shaman totem nameplates
+                totemIconPosition = "top", -- "top" | "left" | "right"
+                totemIconOnly = false, -- hide the totem nameplate entirely; show only the totem icon
+                showTotemTimer = true, -- show remaining life on own totems (requires GetTotemInfo data)
+                totemNormalModeList = "", -- comma-separated exact totem names forced to render as a plain plate (no icon)
+                centerNameOnly = false, -- hide level/health % and center the unit name
+                showLevelInName = false, -- show the level in the nameplate
+                showLevelOnHover = false, -- level on hover+target; false = target only
+                showLevelAlways = true, -- always show level bracket on any resolvable plate
+                levelTextFormat = "plain", -- "brackets" | "parentheses" | "plain"
+                nameReactionColors = false, -- tint name text with health-bar reaction color
+                enemyNameClassColors = false, -- class colors for enemy player name text
+                friendlyPlayerColor = { r = 0, g = 0, b = 1 }, -- default friendly player color (vanilla blue)
+                friendlyNPCColor = { r = 0, g = 1, b = 0 }, -- default friendly NPC color (green)
+                partyClassColors = false, -- use class colors for party members instead of friendlyPlayerColor
+                friendlyNameOnly = false, -- party/raid members: hide health/power/cast bars, show only the name (headline mode)
+                friendlyNameOnlyClassColor = false, -- class-color party/raid member names while in headline mode
+                enemyPlayerClassColors = false, -- use class colors for enemy player nameplates (ShowClassColorInNameplate)
+                disableNonTargetFade = false, -- when true, target/non-target use the same full opacity
+                opacityNonTarget = 0.5, -- default non-target opacity
+                opacityFullNoTarget = true, -- when no target exists, use full target opacity
+                offsetX = 0, -- horizontal offset from the center of the screen
+                offsetY = 0, -- vertical offset from the center of the screen
+                clickboxWidthFactor = 1, -- width factor for the clickbox
+                clickboxHeightFactor = 1, -- height factor for the clickbox
+                showClickbox = false, -- show the clickbox overlay
+                totemClickPadding = 8, -- extra clickable padding (px) on totem nameplates
+                clampTarget = true, -- keep the target nameplate from leaving the screen top
+                clampBoss = true, -- keep boss nameplates clamped in party/raid instances
+                clampTopInset = 40, -- distance below the screen top where a clamped plate stops
+                depthSortingEnabled = true, -- depth/Z-order sorting for overlapping plates
+                retailTargetScale = 1, -- Retail behavior: target scale multiplier
+                retailFriendlyScale = 1, -- Retail behavior: friendly plate scale multiplier
+                retailStackingEnabled = false, -- Retail-like stacking behavior
+                retailStackingInInstance = false, -- If true, stacking only applies in instances
+                retailStackingXSpace = 150, -- horizontal spacing between nameplates
+                retailStackingYSpace = 24, -- vertical spacing between nameplates
+                retailStackingOriginY = 0, -- vertical origin for stacking
+                retailStackingFreezeMouseover = false, -- freeze the mouseover position while stacking
+                bghCompatEnabled = true, -- compatibility bridge for BattleGroundHealers icon anchoring
+                bghIconAnchor = "top", -- "left" | "top" | "right" | "bottom"
+                bghIconOffsetX = 0, -- x offset for BattleGroundHealers icon anchor
+                bghIconOffsetY = 0, -- y offset for BattleGroundHealers icon anchor
+                bghIconSize = 24, -- icon size override used by compatibility bridge
+                bghTestMode = false, -- enables manual mark-target testing for BattleGroundHealers compatibility
+            },
             tooltip = {
                 enabled = true, -- Enhanced tooltip styling with class colors
                 class_colored_border = true, -- Color tooltip border by class/reaction
@@ -759,10 +853,10 @@ local defaults = {
                 enabled = true, -- Chat enhancements: hide buttons, editbox position, URL copy, chat copy
                 editbox = "bottom", -- Editbox position: "top", "bottom", or "middle"
                 tabIdleAlpha = 0, -- Tab opacity when not hovered (0 = hidden, 1 = fully visible)
-                chatStyle = "none", -- Chat frame background style: "none", "dark", "dragon", "midnight"
+                chatStyle = "none", -- Chat frame background style: "none", "dark", "dragon", "nocturne"
                 chatBgIdleAlpha = 0, -- Chat style background opacity when idle/mouse away (0 = hidden, 1 = always visible)
                 editboxIdleAlpha = 0, -- Editbox minimum opacity when idle (0 = fades with tabs, 1 = always visible)
-                editboxStyle = "dark", -- Editbox background style: "none", "dark", "dragon", "midnight"
+                editboxStyle = "dark", -- Editbox background style: "none", "dark", "dragon", "nocturne"
             },
             bnettoast = {
                 enabled = true, -- Friend online/offline notifications with Battle.net toasts
@@ -875,4 +969,3 @@ function addon:SetConfigValue(section, key, subkey, value)
         self.db.profile[section] = value;
     end
 end
-

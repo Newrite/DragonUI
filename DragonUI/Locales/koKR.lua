@@ -1,4 +1,4 @@
-﻿--[[
+--[[
 ================================================================================
 DragonUI - English Locale (Default)
 ================================================================================
@@ -419,6 +419,8 @@ L["Custom minimap styling, positioning, tracking icons and calendar"] = "ì‚¬
 L["Quest tracker positioning and styling"] = "í€˜ìŠ¤íŠ¸ ì¶”ì ê¸° ìœ„ì¹˜ ë° ìŠ¤íƒ€ì¼ ì„¤ì •"
 L["Tooltip"] = "íˆ´íŒ"
 L["Enhanced tooltip styling with class colors and health bars"] = "ì§ì—… ìƒ‰ìƒê³¼ ìƒëª…ë ¥ ë°”ê°€ ì ìš©ëœ í–¥ìƒëœ íˆ´íŒ ìŠ¤íƒ€ì¼"
+L["Nameplates"] = "이름표"
+L["Apply DragonUI nameplate styling."] = "DragonUI 스타일을 이름표에 적용합니다."
 L["Unit Frame Layers"] = "ìœ ë‹› í”„ë ˆìž„ ë ˆì´ì–´"
 L["Heal prediction, absorb shields, and animated health loss on unit frames"] = "ìœ ë‹› í”„ë ˆìž„ì˜ ì¹˜ìœ  ì˜ˆì¸¡, í¡ìˆ˜ ë³´í˜¸ë§‰ ë° ì• ë‹ˆë©”ì´ì…˜ ì²´ë ¥ ì†ì‹¤"
 L["Stance/shapeshift bar positioning and styling"] = "íƒœì„¸/ë³€ì‹  ë°” ìœ„ì¹˜ ë° ìŠ¤íƒ€ì¼ ì„¤ì •"

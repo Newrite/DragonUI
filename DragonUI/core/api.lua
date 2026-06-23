@@ -1324,6 +1324,12 @@ local MODULE_LIFECYCLE_OVERRIDES = {
     mainbars = { refresh = "RefreshMainbarsSystem", loadOnce = true },
     micromenu = { refresh = "RefreshMicromenuSystem", loadOnce = true },
     minimap = { refresh = "RefreshMinimapSystem", loadOnce = true },
+    nameplates = {
+        apply = "ApplyNameplatesSystem",
+        restore = "RestoreNameplatesSystem",
+        refresh = "RefreshNameplates",
+        loadOnce = true,
+    },
     multicast = { refresh = "RefreshMulticast", loadOnce = true },
     noop = { refresh = "RefreshNoopSystem", loadOnce = true },
     petbar = { refresh = "RefreshPetbarSystem", loadOnce = true },
@@ -1780,11 +1786,11 @@ function addon:RefreshRegisteredSystems()
 end
 
 -- ============================================================================
--- COMBAT QUEUE SYSTEM (ElvUI Pattern)
+-- COMBAT QUEUE SYSTEM
 -- ============================================================================
 -- Central system for deferring operations that cannot run during combat lockdown.
 -- Pattern: Check InCombatLockdown() -> if true, queue operation -> execute after combat
--- Reference: ElvUI ActionBars.lua PLAYER_REGEN_ENABLED handler
+-- Reference: common PLAYER_REGEN_ENABLED deferred-execution pattern
 
 addon.CombatQueue = addon.CombatQueue or {
     -- Pending operations table: { [id] = { func, args } }

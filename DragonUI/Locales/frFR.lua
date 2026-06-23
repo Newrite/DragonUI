@@ -63,7 +63,6 @@ L["Left"] = "Gauche"
 L["Right"] = "Droite"
 L["Error Messages"] = "Messages d'erreur"
 L["ErrorMessages"] = "Messages d'erreur"
-
 -- Bag Sort (Sell Scrap)
 L["Sell Scrap"] = "Vendre ferraille"
 L["Click to sell all gray (poor) items to vendor."] = "Cliquez pour vendre tous les objets gris (médiocres) au marchand."
@@ -77,5 +76,6 @@ L["BNet Toast"] = "Notification BNet"
 L["Friend online/offline notifications with Battle.net toasts and chat messages"] = "Notifications d'amis en ligne/hors ligne via Battle.net toasts et messages"
 L["Position & Scale"] = "Position et Échelle"
 L["Scale of the BNet toast frame."] = "Échelle du cadre de notification Battle.net."
-L["Horizontal position of the BNet toast from the screen center. Negative values move left, positive values move right."] = "Position horizontale de la notification Battle.net depuis le centre de l'écran. Les valeurs négatives déplacent vers la gauche, les positives vers la droite."
-L["Vertical offset of the BNet toast frame. Negative values move down, positive values move up."] = "Décalage vertical du cadre de notification Battle.net. Les valeurs négatives déplacent vers le bas, les positives vers le haut."
+L["Horizontal position of the BNet toast from the screen center. Negative values move left, positive values move right."] = "Position horizontale de la notification Battle.net depuis le centre de l'écran. Les valeurs négatives déplacent vers la gauche, les valeurs positives déplacent vers la droite."
+L["Vertical offset of the BNet toast frame. Negative values move down, positive values move up."] = "Décalage vertical du cadre de notification Battle.net. Les valeurs négatives déplacent vers le bas, les valeurs positives déplacent vers le haut."
+

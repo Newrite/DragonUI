@@ -76,6 +76,38 @@ local function SafeSetFont(fs, size, flags, preferredFont)
     end
 end
 
+local function NormalizeText(value, fallback)
+    if type(value) == "string" and value ~= "" then
+        return value
+    end
+    if value == nil then
+        return fallback
+    end
+    local converted = tostring(value)
+    if converted == "" then
+        return fallback
+    end
+    return converted
+end
+
+local function NormalizeDescription(value)
+    if type(value) == "string" and value ~= "" then
+        return value
+    end
+    return nil
+end
+
+local function NormalizeDropdownValues(values)
+    if type(values) ~= "table" then
+        return {}
+    end
+    local normalized = {}
+    for key, label in pairs(values) do
+        normalized[key] = NormalizeText(label, NormalizeText(key, ""))
+    end
+    return normalized
+end
+
 -- ============================================================================
 -- DB PATH HELPERS
 -- ============================================================================
@@ -198,7 +230,7 @@ local function SkinDropdown(widget)
         SyncDropdownButtonState()
     end
 
-    -- 1. Strip ALL texture regions from UIDropDownMenuTemplate (ElvUI StripTextures pattern)
+    -- 1. Strip all texture regions from UIDropDownMenuTemplate
     if dd.GetNumRegions then
         for i = 1, dd:GetNumRegions() do
             local region = select(i, dd:GetRegions())
@@ -290,7 +322,7 @@ local function SkinButton(widget)
     local f = widget.frame
     if f then
         -- Strip ALL texture regions from UIPanelButtonTemplate2 (Left/Middle/Right)
-        -- This is the same ElvUI StripTextures pattern used for dropdowns
+        -- Use the same texture-stripping approach as the dropdown skinning
         if f.GetNumRegions then
             for i = 1, f:GetNumRegions() do
                 local region = select(i, f:GetRegions())
@@ -450,9 +482,6 @@ function Controls:AddLabel(parent, text, opts)
         label:SetColor(unpack(opts.color))
     end
     SkinLabel(label)
-    if opts.fontSize and label.label then
-        SafeSetFont(label.label, opts.fontSize, "")
-    end
     parent:AddChild(label)
     return label
 end
@@ -498,8 +527,10 @@ end
 
 function Controls:AddToggle(parent, opts)
     local cb = AceGUI:Create("CheckBox")
-    cb:SetLabel(opts.label or "Toggle")
-    if opts.desc then cb:SetDescription(opts.desc) end
+    local label = NormalizeText(opts.label, "Toggle")
+    local desc = NormalizeDescription(opts.desc)
+    cb:SetLabel(label)
+    if desc then cb:SetDescription(desc) end
     if opts.width then cb:SetWidth(opts.width) else cb:SetFullWidth(true) end
 
     if opts.getFunc then
@@ -537,7 +568,9 @@ end
 
 function Controls:AddSlider(parent, opts)
     local slider = AceGUI:Create("Slider")
-    slider:SetLabel(opts.label or "Slider")
+    local label = NormalizeText(opts.label, "Slider")
+    local desc = NormalizeDescription(opts.desc)
+    slider:SetLabel(label)
     slider:SetSliderValues(opts.min or 0, opts.max or 1, opts.step or 0.01)
     if opts.isPercent then slider:SetIsPercent(true) end
     if opts.width then slider:SetWidth(opts.width) end
@@ -567,11 +600,11 @@ function Controls:AddSlider(parent, opts)
         if opts.callback then opts.callback(value) end
     end)
 
-    if opts.desc then
+    if desc then
         slider:SetCallback("OnEnter", function(w)
             GameTooltip:SetOwner(w.frame, "ANCHOR_TOPRIGHT")
-            GameTooltip:SetText(opts.label or "Slider", 1, 1, 1)
-            GameTooltip:AddLine(opts.desc, nil, nil, nil, true)
+            GameTooltip:SetText(label, 1, 1, 1)
+            GameTooltip:AddLine(desc, nil, nil, nil, true)
             GameTooltip:Show()
         end)
         slider:SetCallback("OnLeave", function() GameTooltip:Hide() end)
@@ -583,13 +616,64 @@ function Controls:AddSlider(parent, opts)
 end
 
 -- ============================================================================
+-- EDITBOX
+-- ============================================================================
+
+function Controls:AddEditBox(parent, opts)
+    local box = AceGUI:Create("EditBox")
+    local label = NormalizeText(opts.label, "")
+    local desc = NormalizeDescription(opts.desc)
+    box:SetLabel(label)
+    if opts.width then box:SetWidth(opts.width) else box:SetFullWidth(true) end
+
+    local val
+    if opts.getFunc then
+        val = opts.getFunc()
+    elseif opts.dbPath then
+        val = self:GetDBValue(opts.dbPath)
+    end
+    box:SetText(val or opts.default or "")
+
+    if opts.disabled then
+        if type(opts.disabled) == "function" then
+            box:SetDisabled(opts.disabled())
+        else
+            box:SetDisabled(opts.disabled)
+        end
+    end
+
+    box:SetCallback("OnEnterPressed", function(w, _, value)
+        if opts.setFunc then
+            opts.setFunc(value)
+        elseif opts.dbPath then
+            self:SetDBValue(opts.dbPath, value)
+        end
+        if w and w.ClearFocus then w:ClearFocus() end
+        if opts.callback then opts.callback(value) end
+    end)
+
+    if desc then
+        box:SetCallback("OnEnter", function(w)
+            GameTooltip:SetOwner(w.frame, "ANCHOR_TOPRIGHT")
+            GameTooltip:SetText(label, 1, 1, 1)
+            GameTooltip:AddLine(desc, nil, nil, nil, true)
+            GameTooltip:Show()
+        end)
+        box:SetCallback("OnLeave", function() GameTooltip:Hide() end)
+    end
+
+    parent:AddChild(box)
+    return box
+end
+
+-- ============================================================================
 -- DROPDOWN
 -- ============================================================================
 
 function Controls:AddDropdown(parent, opts)
     local dd = AceGUI:Create("Dropdown")
-    dd:SetLabel(opts.label or "Select")
-    dd:SetList(opts.values or {})
+    dd:SetLabel(NormalizeText(opts.label, "Select"))
+    dd:SetList(NormalizeDropdownValues(opts.values))
     if opts.width then dd:SetWidth(opts.width) end
 
     local val
@@ -660,7 +744,9 @@ end
 
 function Controls:AddButton(parent, opts)
     local btn = AceGUI:Create("Button")
-    btn:SetText(opts.label or "Button")
+    local label = NormalizeText(opts.label, "Button")
+    local desc = NormalizeDescription(opts.desc)
+    btn:SetText(label)
     if opts.width then btn:SetWidth(opts.width) end
     if opts.disabled then
         if type(opts.disabled) == "function" then
@@ -673,11 +759,11 @@ function Controls:AddButton(parent, opts)
         GameTooltip:Hide()
         if opts.callback then opts.callback() end
     end)
-    if opts.desc then
+    if desc then
         btn:SetCallback("OnEnter", function(w)
             GameTooltip:SetOwner(w.frame, "ANCHOR_TOPRIGHT")
-            GameTooltip:SetText(opts.label or "Button", 1, 1, 1)
-            GameTooltip:AddLine(opts.desc, nil, nil, nil, true)
+            GameTooltip:SetText(label, 1, 1, 1)
+            GameTooltip:AddLine(desc, nil, nil, nil, true)
             GameTooltip:Show()
         end)
         btn:SetCallback("OnLeave", function() GameTooltip:Hide() end)
@@ -805,4 +891,415 @@ function Controls:AddSubTabs(parent, tabs, activeKey, onSelect)
     parent:AddChild(sep)
 
     return row
+end
+
+-- ============================================================================
+-- SPELL FILTER LIST (NotPlater-style debuff whitelist/blacklist picker)
+-- Options-only: reads/writes a comma-separated spell ID string in the DB.
+-- GetSpellInfo runs only when the panel is used — not on nameplate ticks.
+-- ============================================================================
+
+local spellFilterPopupContext = nil
+local spellFilterExportDialog = nil
+local spellFilterNameCache = nil
+
+local function EnsureSpellFilterNameCache()
+    if spellFilterNameCache then
+        return spellFilterNameCache
+    end
+    -- Reuse the nameplate runtime's shared name->id index when available so the
+    -- ~70k GetSpellInfo scan runs at most once per session across both panels.
+    local NP = _G.DragonUI and _G.DragonUI.Nameplates
+    if NP and NP.auras and NP.auras.GetSpellNameIndex then
+        spellFilterNameCache = NP.auras.GetSpellNameIndex()
+        return spellFilterNameCache
+    end
+    -- DragonUI_Options declares DragonUI as a required dependency, so this is
+    -- only a defensive fallback for a partially loaded/broken installation.
+    -- Never reintroduce a synchronous full spell-table scan here.
+    spellFilterNameCache = {}
+    return spellFilterNameCache
+end
+
+local function SpellFilterPrint(msg)
+    if addon and addon.Print then
+        addon:Print(msg)
+    else
+        print("|cff1784d1DragonUI:|r " .. tostring(msg))
+    end
+end
+
+local function ParseSpellFilterIDs(raw)
+    local ids = {}
+    local seen = {}
+    for token in string.gmatch(raw or "", "[^,%s]+") do
+        local id = tonumber(token)
+        if id and id > 0 and not seen[id] then
+            seen[id] = true
+            ids[#ids + 1] = id
+        end
+    end
+    return ids
+end
+
+local function SpellFilterIDsToCSV(ids)
+    if not ids or #ids == 0 then
+        return ""
+    end
+    local parts = {}
+    for i = 1, #ids do
+        parts[i] = tostring(ids[i])
+    end
+    return table.concat(parts, ", ")
+end
+
+local function ResolveSpellFilterToken(token)
+    if not token or token == "" then
+        return
+    end
+    token = string.gsub(token, "^%s+", "")
+    token = string.gsub(token, "%s+$", "")
+
+    local numericID = tonumber(token)
+    if numericID and numericID > 0 then
+        local name, _, icon = GetSpellInfo(numericID)
+        if not name then
+            return
+        end
+        return numericID, name, icon or "Interface\\Icons\\INV_Misc_QuestionMark"
+    end
+
+    local lower = string.lower(token)
+    local cache = EnsureSpellFilterNameCache()
+    local spellID = cache[lower]
+    if spellID then
+        local name, _, icon = GetSpellInfo(spellID)
+        if name then
+            return spellID, name, icon or "Interface\\Icons\\INV_Misc_QuestionMark"
+        end
+    end
+end
+
+local function EnsureSpellFilterPopup()
+    if Controls._spellFilterPopupRegistered then
+        return
+    end
+    Controls._spellFilterPopupRegistered = true
+
+    StaticPopupDialogs["DRAGONUI_SPELL_FILTER_PROMPT"] = {
+        button1 = ACCEPT,
+        button2 = CANCEL,
+        hasEditBox = true,
+        timeout = 0,
+        whileDead = true,
+        hideOnEscape = true,
+        OnShow = function(self)
+            self:SetFrameStrata("FULLSCREEN_DIALOG")
+            self:Raise()
+        end,
+        OnAccept = function(self)
+            local text = self.editBox and self.editBox:GetText() or ""
+            local ctx = spellFilterPopupContext
+            if ctx and ctx.onAccept then
+                ctx.onAccept(text)
+            end
+            if self.editBox then
+                self.editBox:SetText("")
+            end
+        end,
+        OnHide = function(self)
+            if self.editBox then
+                self.editBox:SetText("")
+            end
+            spellFilterPopupContext = nil
+        end,
+        EditBoxOnEnterPressed = function(editBox)
+            local parent = editBox:GetParent()
+            if parent and parent.button1 and parent.button1.Click then
+                parent.button1:Click()
+            end
+        end,
+        EditBoxOnEscapePressed = function(editBox)
+            local parent = editBox:GetParent()
+            if parent then
+                parent:Hide()
+            end
+        end,
+        text = "",
+    }
+end
+
+local function ShowSpellFilterPrompt(inputType, onAccept)
+    EnsureSpellFilterPopup()
+    spellFilterPopupContext = { onAccept = onAccept }
+    local dialog = StaticPopup_Show("DRAGONUI_SPELL_FILTER_PROMPT")
+    if not dialog then
+        return
+    end
+    local prompt = (inputType == "ID") and LO["Enter a spell ID"] or LO["Enter a spell name"]
+    if dialog.text then
+        dialog.text:SetText(prompt)
+    end
+    if dialog.editBox then
+        dialog.editBox:SetNumeric(inputType == "ID")
+        dialog.editBox:SetAutoFocus(true)
+        dialog.editBox:SetText("")
+        dialog.editBox:SetFocus()
+    end
+end
+
+local function EnsureSpellFilterExportDialog()
+    if spellFilterExportDialog then
+        return spellFilterExportDialog
+    end
+
+    local frame = CreateFrame("Frame", "DragonUISpellFilterExportDialog", UIParent)
+    frame:SetSize(420, 320)
+    frame:SetFrameStrata("FULLSCREEN_DIALOG")
+    frame:SetFrameLevel(100)
+    frame:SetPoint("CENTER")
+    frame:EnableMouse(true)
+    frame:SetMovable(true)
+    frame:RegisterForDrag("LeftButton")
+    frame:SetScript("OnDragStart", function(self)
+        self:StartMoving()
+    end)
+    frame:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+    end)
+    frame:SetBackdrop({
+        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+        tile = true,
+        tileSize = 32,
+        edgeSize = 32,
+        insets = { left = 11, right = 12, top = 12, bottom = 11 },
+    })
+    frame:SetBackdropColor(0, 0, 0, 1)
+
+    local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    title:SetPoint("TOP", 0, -16)
+    title:SetText(LO["Export/Import Spell IDs"])
+
+    local hint = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    hint:SetPoint("TOP", title, "BOTTOM", 0, -8)
+    hint:SetText(LO["Paste spell IDs separated by commas."])
+
+    -- UIPanelScrollFrameTemplate builds a $parentScrollBar child whose OnLoad
+    -- concatenates the parent's name; a nil name crashes it, so name it.
+    local scrollFrame = CreateFrame("ScrollFrame", "DragonUISpellFilterExportScrollFrame", frame, "UIPanelScrollFrameTemplate")
+    scrollFrame:SetPoint("TOPLEFT", 16, -50)
+    scrollFrame:SetPoint("BOTTOMRIGHT", -30, 52)
+
+    local editBox = CreateFrame("EditBox", nil, scrollFrame)
+    editBox:SetMultiLine(true)
+    editBox:SetAutoFocus(false)
+    editBox:SetFontObject("GameFontHighlightSmall")
+    editBox:SetWidth(360)
+    editBox:SetHeight(140)
+    editBox:SetScript("OnEscapePressed", function(self)
+        self:ClearFocus()
+        frame:Hide()
+    end)
+    editBox:SetScript("OnEnterPressed", function(self)
+        self:Insert("\n")
+    end)
+    scrollFrame:SetScrollChild(editBox)
+
+    local okButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    okButton:SetText(ACCEPT)
+    okButton:SetSize(110, 22)
+    okButton:SetPoint("BOTTOMLEFT", 16, 16)
+    okButton:SetScript("OnClick", function()
+        if frame.onImport then
+            frame.onImport(editBox:GetText())
+        end
+        frame:Hide()
+    end)
+
+    local cancelButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    cancelButton:SetText(CANCEL)
+    cancelButton:SetSize(110, 22)
+    cancelButton:SetPoint("BOTTOMRIGHT", -16, 16)
+    cancelButton:SetScript("OnClick", function()
+        frame:Hide()
+    end)
+
+    frame.editBox = editBox
+    spellFilterExportDialog = frame
+    frame:Hide()
+    return frame
+end
+
+local function BuildSpellFilterExportText(raw)
+    local ids = ParseSpellFilterIDs(raw)
+    if #ids == 0 then
+        return ""
+    end
+    local lines = {}
+    for i = 1, #ids do
+        lines[i] = tostring(ids[i]) .. ","
+    end
+    return table.concat(lines, "\n")
+end
+
+local function ImportSpellFilterText(raw, setFunc)
+    local ids = ParseSpellFilterIDs(raw)
+    if #ids == 0 and raw and raw:match("%d") then
+        SpellFilterPrint(LO["Invalid spell name or ID"])
+    end
+    setFunc(SpellFilterIDsToCSV(ids))
+end
+
+function Controls:AddSpellFilterList(parent, opts)
+    opts = opts or {}
+    local dbPath = opts.dbPath
+    local disabledFunc = opts.disabled
+    local registerDynamic = opts.registerDynamic
+
+    local function IsDisabled()
+        if type(disabledFunc) == "function" then
+            return disabledFunc()
+        end
+        return disabledFunc == true
+    end
+
+    local function GetListRaw()
+        return self:GetDBValue(dbPath) or ""
+    end
+
+    local function SetListRaw(value)
+        self:SetDBValue(dbPath, value or "")
+        if opts.callback then
+            opts.callback(value)
+        end
+        if opts.rebuildUI then
+            opts.rebuildUI()
+        end
+    end
+
+    local function AddSpellToken(token)
+        local spellID, name, icon = ResolveSpellFilterToken(token)
+        if not spellID then
+            SpellFilterPrint(LO["Invalid spell name or ID"])
+            return
+        end
+        local ids = ParseSpellFilterIDs(GetListRaw())
+        for i = 1, #ids do
+            if ids[i] == spellID then
+                SetListRaw(SpellFilterIDsToCSV(ids))
+                return
+            end
+        end
+        ids[#ids + 1] = spellID
+        table.sort(ids)
+        SetListRaw(SpellFilterIDsToCSV(ids))
+    end
+
+    local function RemoveSpellAtIndex(index)
+        local ids = ParseSpellFilterIDs(GetListRaw())
+        if ids[index] then
+            table.remove(ids, index)
+            SetListRaw(SpellFilterIDsToCSV(ids))
+        end
+    end
+
+    local function RegisterWidget(widget)
+        if registerDynamic and widget then
+            return registerDynamic(widget, disabledFunc)
+        end
+        if widget and widget.SetDisabled then
+            widget:SetDisabled(IsDisabled())
+        end
+        return widget
+    end
+
+    local btnRow = self:AddRow(parent, { layout = "Flow" })
+    RegisterWidget(self:AddButton(btnRow, {
+        label = LO["Add Debuff by Name"],
+        width = 160,
+        disabled = disabledFunc,
+        callback = function()
+            -- Populate the shared name index while the user types instead of
+            -- blocking the Accept click with a full spell-table scan.
+            EnsureSpellFilterNameCache()
+            ShowSpellFilterPrompt("NAME", AddSpellToken)
+        end,
+    }))
+    RegisterWidget(self:AddButton(btnRow, {
+        label = LO["Add Debuff by ID"],
+        width = 150,
+        disabled = disabledFunc,
+        callback = function()
+            ShowSpellFilterPrompt("ID", AddSpellToken)
+        end,
+    }))
+    RegisterWidget(self:AddButton(btnRow, {
+        label = LO["Export/Import Spell IDs"],
+        width = 170,
+        disabled = disabledFunc,
+        callback = function()
+            local dialog = EnsureSpellFilterExportDialog()
+            dialog.onImport = function(text)
+                ImportSpellFilterText(text, SetListRaw)
+            end
+            dialog.editBox:SetText(BuildSpellFilterExportText(GetListRaw()))
+            dialog.editBox:HighlightText()
+            dialog:Show()
+            dialog.editBox:SetFocus()
+        end,
+    }))
+
+    local ids = ParseSpellFilterIDs(GetListRaw())
+    if #ids == 0 then
+        local empty = AceGUI:Create("Label")
+        empty:SetFullWidth(true)
+        empty:SetText("|cff888888" .. LO["Spell filter list is empty."] .. "|r")
+        parent:AddChild(empty)
+        if IsDisabled() and empty.SetDisabled then
+            empty:SetDisabled(true)
+        end
+        return empty
+    end
+
+    local listLabel = AceGUI:Create("Label")
+    listLabel:SetFullWidth(true)
+    listLabel:SetText(LO["Click an entry to remove it."])
+    parent:AddChild(listLabel)
+
+    for index, spellID in ipairs(ids) do
+        local name, _, icon = GetSpellInfo(spellID)
+        name = name or LO["Unknown"]
+        icon = icon or "Interface\\Icons\\INV_Misc_QuestionMark"
+        local rowText = string.format("|T%s:16:16:0:0:64:64:4:60:4:60|t %s (%d)", icon, name, spellID)
+
+        local row = AceGUI:Create("InteractiveLabel")
+        row:SetFullWidth(true)
+        row:SetText(rowText)
+        if row.label then
+            SafeSetFont(row.label, 12, "", self.Theme.font)
+        end
+        row:SetCallback("OnClick", function()
+            if not IsDisabled() then
+                RemoveSpellAtIndex(index)
+            end
+        end)
+        row:SetCallback("OnEnter", function(w)
+            GameTooltip:SetOwner(w.frame, "ANCHOR_RIGHT")
+            GameTooltip:SetText(name, 1, 1, 1)
+            GameTooltip:AddLine(string.format(LO["Spell ID: %d"], spellID), nil, nil, nil, true)
+            GameTooltip:AddLine(LO["Click to remove."], 0.7, 0.7, 0.7, true)
+            GameTooltip:Show()
+        end)
+        row:SetCallback("OnLeave", function()
+            GameTooltip:Hide()
+        end)
+        if IsDisabled() and row.SetDisabled then
+            row:SetDisabled(true)
+        end
+        RegisterWidget(row)
+        parent:AddChild(row)
+    end
+
+    return listLabel
 end

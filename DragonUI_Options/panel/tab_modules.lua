@@ -248,6 +248,7 @@ local function BuildModulesTab(scroll)
             { key = "cooldowns",   name = LO["Cooldowns"] },
             { key = "auracooldowns", name = LO["Target & Focus Aura Customization"] },
             { key = "minimap",     name = LO["Minimap"] },
+            { key = "nameplates",  name = LO["Nameplates"] },
             { key = "keybinding",  name = LO["KeyBinding"] },
             { key = "questtracker", name = LO["Quest Tracker"] },
         }

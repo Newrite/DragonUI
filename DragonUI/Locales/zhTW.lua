@@ -79,3 +79,8 @@ L["Position & Scale"] = "位置與縮放"
 L["Scale of the BNet toast frame."] = "戰網提示框架的縮放比例。"
 L["Horizontal position of the BNet toast from the screen center. Negative values move left, positive values move right."] = "戰網提示距螢幕中心的水平位置。負值向左移動，正值向右移動。"
 L["Vertical offset of the BNet toast frame. Negative values move down, positive values move up."] = "戰網提示框架的垂直偏移。負值向下移動，正值向上移動。"
+
+-- NamePlates
+L["Nameplates"] = "名牌"
+L["Apply DragonUI nameplate styling."] = "將 DragonUI 樣式套用至名牌。"
+

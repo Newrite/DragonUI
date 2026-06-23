@@ -79,3 +79,8 @@ L["Position & Scale"] = "Posição e Escala"
 L["Scale of the BNet toast frame."] = "Escala do quadro de notificação do Battle.net."
 L["Horizontal position of the BNet toast from the screen center. Negative values move left, positive values move right."] = "Posição horizontal da notificação do Battle.net a partir do centro da tela. Valores negativos movem para a esquerda, positivos para a direita."
 L["Vertical offset of the BNet toast frame. Negative values move down, positive values move up."] = "Deslocamento vertical do quadro de notificação do Battle.net. Valores negativos movem para baixo, positivos para cima."
+
+-- Nameplates
+L["Nameplates"] = "Placas de nome"
+L["Apply DragonUI nameplate styling."] = "Aplica o estilo DragonUI as placas de nome."
+
