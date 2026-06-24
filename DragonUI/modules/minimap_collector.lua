@@ -63,6 +63,7 @@ local EXCLUDED_BUTTONS = {
 -- State
 -- ----------------------------------------------------------------------------
 local deps = Collector._deps or {}
+local isRefreshingCollector = false  -- guards against reentrant RefreshCollector calls
 
 -- ----------------------------------------------------------------------------
 -- Config helpers
@@ -196,6 +197,8 @@ end
 -- Highlight / glow / animations
 -- ----------------------------------------------------------------------------
 local UpdateHighlightStyle  -- forward declaration
+local RefreshCollector  -- forward declaration
+local HookButtonVisibility  -- forward declaration
 
 local function EnsureHighlight(btn)
     if btn.DragonUI_HighlightPrepared then return end
@@ -397,6 +400,34 @@ local function OpenInterfaceConfig()
 end
 
 -- ----------------------------------------------------------------------------
+-- Detect addon launcher buttons hidden via their own settings
+-- ----------------------------------------------------------------------------
+local function IsAddonMinimapButtonHidden(btn)
+    if not btn then return false end
+    if btn.db and btn.db.hide then return true end
+
+    if btn.IsShown and not btn:IsShown() then
+        local parent = btn:GetParent()
+        return parent == Minimap or parent == MinimapBackdrop or btn.DragonUI_CollectorManaged or false
+    end
+
+    return false
+end
+
+local function ApplyCollectedButtonVisibility(btn, c)
+    if not btn or not c then return end
+
+    if IsAddonMinimapButtonHidden(btn) then
+        btn:Hide()
+        return
+    end
+
+    if c.isOpen then
+        btn:Show()
+    end
+end
+
+-- ----------------------------------------------------------------------------
 -- Origin tracking (single subtable instead of many keys)
 -- ----------------------------------------------------------------------------
 local function RememberWrapperFrame(btn)
@@ -443,7 +474,7 @@ local function RememberOrigin(btn)
         parent = btn:GetParent(),
         strata = btn:GetFrameStrata(),
         level  = btn:GetFrameLevel(),
-        shown  = btn:IsShown(),
+        shown  = not IsAddonMinimapButtonHidden(btn) and btn:IsShown(),
         alpha  = btn:GetAlpha(),
         scale  = btn:GetScale(),
         w = w, h = h,
@@ -470,7 +501,7 @@ local function RestoreOrigin(btn)
     if o.points then
         for _, p in ipairs(o.points) do btn:SetPoint(unpack(p)) end
     end
-    if o.shown then btn:Show() else btn:Hide() end
+    if IsAddonMinimapButtonHidden(btn) or not o.shown then btn:Hide() else btn:Show() end
     btn.DragonUI_CollectorOrigin = nil
 end
 
@@ -501,6 +532,12 @@ local function CollectEntries()
                      and g(child, "OnMouseDown") == nil) then
                 return
             end
+        end
+
+        if IsAddonMinimapButtonHidden(child) then
+            -- Hook while hidden so OnHookedShow can grab it the moment it shows.
+            HookButtonVisibility(child)
+            return
         end
 
         if seen[child] then return end
@@ -744,18 +781,38 @@ end
 local function OnHookedShow(self)
     local m = GetModule()
     if not m or not m.applied then return end
+    if IsAddonMinimapButtonHidden(self) then
+        self:Hide()
+        return
+    end
+    -- Reflow immediately so the grid stays compact and in sync.
     local c = GetCollector()
     if c and self:GetParent() == c then
-        if c.isOpen then self:Show() end
+        if c.isOpen then RefreshCollector() else self:Hide() end
     elseif self.DragonUI_CollectorManaged then
         self:Hide()
+    elseif self.DragonUI_CollectorVisibilityHooked then
+        -- First time visible after always being hidden: grab it now.
+        RefreshCollector()
     end
 end
 
-local function HookButtonVisibility(btn)
+local function OnHookedHide(self)
+    local m = GetModule()
+    if not m or not m.applied then return end
+    if not self.DragonUI_CollectorManaged then return end
+
+    local c = GetCollector()
+    if c and self:GetParent() == c and c.isOpen then
+        RefreshCollector()
+    end
+end
+
+HookButtonVisibility = function(btn)
     if btn.DragonUI_CollectorVisibilityHooked then return end
     btn.DragonUI_CollectorVisibilityHooked = true
     btn:HookScript("OnShow", OnHookedShow)
+    btn:HookScript("OnHide", OnHookedHide)
 end
 
 local function PositionCollectedButton(btn, c, index, skin)
@@ -814,7 +871,7 @@ local function EnforceCollectedButtonPlacement(btn)
     end
     PositionCollectedButton(btn, c, btn.DragonUI_CollectorIndex or 1, IsSkinEnabled())
     btn:SetAlpha(1)
-    if c.isOpen then btn:Show() end
+    ApplyCollectedButtonVisibility(btn, c)
     btn.DragonUI_CollectorRepositioning = nil
 end
 
@@ -872,7 +929,7 @@ local function PlaceCollectedButton(btn, c, index)
     PositionCollectedButton(btn, c, index, skin)
     HideWrapperFrame(btn)
 
-    if c.isOpen then btn:Show() end
+    ApplyCollectedButtonVisibility(btn, c)
 end
 
 -- ----------------------------------------------------------------------------
@@ -911,7 +968,7 @@ local function RefreshAddonButtonsAfterDisable()
     end
 end
 
-local function RefreshCollector()
+local function RefreshCollectorImpl()
     if not IsEnabled() then
         RestoreCollectedToOrigin()
         HideCollectorImmediate()
@@ -926,9 +983,22 @@ local function RefreshCollector()
     PositionCollector()
     ResizeCollector(c, #entries)
 
+    local placed = {}
     for i, e in ipairs(entries) do
         PlaceCollectedButton(e.button, c, i)
+        placed[e.button] = true
     end
+
+    ForEachChild(c, function(child)
+        if child.DragonUI_CollectorManaged and not placed[child] then
+            -- Still addon-hidden: park it hidden instead of restoring it.
+            if IsAddonMinimapButtonHidden(child) then
+                child:Hide()
+            else
+                RestoreOrigin(child)
+            end
+        end
+    end)
 
     if #entries == 0 then
         StopAnim(c)
@@ -957,6 +1027,13 @@ local function RefreshCollector()
             c:Hide()
         end
     end
+end
+
+RefreshCollector = function()
+    if isRefreshingCollector then return end
+    isRefreshingCollector = true
+    RefreshCollectorImpl()
+    isRefreshingCollector = false
 end
 
 local function ToggleCollector()
