@@ -125,6 +125,17 @@ function NP.widgets.ResolveTotemTexturePath(plateName)
             return C.TOTEM_TEX .. basename
         end
     end
+    -- Fallback: resolve via GetSpellInfo for custom/CoA totems not in tables.
+    -- Mirrors approach: delegate icon resolution to the client.
+    -- CoA general fix
+    if GetSpellInfo then
+        local _, _, icon = GetSpellInfo(plateName)
+        if icon then return icon end
+        if bare then
+            local _, _, icon = GetSpellInfo(bare)
+            if icon then return icon end
+        end
+    end
     return nil
 end
 
