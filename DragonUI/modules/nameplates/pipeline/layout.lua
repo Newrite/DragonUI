@@ -619,13 +619,23 @@ end
 
 -- Fonts
 
+-- Fallback chain in case fontPath's file is missing on disk (avoids "Font not set").
+local function SafeSetFont(fs, path, size, flags)
+    if not fs then return end
+    flags = flags or ""
+    if fs:SetFont(path, size, flags) then return end
+    if STANDARD_TEXT_FONT and fs:SetFont(STANDARD_TEXT_FONT, size, flags) then return end
+    fs:SetFont("Fonts\\FRIZQT__.TTF", size, flags)
+end
+NP.layout.SafeSetFont = SafeSetFont
+
 function NP.layout.ApplyNameplateFonts(plateData)
     local nameSize, powerSize = NP.config.GetNameplateFontSizes()
     local fontPath = NP.config.GetNameplateFont()
 
     local function applyFont(fs, px)
         if not fs then return end
-        fs:SetFont(fontPath, px, "")
+        SafeSetFont(fs, fontPath, px, "")
     end
 
     applyFont(plateData.minaName, nameSize)
@@ -734,7 +744,7 @@ function NP.layout.EnsureMinaStack(plateData)
     local nameSize = select(1, NP.config.GetNameplateFontSizes())
 
     plateData.minaName = plateData.minaNameRow:CreateFontString(nil, "OVERLAY")
-    plateData.minaName:SetFont(fontPath, nameSize, "")
+    SafeSetFont(plateData.minaName, fontPath, nameSize, "")
     plateData.minaName:SetShadowOffset(1, -1)
     plateData.minaName:SetShadowColor(0, 0, 0, 1)
     plateData.minaName:SetJustifyH("LEFT")
@@ -743,7 +753,7 @@ function NP.layout.EnsureMinaStack(plateData)
     plateData.minaName:SetHeight(12)
 
     plateData.minaHpPct = plateData.minaNameRow:CreateFontString(nil, "OVERLAY")
-    plateData.minaHpPct:SetFont(fontPath, nameSize, "")
+    SafeSetFont(plateData.minaHpPct, fontPath, nameSize, "")
     plateData.minaHpPct:SetShadowOffset(1, -1)
     plateData.minaHpPct:SetShadowColor(0, 0, 0, 1)
     plateData.minaHpPct:SetJustifyH("RIGHT")
@@ -752,13 +762,13 @@ function NP.layout.EnsureMinaStack(plateData)
     plateData.minaHpPct:SetHeight(12)
 
     plateData.minaPoCur = visualRoot:CreateFontString(nil, "OVERLAY")
-    plateData.minaPoCur:SetFont(fontPath, 9, "")
+    SafeSetFont(plateData.minaPoCur, fontPath, 9, "")
     plateData.minaPoCur:SetShadowOffset(1, -1)
     plateData.minaPoCur:SetShadowColor(0, 0, 0, 1)
     plateData.minaPoCur:SetJustifyH("LEFT")
 
     plateData.minaPoPct = visualRoot:CreateFontString(nil, "OVERLAY")
-    plateData.minaPoPct:SetFont(fontPath, 9, "")
+    SafeSetFont(plateData.minaPoPct, fontPath, 9, "")
     plateData.minaPoPct:SetShadowOffset(1, -1)
     plateData.minaPoPct:SetShadowColor(0, 0, 0, 1)
     plateData.minaPoPct:SetJustifyH("RIGHT")
