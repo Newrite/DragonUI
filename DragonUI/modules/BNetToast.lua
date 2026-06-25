@@ -459,8 +459,6 @@ function SetupToastEditorAnchor()
             toastAnchor:ClearAllPoints()
             if cfg and cfg.custom_position then
                 toastAnchor:SetPoint(cfg.anchor or "CENTER", UIParent, cfg.anchor or "CENTER", cfg.posX or 0, cfg.posY or 200)
-            elseif BNToastFrame then
-                toastAnchor:SetPoint("CENTER", BNToastFrame, "CENTER", 0, 0)
             else
                 toastAnchor:SetPoint("CENTER", UIParent, "CENTER", 0, 200)
             end
