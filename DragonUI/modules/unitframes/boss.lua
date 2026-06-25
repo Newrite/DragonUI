@@ -308,7 +308,7 @@ local function ApplyBossFrameLayout(frame)
     end
 
     -- High level icon (skull)
-    local highLevelTex = _G[frameName .. "TextureFrameHighLevelTexture"]
+    local highLevelTex = _G[frame:GetName() .. "TextureFrameHighLevelTexture"]
     if highLevelTex and levelText then
         highLevelTex:ClearAllPoints()
         highLevelTex:SetPoint("CENTER", levelText, "CENTER", -9, 6)

@@ -88,7 +88,7 @@ local function ReplaceBlizzardFrame(frame)
 
     local highlightTexture = toggleButton:GetHighlightTexture() or toggleButton:CreateTexture(nil, "HIGHLIGHT")
     highlightTexture:SetAllPoints(toggleButton)
-    SetAtlasTexture(highlightTexture, 'CollapseButton-Right')
+    highlightTexture:set_atlas('CollapseButton-Right', true)
     highlightTexture:set_atlas('CollapseButton-Right', true)
 
     toggleButton:SetScript("OnClick", function(self)
@@ -183,9 +183,9 @@ function BuffFrameModule:UpdatePosition()
     if not addon.db or not addon.db.profile or not addon.db.profile.widgets or not addon.db.profile.widgets.buffs then
         return
     end
-    
+
     local widgetOptions = addon.db.profile.widgets.buffs
-    
+
     if IsBuffFrameAtDefaultPosition() then
         -- Default position: shift down when ticket/GM panel is open
         local ticketOpen = (TicketStatusFrame and TicketStatusFrame:IsShown())
@@ -311,9 +311,9 @@ end
 -- Toggle module on/off
 function BuffFrameModule:Toggle(enabled)
     if not addon.db or not addon.db.profile then return end
-    
+
     addon.db.profile.buffs.enabled = enabled
-    
+
     if enabled then
         self:Enable()
     else
@@ -327,10 +327,10 @@ end
 -- Enable the buff frame module
 function BuffFrameModule:Enable()
     if not addon.db.profile.buffs.enabled then return end
-    
+
     -- Create auxiliary frame for editor mode
     dragonUIBuffFrame = addon.CreateUIFrame(BuffFrame:GetWidth(), BuffFrame:GetHeight(), "Auras")
-    
+
     -- Register with editor system
     addon:RegisterEditableFrame({
         name = "buffs",
@@ -348,7 +348,7 @@ function BuffFrameModule:Enable()
         end,
         module = self
     })
-    
+
     -- ========================================================================
     -- WEAPON ENCHANT SEPARATION (FEATURE)
     -- When enabled, weapon enchant icons (TempEnchant1/2/3) are detached from
@@ -356,19 +356,19 @@ function BuffFrameModule:Enable()
     -- frame.  The editor mode system lets users position it freely.
     -- ========================================================================
     self:SetupWeaponEnchantSeparation()
-    
+
     -- PERMANENTLY OVERRIDE BuffFrame positioning methods.
     -- Every call to BuffFrame:SetPoint() from ANY code path (BuffFrame_Update,
     -- UIParent_ManageFramePositions, etc.) gets redirected to anchor BuffFrame
     -- to our dragonUIBuffFrame. This is the ONLY reliable way to prevent
     -- Blizzard from moving the buff icons.
     buffFramePositionLocked = true
-    
+
     BuffFrame.ClearAllPoints = function(self)
         -- Noop: don't let anyone clear BuffFrame's anchor.
         -- Our SetPoint override handles re-anchoring when needed.
     end
-    
+
     BuffFrame.SetPoint = function(self, ...)
         -- ALWAYS redirect: anchor BuffFrame to our controlled frame
         if not buffFramePositionLocked or not dragonUIBuffFrame then
@@ -381,7 +381,7 @@ function BuffFrameModule:Enable()
         -- DON'T call UpdatePosition() here - it would reset dragonUIBuffFrame
         -- position during editor drag. UpdatePosition is called on events instead.
     end
-    
+
     -- PERMANENTLY OVERRIDE ConsolidatedBuffs positioning methods.
     -- Same pattern as BuffFrame above: ConsolidatedBuffs is the ROOT of the
     -- buff icon anchor chain (CB → TemporaryEnchantFrame → BuffButton1 → …).
@@ -394,7 +394,7 @@ function BuffFrameModule:Enable()
         end
         -- Noop when locked
     end
-    
+
     ConsolidatedBuffs.SetPoint = function(self, ...)
         if not buffFramePositionLocked or not dragonUIBuffFrame then
             return original_CB_SetPoint(self, ...)
@@ -402,14 +402,14 @@ function BuffFrameModule:Enable()
         original_CB_ClearAllPoints(self)
         original_CB_SetPoint(self, "TOPRIGHT", dragonUIBuffFrame, "TOPRIGHT", 0, 0)
     end
-    
+
     -- Set initial position: anchor BuffFrame and ConsolidatedBuffs to our frame
     original_BuffFrame_ClearAllPoints(BuffFrame)
     original_BuffFrame_SetPoint(BuffFrame, "TOPRIGHT", dragonUIBuffFrame, "TOPRIGHT", 0, 0)
     original_CB_ClearAllPoints(ConsolidatedBuffs)
     original_CB_SetPoint(ConsolidatedBuffs, "TOPRIGHT", dragonUIBuffFrame, "TOPRIGHT", 0, 0)
     BuffFrameModule:UpdatePosition()
-    
+
     -- ========================================================================
     -- HELPER: Find buff layout info (first buff, last-row-start buff, row count)
     -- Used by both buff row-2 fix and debuff anchoring.
@@ -632,7 +632,7 @@ function BuffFrameModule:Enable()
             FixDebuffPositions()
         end)
     end
-    
+
     -- Also hook TicketStatusFrame Show/Hide directly for reliable detection
     if not BuffFrameModule._hookedTicketFrame then
         BuffFrameModule._hookedTicketFrame = true
@@ -669,7 +669,7 @@ function BuffFrameModule:Enable()
             end)
         end
     end
-    
+
     --  CONFIGURE EVENTS
     if not buffFrame then
         buffFrame = CreateFrame("Frame")
@@ -677,13 +677,13 @@ function BuffFrameModule:Enable()
         buffFrame:RegisterEvent("UNIT_AURA")
         buffFrame:RegisterEvent("UNIT_ENTERED_VEHICLE")
         buffFrame:RegisterEvent("UNIT_EXITED_VEHICLE")
-        
+
         buffFrame:SetScript("OnEvent", function(self, event, unit)
             if event == "PLAYER_ENTERING_WORLD" then
                 ReplaceBlizzardFrame(dragonUIBuffFrame)
                 ShowToggleButtonIf(GetUnitBuffCount("player", 16) > 0)
                 BuffFrameModule:UpdatePosition()
-                
+
                 -- Restore buff toggle state from saved profile
                 if addon.db and addon.db.profile and addon.db.profile.buffs
                    and addon.db.profile.buffs.buffs_hidden then
@@ -700,7 +700,7 @@ function BuffFrameModule:Enable()
             if VanityBuffs then VanityBuffs:ClearAllPoints(); VanityBuffs:Hide() end
                     if TemporaryEnchantFrame then TemporaryEnchantFrame:Hide() end
                 end
-                
+
                 -- Reposition the GM ticket frame so it doesn't overlap the minimap
                 if TicketStatusFrame then
                     TicketStatusFrame:ClearAllPoints()
@@ -733,7 +733,7 @@ function BuffFrameModule:Disable()
     BuffFrame.ClearAllPoints = original_BuffFrame_ClearAllPoints
     ConsolidatedBuffs.SetPoint = original_CB_SetPoint
     ConsolidatedBuffs.ClearAllPoints = original_CB_ClearAllPoints
-    
+
     -- Clean up weapon enchant separation
     if weaponEnchantsAreSeparated then
         weaponEnchantsAreSeparated = false
@@ -743,18 +743,18 @@ function BuffFrameModule:Disable()
         dragonUIWeaponBuffFrame:Hide()
         -- Don't nil it — may be re-enabled without reload
     end
-    
+
     if buffFrame then
         buffFrame:UnregisterAllEvents()
         buffFrame:SetScript("OnEvent", nil)
         buffFrame = nil
     end
-    
+
     if toggleButton then
         toggleButton:Hide()
         toggleButton = nil
     end
-    
+
     if dragonUIBuffFrame then
         dragonUIBuffFrame:Hide()
         dragonUIBuffFrame = nil
