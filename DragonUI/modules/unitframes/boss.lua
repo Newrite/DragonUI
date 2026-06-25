@@ -422,10 +422,10 @@ local function UpdateBossFrame(frame)
 
 
     -- Threat indicator
-    if bossFrame.threatIndicator then
-        bossFrame.threatIndicator:ClearAllPoints()
-        bossFrame.threatIndicator:SetPoint("BOTTOMLEFT", 0, 0)
-        bossFrame.threatIndicator:set_atlas("TargetFrame-Status", true)
+    if frame.threatIndicator then
+        frame.threatIndicator:ClearAllPoints()
+        frame.threatIndicator:SetPoint("BOTTOMLEFT", 0, 0)
+        frame.threatIndicator:set_atlas("TargetFrame-Status", true)
     end
 
     -- Threat / combat glow — hide Blizzard's, use our custom
