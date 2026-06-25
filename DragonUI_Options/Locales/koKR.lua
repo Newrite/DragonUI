@@ -1061,6 +1061,26 @@ L["Show mana gain/loss glow feedback on player mana bar (experimental)."] = "플
 -- Preset (used by minimap tab)
 L["Preset"] = "프리셋"
 L["Save"] = "저장"
+L["Load"] = "불러오기"
+L["Load preset '%s'? This will overwrite your current layout settings."] = "'%s' 프리셋을 불러올까요? 현재 레이아웃 설정이 덮어씁니다."
+L["Load Preset"] = "프리셋 불러오기"
+L["Delete preset '%s'? This cannot be undone."] = "'%s' 프리셋을 삭제할까요? 이 작업은 되돌릴 수 없습니다."
+L["Delete Preset"] = "프리셋 삭제"
+L["Duplicate Preset"] = "프리셋 복제"
+L["Preset saved: "] = "프리셋 저장됨: "
+L["Preset loaded: "] = "프리셋 불러옴: "
+L["Preset deleted: "] = "프리셋 삭제됨: "
+L["Preset duplicated: "] = "프리셋 복제됨: "
+L["Also delete all saved layout presets?"] = "저장된 레이아웃 프리셋도 모두 삭제할까요?"
+L["Also delete all saved position presets?"] = "저장된 위치 프리셋도 모두 삭제할까요?"
+L["Presets kept."] = "프리셋이 유지되었습니다."
+L["Position presets kept."] = "위치 프리셋이 유지되었습니다."
+
+-- PRESET IMPORT / EXPORT
+L["Export Preset"] = "프리셋 내보내기"
+L["Import Preset"] = "프리셋 가져오기"
+L["Import a preset from a text string shared by another player."] = "다른 플레이어가 공유한 텍스트에서 프리셋을 가져옵니다."
+L["Import"] = "가져오기"
 L["Select All"] = "모두 선택"
 L["Close"] = "닫기"
 

@@ -1057,6 +1057,26 @@ L["Show mana gain/loss glow feedback on player mana bar (experimental)."] = "Zei
 -- Preset (used by minimap tab)
 L["Preset"] = "Vorlage"
 L["Save"] = "Speichern"
+L["Load"] = "Laden"
+L["Load preset '%s'? This will overwrite your current layout settings."] = "Vorlage '%s' laden? Aktuelle Layout-Einstellungen werden überschrieben."
+L["Load Preset"] = "Vorlage laden"
+L["Delete preset '%s'? This cannot be undone."] = "Vorlage '%s' löschen? Dies kann nicht rückgängig gemacht werden."
+L["Delete Preset"] = "Vorlage löschen"
+L["Duplicate Preset"] = "Vorlage duplizieren"
+L["Preset saved: "] = "Vorlage gespeichert: "
+L["Preset loaded: "] = "Vorlage geladen: "
+L["Preset deleted: "] = "Vorlage gelöscht: "
+L["Preset duplicated: "] = "Vorlage dupliziert: "
+L["Also delete all saved layout presets?"] = "Auch alle gespeicherten Layout-Vorlagen löschen?"
+L["Also delete all saved position presets?"] = "Auch alle gespeicherten Positions-Vorlagen löschen?"
+L["Presets kept."] = "Vorlagen beibehalten."
+L["Position presets kept."] = "Positions-Vorlagen beibehalten."
+
+-- PRESET IMPORT / EXPORT
+L["Export Preset"] = "Vorlage exportieren"
+L["Import Preset"] = "Vorlage importieren"
+L["Import a preset from a text string shared by another player."] = "Importiere eine Vorlage aus einem Textstring, der von einem anderen Spieler geteilt wurde."
+L["Import"] = "Importieren"
 L["Select All"] = "Alles auswählen"
 L["Close"] = "Schließen"
 

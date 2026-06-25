@@ -1071,6 +1071,26 @@ L["Show mana gain/loss glow feedback on player mana bar (experimental)."] = "Mos
 -- Preset (used by minimap tab)
 L["Preset"] = "Preajuste"
 L["Save"] = "Guardar"
+L["Load"] = "Cargar"
+L["Load preset '%s'? This will overwrite your current layout settings."] = "¿Cargar preajuste '%s'? Esto sobrescribirá tu configuración de diseño actual."
+L["Load Preset"] = "Cargar Preajuste"
+L["Delete preset '%s'? This cannot be undone."] = "¿Eliminar preajuste '%s'? Esto no se puede deshacer."
+L["Delete Preset"] = "Eliminar Preajuste"
+L["Duplicate Preset"] = "Duplicar Preajuste"
+L["Preset saved: "] = "Preajuste guardado: "
+L["Preset loaded: "] = "Preajuste cargado: "
+L["Preset deleted: "] = "Preajuste eliminado: "
+L["Preset duplicated: "] = "Preajuste duplicado: "
+L["Also delete all saved layout presets?"] = "¿Eliminar también todos los preajustes de diseño guardados?"
+L["Also delete all saved position presets?"] = "¿Eliminar también todos los preajustes de posición guardados?"
+L["Presets kept."] = "Preajustes conservados."
+L["Position presets kept."] = "Preajustes de posición conservados."
+
+-- PRESET IMPORT / EXPORT
+L["Export Preset"] = "Exportar Preajuste"
+L["Import Preset"] = "Importar Preajuste"
+L["Import a preset from a text string shared by another player."] = "Importa un preajuste desde un texto compartido por otro jugador."
+L["Import"] = "Importar"
 L["Select All"] = "Seleccionar Todo"
 L["Close"] = "Cerrar"
 

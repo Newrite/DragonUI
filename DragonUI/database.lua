@@ -161,6 +161,13 @@ local defaults = {
                 posX = 0,
                 posY = 160,
                 custom_position = false
+            },
+            positionPresetPanel = {
+                anchor = "TOP",
+                posX = 0,
+                posY = 144,
+                relativePoint = "CENTER",
+                custom_position = false
             }
         },
         -- Quest Tracker
@@ -907,6 +914,9 @@ local defaults = {
 
         -- LAYOUT PRESETS (user-saved UI snapshots within this profile)
         presets = {},
+
+        -- POSITION PRESETS (edit-mode element positions only)
+        positionPresets = {},
 
         -- Conquest of Azeroth settings
         CoA = {

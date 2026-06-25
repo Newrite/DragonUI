@@ -1113,6 +1113,26 @@ L["Show mana gain/loss glow feedback on player mana bar (experimental)."] = true
 -- Preset (used by minimap tab)
 L["Preset"] = true
 L["Save"] = true
+L["Load"] = true
+L["Load preset '%s'? This will overwrite your current layout settings."] = true
+L["Load Preset"] = true
+L["Delete preset '%s'? This cannot be undone."] = true
+L["Delete Preset"] = true
+L["Duplicate Preset"] = true
+L["Preset saved: "] = true
+L["Preset loaded: "] = true
+L["Preset deleted: "] = true
+L["Preset duplicated: "] = true
+L["Also delete all saved layout presets?"] = true
+L["Also delete all saved position presets?"] = true
+L["Presets kept."] = true
+L["Position presets kept."] = true
+
+-- PRESET IMPORT / EXPORT
+L["Export Preset"] = true
+L["Import Preset"] = true
+L["Import a preset from a text string shared by another player."] = true
+L["Import"] = true
 L["Select All"] = true
 L["Close"] = true
 

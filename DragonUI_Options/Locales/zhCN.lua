@@ -1031,6 +1031,26 @@ L["Show mana gain/loss glow feedback on player mana bar (experimental)."] = "在
 -- Preset (used by minimap tab)
 L["Preset"] = "预设"
 L["Save"] = "保存"
+L["Load"] = "加载"
+L["Load preset '%s'? This will overwrite your current layout settings."] = "加载预设 '%s'？这将覆盖您当前的布局设置。"
+L["Load Preset"] = "加载预设"
+L["Delete preset '%s'? This cannot be undone."] = "删除预设 '%s'？此操作无法撤销。"
+L["Delete Preset"] = "删除预设"
+L["Duplicate Preset"] = "复制预设"
+L["Preset saved: "] = "预设已保存: "
+L["Preset loaded: "] = "预设已加载: "
+L["Preset deleted: "] = "预设已删除: "
+L["Preset duplicated: "] = "预设已复制: "
+L["Also delete all saved layout presets?"] = "是否同时删除所有已保存的布局预设？"
+L["Also delete all saved position presets?"] = "是否同时删除所有已保存的位置预设？"
+L["Presets kept."] = "预设已保留。"
+L["Position presets kept."] = "位置预设已保留。"
+
+-- PRESET IMPORT / EXPORT
+L["Export Preset"] = "导出预设"
+L["Import Preset"] = "导入预设"
+L["Import a preset from a text string shared by another player."] = "从其他玩家分享的文本中导入预设。"
+L["Import"] = "导入"
 L["Select All"] = "全选"
 L["Close"] = "关闭"
 

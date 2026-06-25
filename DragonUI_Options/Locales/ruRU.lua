@@ -1053,6 +1053,26 @@ L["Show mana gain/loss glow feedback on player mana bar (experimental)."] = "П�
 -- Preset (used by minimap tab)
 L["Preset"] = "Шаблон"
 L["Save"] = "Сохранить"
+L["Load"] = "Загрузить"
+L["Load preset '%s'? This will overwrite your current layout settings."] = "Загрузить шаблон '%s'? Текущие настройки раскладки будут перезаписаны."
+L["Load Preset"] = "Загрузить шаблон"
+L["Delete preset '%s'? This cannot be undone."] = "Удалить шаблон '%s'? Это действие нельзя отменить."
+L["Delete Preset"] = "Удалить шаблон"
+L["Duplicate Preset"] = "Дублировать шаблон"
+L["Preset saved: "] = "Шаблон сохранён: "
+L["Preset loaded: "] = "Шаблон загружен: "
+L["Preset deleted: "] = "Шаблон удалён: "
+L["Preset duplicated: "] = "Шаблон дублирован: "
+L["Also delete all saved layout presets?"] = "Также удалить все сохранённые шаблоны раскладки?"
+L["Also delete all saved position presets?"] = "Также удалить все сохранённые пресеты позиций?"
+L["Presets kept."] = "Шаблоны сохранены."
+L["Position presets kept."] = "Пресеты позиций сохранены."
+
+-- PRESET IMPORT / EXPORT
+L["Export Preset"] = "Экспорт шаблона"
+L["Import Preset"] = "Импорт шаблона"
+L["Import a preset from a text string shared by another player."] = "Импортировать шаблон из текста, которым поделился другой игрок."
+L["Import"] = "Импорт"
 L["Select All"] = "Выбрать всё"
 L["Close"] = "Закрыть"
 

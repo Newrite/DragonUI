@@ -560,15 +560,102 @@ local function BuildProfilesTab(scroll)
         width = 160,
         desc = LO["Restores the current profile to defaults."],
         callback = function()
+            local function FinishProfileReset(extraMessage)
+                local msg = LO["Profile reset to defaults."]
+                if extraMessage and extraMessage ~= "" then
+                    msg = msg .. " " .. extraMessage
+                end
+                print("|cFF00FF00[DragonUI]|r " .. msg)
+                ReloadUI()
+            end
+
+            local function AskDeletePositionPresets()
+                local positionPresets = addon.db and addon.db.profile and addon.db.profile.positionPresets
+                if not positionPresets or not next(positionPresets) then
+                    FinishProfileReset()
+                    return
+                end
+
+                StaticPopupDialogs["DRAGONUI_RESET_POSITION_PRESETS"] = StaticPopupDialogs["DRAGONUI_RESET_POSITION_PRESETS"] or {
+                    text = LO["Also delete all saved position presets?"],
+                    button1 = LO["Yes"],
+                    button2 = LO["No"],
+                    OnAccept = function()
+                        if addon.db and addon.db.profile then
+                            addon.db.profile.positionPresets = {}
+                        end
+                        FinishProfileReset()
+                    end,
+                    OnCancel = function()
+                        FinishProfileReset(LO["Position presets kept."] or LO["Presets kept."] or "Position presets kept.")
+                    end,
+                    timeout = 0,
+                    whileDead = true,
+                    hideOnEscape = false,
+                    preferredIndex = 3,
+                }
+                StaticPopup_Show("DRAGONUI_RESET_POSITION_PRESETS")
+            end
+
+            local function AskDeleteLayoutPresets()
+                local presets = addon.db and addon.db.profile and addon.db.profile.presets
+                if presets and next(presets) then
+                    StaticPopupDialogs["DRAGONUI_RESET_PRESETS"] = StaticPopupDialogs["DRAGONUI_RESET_PRESETS"] or {
+                        text = LO["Also delete all saved layout presets?"],
+                        button1 = LO["Yes"],
+                        button2 = LO["No"],
+                        OnAccept = function()
+                            if addon.db and addon.db.profile then
+                                addon.db.profile.presets = {}
+                            end
+                            AskDeletePositionPresets()
+                        end,
+                        OnCancel = function()
+                            local positionPresets = addon.db and addon.db.profile and addon.db.profile.positionPresets
+                            if positionPresets and next(positionPresets) then
+                                AskDeletePositionPresets()
+                            else
+                                FinishProfileReset(LO["Presets kept."] or "Presets kept.")
+                            end
+                        end,
+                        timeout = 0,
+                        whileDead = true,
+                        hideOnEscape = false,
+                        preferredIndex = 3,
+                    }
+                    StaticPopup_Show("DRAGONUI_RESET_PRESETS")
+                else
+                    AskDeletePositionPresets()
+                end
+            end
+
+            -- Show confirmation dialog before resetting
             StaticPopupDialogs["DRAGONUI_RESET_PROFILE"] = StaticPopupDialogs["DRAGONUI_RESET_PROFILE"] or {
                 text = LO["All changes will be lost and the UI will be reloaded.\nAre you sure you want to reset your profile?"],
                 button1 = LO["Yes"],
                 button2 = LO["No"],
                 OnAccept = function()
                     if not addon.db then return end
+
+                    local savedPresets = addon.db.profile.presets
+                    local savedPositionPresets = addon.db.profile.positionPresets
+                    if savedPresets then
+                        savedPresets = addon.DeepCopy(savedPresets)
+                    end
+                    if savedPositionPresets then
+                        savedPositionPresets = addon.DeepCopy(savedPositionPresets)
+                    end
+
                     addon.db:ResetProfile()
-                    print("|cFF00FF00[DragonUI]|r " .. LO["Profile reset to defaults."])
-                    ReloadUI()
+
+                    if savedPresets then
+                        addon.db.profile.presets = savedPresets
+                    end
+                    if savedPositionPresets then
+                        addon.db.profile.positionPresets = savedPositionPresets
+                    end
+
+                    AskDeleteLayoutPresets()
                 end,
                 timeout = 0,
                 whileDead = true,

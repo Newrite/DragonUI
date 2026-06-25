@@ -6,10 +6,12 @@
   Uses Dragonflight-styled DragonUI textures.
 
   Architecture:
-  - Each boss frame is a normal (non-secure) frame created by us
-  - TEXTURES from uf_core: targetStyle.BOSS (elite dragon border)
-  - Visibility: UNIT_HEALTH event — show/hide based on UnitExists("bossN")
-  - Positioning: anchored to our wrapper/overlay like other DragonUI widgets
+  - Config: addon.db.profile.unitframe.boss
+  - Atlas: texture:set_atlas(name, true) (from utils/atlas.lua)
+  - Editor: RegisterEditableFrame for drag positioning
+  - Visibility: RegisterUnitWatch(bossFrame) per boss frame — required because
+    INSTANCE_ENCOUNTER_ENGAGE_UNIT does NOT exist in 3.3.5a (MCP Ch.25).
+    RegisterUnitWatch auto-shows/hides frames based on UnitExists("bossN").
 ]]
 
 local _, addon = ...
@@ -305,14 +307,12 @@ local function ApplyBossFrameLayout(frame)
         elite:Show()
     end
 
-    -- Health text (left = pct, right = current)
-    if frame.healthPct then
-        frame.healthPct:ClearAllPoints()
-        frame.healthPct:SetPoint("LEFT", healthBar, "LEFT", 6, 0)
-    end
-    if frame.healthText then
-        frame.healthText:ClearAllPoints()
-        frame.healthText:SetPoint("RIGHT", healthBar, "RIGHT", -6, 0)
+    -- High level icon (skull)
+    local highLevelTex = _G[frameName .. "TextureFrameHighLevelTexture"]
+    if highLevelTex and levelText then
+        highLevelTex:ClearAllPoints()
+        highLevelTex:SetPoint("CENTER", levelText, "CENTER", -9, 6)
+        highLevelTex:set_atlas("TargetFrame-HighLevelIcon", true)
     end
 
     -- Power text (left = pct, right = current)
@@ -421,6 +421,12 @@ local function UpdateBossFrame(frame)
     end
 
 
+    -- Threat indicator
+    if bossFrame.threatIndicator then
+        bossFrame.threatIndicator:ClearAllPoints()
+        bossFrame.threatIndicator:SetPoint("BOTTOMLEFT", 0, 0)
+        bossFrame.threatIndicator:set_atlas("TargetFrame-Status", true)
+    end
 
     -- Threat / combat glow — hide Blizzard's, use our custom
     local threatIndicator = _G[frame:GetName() .. "ThreatIndicator"]
