@@ -93,8 +93,7 @@ UF.TEXTURES = {
     -- Shared class icon texture (used by class portrait system)
     CLASS_ICON_ALTERNATIVE_PREFIX = "Interface\\AddOns\\DragonUI\\Textures\\ClassIcons\\",
     CLASS_ICON_ALTERNATIVE_SUFFIX = ".blp",
-    CLASS_ICON = "Interface\\TargetingFrame\\UI-Classes-Circles",
-    CLASSES_ALPHA = "Interface\\AddOns\\DragonUI\\Textures\\ClassIcons\\classes_alpha.blp",
+    CLASS_ICON_ROUND = "Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES-ROUND",
 }
 
 
@@ -168,9 +167,6 @@ addon.unitframe.famous = UF.FAMOUS_NPCS
 
 UF.DEFAULT_FONT = addon.Fonts and addon.Fonts.PRIMARY or "Fonts\\FRIZQT__.TTF"
 
--- Fine-tune for non-alternative class portrait apparent size.
--- 0.000 = smallest (native atlas crop), higher values zoom in slightly.
-UF.CLASSIC_CLASS_ICON_INSET = 0.012
 
 
 -- ============================================================================
@@ -247,10 +243,11 @@ end
 
 
 -- ============================================================================
--- CLASSES ALPHA ATLAS MAP
+-- CLASSES KNOWN TO THE ADDON
 -- ============================================================================
--- 1024x1024 atlas, 8 cols x 5 rows, 128x128 per icon.
--- Maps class token -> {col, row} (0-indexed).
+-- Maps every Ascension class token known to the addon for CoA detection and
+-- debug commands. Used as a fallback indicator only — actual rendering goes
+-- through ROUND → TCOORDS → individual BLP.
 
 UF.CLASSES_ALPHA_MAP = {
     BARBARIAN      = {0, 0},
@@ -308,14 +305,7 @@ local CLASSES_WITH_INDIVIDUAL_BLP = UF.CLASSES_WITH_INDIVIDUAL_BLP
 
 function UF.ApplyClassPortraitIcon(icon, classFileName, useAlternative)
     if not icon or not classFileName then
-        return false
-    end
-
-    local function ClampInset(value)
-        local inset = tonumber(value) or 0
-        if inset < 0 then return 0 end
-        if inset > 0.03 then return 0.03 end
-        return inset
+        return false, false
     end
 
     if useAlternative and CLASSES_WITH_INDIVIDUAL_BLP[classFileName] then
@@ -324,33 +314,19 @@ function UF.ApplyClassPortraitIcon(icon, classFileName, useAlternative)
             .. classFileName
             .. UF.TEXTURES.CLASS_ICON_ALTERNATIVE_SUFFIX)
         icon:SetTexCoord(0, 1, 0, 1)
-        return true
+        return true, false
     end
 
-    if not useAlternative then
-        local coords = CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[classFileName]
-        if coords then
-            local inset = ClampInset(UF.CLASSIC_CLASS_ICON_INSET)
-            icon:SetTexture(UF.TEXTURES.CLASS_ICON)
-            icon:SetTexCoord(
-                coords[1] + inset, coords[2] - inset,
-                coords[3] + inset, coords[4] - inset)
-            return true
-        end
+    -- CLASS_ICON_TCOORDS_ROUND — Blizzard ya provee iconos recortados en
+    -- UI-CHARACTERCREATE-CLASSES-ROUND. No necesita overlay.
+    local roundCoords = CLASS_ICON_TCOORDS_ROUND and CLASS_ICON_TCOORDS_ROUND[classFileName]
+    if roundCoords then
+        icon:SetTexture(UF.TEXTURES.CLASS_ICON_ROUND)
+        icon:SetTexCoord(roundCoords[1], roundCoords[2], roundCoords[3], roundCoords[4])
+        return true, false
     end
 
-    local atlasEntry = UF.CLASSES_ALPHA_MAP[classFileName]
-    if atlasEntry then
-        local col, row = atlasEntry[1], atlasEntry[2]
-        local cellW, cellH = 128 / 1024, 128 / 1024
-        icon:SetTexture(UF.TEXTURES.CLASSES_ALPHA)
-        icon:SetTexCoord(
-            col * cellW, (col + 1) * cellW,
-            row * cellH, (row + 1) * cellH)
-        return true
-    end
-
-    return false
+    return false, false
 end
 
 function UF.ApplyClassPortraitToTexture(unit, portraitTexture, useAlternative)
@@ -371,7 +347,8 @@ function UF.ApplyClassPortraitToTexture(unit, portraitTexture, useAlternative)
         classFileName = addon.CoA:ResolvePortraitClass(unit) or classFileName
     end
 
-    if UF.ApplyClassPortraitIcon(portraitTexture, classFileName, useAlternative) then
+    local applied = UF.ApplyClassPortraitIcon(portraitTexture, classFileName, useAlternative)
+    if applied then
         portraitTexture:SetAlpha(1)
         return true
     end
