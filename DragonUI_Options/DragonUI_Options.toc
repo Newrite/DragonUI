@@ -67,3 +67,4 @@ panel\tab_bags.lua
 panel\tab_bnettoast.lua
 panel\tab_chat.lua
 panel\tab_profiles.lua
+panel\search.lua

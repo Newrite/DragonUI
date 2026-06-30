@@ -1430,3 +1430,8 @@ L["Size of debuff icons on nameplates."] = "Größe der Debuff-Symbole auf Namen
 L["Totem Icon Position"] = "Position des Totemsymbols"
 L["Whitelist"] = "Positivliste"
 
+-- Search
+
+L["Search settings..."] = "Einstellungen suchen..."
+L["Type to find a setting"] = "Tippen, um eine Einstellung zu finden"
+L["No settings match '%s'."] = "Keine Einstellungen entsprechen '%s'."
