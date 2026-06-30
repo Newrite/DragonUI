@@ -1490,3 +1490,9 @@ L["Search settings..."] = true
 L["Type to find a setting"] = true
 L["No settings match '%s'."] = true
 L["Showing top %d results. Type at least 3 characters for the full list."] = true
+
+-- Transmog Collector
+L["Transmog Collector"] = true
+L["Enable Transmog Collector"] = true
+L["Automatically collect transmog appearances when looting new items. Works with Ascension's Ctrl+Alt+Click appearance system."] = true
+L["On loot, auto-collects appearances for items you haven't learned yet."] = true

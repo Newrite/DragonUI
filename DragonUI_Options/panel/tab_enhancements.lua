@@ -470,6 +470,33 @@ local function BuildEnhancementsTab(scroll)
         disabled = function() return not IsEnabled("tooltip") end,
         requiresReload = false,
     })
+
+    -- ====================================================================
+    -- TRANSMOG COLLECTOR (Ascension)
+    -- ====================================================================
+    C:AddSpacer(scroll)
+    local tmSection = C:AddSection(scroll, LO["Transmog Collector"])
+
+    C:AddDescription(tmSection, LO["Automatically collect transmog appearances when looting new items. Works with Ascension's Ctrl+Alt+Click appearance system."])
+
+    C:AddToggle(tmSection, {
+        label = LO["Enable Transmog Collector"],
+        desc = LO["On loot, auto-collects appearances for items you haven't learned yet."],
+        getFunc = function() return IsEnabled("transmog_collector") end,
+        setFunc = function(val)
+            EnsureModuleTable("transmog_collector").enabled = val
+            if val then
+                if addon.ApplyTransmogCollectorSystem then
+                    addon.ApplyTransmogCollectorSystem()
+                end
+            else
+                if addon.RestoreTransmogCollectorSystem then
+                    addon.RestoreTransmogCollectorSystem()
+                end
+            end
+        end,
+        requiresReload = false,
+    })
 end
 
 -- Register the tab (order 11 = after Quest Tracker, before Profiles)
