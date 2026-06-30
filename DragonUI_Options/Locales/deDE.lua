@@ -249,6 +249,12 @@ L["Tints action button icons based on range and usability: red = out of range, b
 L["Enable Range Indicator"] = "Reichweitenanzeige aktivieren"
 L["Color action button icons when target is out of range or ability is unusable."] = "Aktionsbutton-Icons färben, wenn das Ziel außer Reichweite ist oder die Fähigkeit nicht nutzbar ist."
 
+-- Key Press
+L["Key Press"] = "Tastendruck"
+L["Fires action bar abilities the instant you press a key instead of when you release it, shaving reaction-time latency. Most useful for interrupts, dispels, and PvP."] = "Löst Fähigkeiten auf der Aktionsleiste beim Drücken der Taste aus, nicht beim Loslassen, und reduziert so die Reaktionszeit. Besonders nützlich für Unterbrechungen, Dispels und PvP."
+L["Enable Key Press"] = "Tastendruck aktivieren"
+L["Fire abilities on key press instead of key release."] = "Fähigkeiten beim Drücken statt beim Loslassen auslösen."
+
 -- Item Quality Borders
 L["Show colored glow borders on action buttons containing items, colored by item quality (green = uncommon, blue = rare, purple = epic, etc.)."] = "Farbige Leuchtrahmen auf Aktionsbuttons mit Gegenständen anzeigen – je nach Qualität (grün = ungewöhnlich, blau = selten, lila = episch, usw.)."
 L["Enable Item Quality Borders"] = "Rahmen nach Gegenstandsqualität aktivieren"
@@ -1435,3 +1441,4 @@ L["Whitelist"] = "Positivliste"
 L["Search settings..."] = "Einstellungen suchen..."
 L["Type to find a setting"] = "Tippen, um eine Einstellung zu finden"
 L["No settings match '%s'."] = "Keine Einstellungen entsprechen '%s'."
+L["Showing top %d results. Type at least 3 characters for the full list."] = "Zeigt die besten %d Ergebnisse. Mindestens 3 Zeichen für die vollständige Liste."

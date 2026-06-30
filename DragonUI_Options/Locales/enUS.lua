@@ -262,6 +262,12 @@ L["Tints action button icons based on range and usability: red = out of range, b
 L["Enable Range Indicator"] = true
 L["Color action button icons when target is out of range or ability is unusable."] = true
 
+-- Key Press
+L["Key Press"] = true
+L["Fires action bar abilities the instant you press a key instead of when you release it, shaving reaction-time latency. Most useful for interrupts, dispels, and PvP."] = true
+L["Enable Key Press"] = true
+L["Fire abilities on key press instead of key release."] = true
+
 -- Item Quality Borders
 L["Show colored glow borders on action buttons containing items, colored by item quality (green = uncommon, blue = rare, purple = epic, etc.)."] = true
 L["Enable Item Quality Borders"] = true
@@ -1483,3 +1489,4 @@ L["Show icons for recognized shaman totems. DragonUI uses localized spell names 
 L["Search settings..."] = true
 L["Type to find a setting"] = true
 L["No settings match '%s'."] = true
+L["Showing top %d results. Type at least 3 characters for the full list."] = true

@@ -346,17 +346,8 @@ local function CreatePanel()
 
     searchBox:SetScript("OnEnterPressed", function(self)
         if Panel._suppressSearch then return end
-        local text = self:GetText()
-        text = string.gsub(text, "^%s+", "")
-        text = string.gsub(text, "%s+$", "")
         if Panel.searchDebounce then Panel.searchDebounce:Hide() end
-        if text == "" then
-            Panel._lastRenderedQuery = nil
-            if Panel.currentTab then Panel:SelectTab(Panel.currentTab) end
-        else
-            Panel:BuildSearchIndex()
-            Panel:ShowSearchResults(text)
-        end
+        Panel:RunSearchQuery(self:GetText())
     end)
 
     searchBox:SetScript("OnEscapePressed", function(self)
@@ -616,6 +607,10 @@ function Panel:SelectTab(key, highlight)
 
     -- Release old scroll widget if any
     if self.scrollWidget then
+        local C = addon.PanelControls
+        if C and C.ClearSearchFontTags then
+            C:ClearSearchFontTags(self.scrollWidget)
+        end
         self.scrollWidget:ReleaseChildren()
         AceGUI:Release(self.scrollWidget)
         self.scrollWidget = nil
@@ -714,6 +709,10 @@ function Panel:Close()
         end
         -- Release the scroll widget properly
         if self.scrollWidget then
+            local C = addon.PanelControls
+            if C and C.ClearSearchFontTags then
+                C:ClearSearchFontTags(self.scrollWidget)
+            end
             self.scrollWidget:ReleaseChildren()
             AceGUI:Release(self.scrollWidget)
             self.scrollWidget = nil

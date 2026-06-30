@@ -628,8 +628,15 @@ L["Show remaining debuff time on each debuff icon."] = "Affiche la durée restan
 L["Size of debuff icons on nameplates."] = "Taille des icônes d'affaiblissement sur les barres de nom."
 L["Totem Icon Position"] = "Position de l'icône du totem"
 
+-- Key Press
+L["Key Press"] = "Appui de touche"
+L["Fires action bar abilities the instant you press a key instead of when you release it, shaving reaction-time latency. Most useful for interrupts, dispels, and PvP."] = "Active les sorts de la barre d'actions dès l'appui de la touche, et non au relâchement, réduisant la latence de réaction. Très utile pour les interruptions, dispels et JcJ."
+L["Enable Key Press"] = "Activer l'appui de touche"
+L["Fire abilities on key press instead of key release."] = "Active les sorts à l'appui de la touche, pas au relâchement."
+
 -- Search
 
 L["Search settings..."] = "Rechercher des réglages..."
 L["Type to find a setting"] = "Tapez pour trouver un réglage"
 L["No settings match '%s'."] = "Aucun réglage ne correspond à « %s »."
+L["Showing top %d results. Type at least 3 characters for the full list."] = "Affichage des %d meilleurs résultats. Saisissez au moins 3 caractères pour la liste complète."
