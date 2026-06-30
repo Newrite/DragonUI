@@ -490,6 +490,57 @@ local function SlashCommandHandler(input)
 
         addon:Print(L["Class icons grid opened for debugging."])
 
+    elseif cmd == "transmogdiag" then
+        -- Diagnostic for transmog appearance collection
+        local function ScanGlobals()
+            local patterns = {"transmog", "appearance", "APPEARANCE", "collect", "COLLECT",
+                             "learn", "LEARN", "ascension", "ASCENSION", "morph", "MORPH"}
+            local found = {}
+            for _, pattern in ipairs(patterns) do
+                for k, v in pairs(_G) do
+                    if type(k) == "string" and type(v) == "function" and
+                       k:lower():find(pattern) then
+                        found[k] = true
+                    end
+                end
+            end
+            local count = 0
+            for name in pairs(found) do
+                count = count + 1
+                addon:Print(string.format("  %d. %s", count, name))
+            end
+            if count == 0 then
+                addon:Print("No matching global functions found.")
+            end
+        end
+
+        -- Hook StaticPopup_Show to log popups
+        if not _G.DUI_TransmogDiagHooked then
+            _G.DUI_TransmogDiagHooked = true
+            hooksecurefunc("StaticPopup_Show", function(dialogName, text)
+                addon:Print(string.format(
+                    "|cFF00FF00[TransmogDiag]|r StaticPopup_Show: %s | text=%s",
+                    tostring(dialogName),
+                    tostring(text and text:sub(1, 80) or "nil")))
+            end)
+            addon:Print("StaticPopup_Show hooked. Ctrl+Alt+Click a transmog item now.")
+        end
+
+        addon:Print("|cFFFFD700Scanning for transmog-related globals...|r")
+        ScanGlobals()
+
+        if HandleModifiedItemClick then
+            addon:Print("HandleModifiedItemClick found — Ascension may hook this.")
+        end
+        if ContainerFrameItemButton_OnClick then
+            addon:Print("ContainerFrameItemButton_OnClick found.")
+        end
+        if HandleContainerItemClick then
+            addon:Print("HandleContainerItemClick found.")
+        end
+
+        addon:Print("|cFFFFD700Done.|r Ctrl+Alt+Click an item in your bags and check the output.")
+
     else
         -- Unknown command
         addon:Print(L["Unknown command: "] .. cmd)

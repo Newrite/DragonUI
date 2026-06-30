@@ -912,6 +912,9 @@ local defaults = {
             },
             bags_skin = {
                 enabled = true, -- Retail-style textures for bags
+            },
+            transmog_collector = {
+                enabled = false, -- Auto-collect transmog appearances on loot (Ascension)
             }
         },
 
