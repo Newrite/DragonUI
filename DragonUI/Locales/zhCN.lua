@@ -319,6 +319,10 @@ L["Open a merchant window first to sell scrap items."] = "请先打开商人窗�
 L["Sold %d scrap item(s) for %s."] = "出售了%d件垃圾物品，获得%s。"
 L["No scrap items to sell."] = "没有可出售的垃圾物品。"
 
+-- Transmog Collect
+L["Collect Transmog"] = "收集幻化外观"
+L["Click to collect all uncollected transmog appearances from your bags."] = "点击以收集背包中所有未收集的幻化外观。"
+
 -- ============================================================================
 -- 微型菜单延迟提示
 -- ============================================================================

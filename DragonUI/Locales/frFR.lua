@@ -71,6 +71,10 @@ L["Open a merchant window first to sell scrap items."] = "Ouvrez d'abord une fen
 L["Sold %d scrap item(s) for %s."] = "Vendu %d objet(s) de ferraille pour %s."
 L["No scrap items to sell."] = "Aucun objet de ferraille à vendre."
 
+-- Transmog Collect
+L["Collect Transmog"] = "Collectionner Transmog"
+L["Click to collect all uncollected transmog appearances from your bags."] = "Cliquez pour collectionner toutes les apparences de transmog non collectées dans vos sacs."
+
 -- BNet Toast Module
 L["BNet Toast"] = "Notification BNet"
 L["Friend online/offline notifications with Battle.net toasts and chat messages"] = "Notifications d'amis en ligne/hors ligne via Battle.net toasts et messages"

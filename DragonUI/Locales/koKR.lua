@@ -324,6 +324,10 @@ L["Open a merchant window first to sell scrap items."] = "ê³ ì² ì„ í
 L["Sold %d scrap item(s) for %s."] = "ê³ ì²  ì•„ì´í…œ %dê°œë¥¼ %sì— íŒë§¤í–ˆìŠµë‹ˆë‹¤."
 L["No scrap items to sell."] = "íŒë§¤í•  ê³ ì²  ì•„ì´í…œì´ ì—†ìŠµë‹ˆë‹¤."
 
+-- Transmog Collect
+L["Collect Transmog"] = "íŠ¸ëžœìŠ¤ëª¨ê·¸ ìˆ˜ì§‘"
+L["Click to collect all uncollected transmog appearances from your bags."] = "ê°€ë°©ì—ì„œ ìˆ˜ì§‘ë˜ì§€ ì•Šì€ ëª¨ë“  íŠ¸ëžœìŠ¤ëª¨ê·¸ ì™¸ê´€ì„ ìˆ˜ì§‘í•˜ë ¤ë©´ í´ë¦­í•˜ì„¸ìšš."
+
 -- Micromenu Latency
 L["Network"] = "ë„¤íŠ¸ì›Œí¬"
 L["Latency"] = "ì§€ì—° ì‹œê°„"

@@ -324,6 +324,10 @@ L["Open a merchant window first to sell scrap items."] = "Öffne zuerst ein Hän
 L["Sold %d scrap item(s) for %s."] = "%d Schrott-Gegenstände für %s verkauft."
 L["No scrap items to sell."] = "Keine Schrott-Gegenstände zu verkaufen."
 
+-- Transmog Collect
+L["Collect Transmog"] = "Transmog sammeln"
+L["Click to collect all uncollected transmog appearances from your bags."] = "Klicken, um alle nicht gesammelten Transmog-Erscheinungsbilder aus deinen Taschen zu sammeln."
+
 -- Micromenu Latency
 L["Network"] = "Netzwerk"
 L["Latency"] = "Latenz"

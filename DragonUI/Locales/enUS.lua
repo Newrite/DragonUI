@@ -329,6 +329,10 @@ L["Open a merchant window first to sell scrap items."] = true
 L["Sold %d scrap item(s) for %s."] = true
 L["No scrap items to sell."] = true
 
+-- Transmog Collect
+L["Collect Transmog"] = true
+L["Click to collect all uncollected transmog appearances from your bags."] = true
+
 -- Micromenu Latency
 L["Network"] = true
 L["Latency"] = true

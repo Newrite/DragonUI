@@ -72,6 +72,10 @@ L["Open a merchant window first to sell scrap items."] = "請先開啟商人視�
 L["Sold %d scrap item(s) for %s."] = "出售了%d件垃圾物品，獲得%s。"
 L["No scrap items to sell."] = "沒有可出售的垃圾物品。"
 
+-- Transmog Collect
+L["Collect Transmog"] = "收集幻化外觀"
+L["Click to collect all uncollected transmog appearances from your bags."] = "點擊以收集背包中所有未收集的幻化外觀。"
+
 -- BNet Toast Module
 L["BNet Toast"] = "BNet 提醒"
 L["Friend online/offline notifications with Battle.net toasts and chat messages"] = "好友上線/離線的戰網提醒和聊天通知"

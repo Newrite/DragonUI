@@ -324,6 +324,10 @@ L["Open a merchant window first to sell scrap items."] = "Сначала отк�
 L["Sold %d scrap item(s) for %s."] = "Продано %d предмет(ов) хлама за %s."
 L["No scrap items to sell."] = "Нет хлама для продажи."
 
+-- Transmog Collect
+L["Collect Transmog"] = "Собрать трансмутацию"
+L["Click to collect all uncollected transmog appearances from your bags."] = "Нажмите, чтобы собрать все несобранные облики трансмутации из ваших сумок."
+
 -- Micromenu Latency
 L["Network"] = "Сеть"
 L["Latency"] = "Задержка"
