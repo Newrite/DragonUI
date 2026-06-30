@@ -343,21 +343,11 @@ function UF.ApplyClassPortraitToTexture(unit, portraitTexture, useAlternative)
         return false
     end
 
-    -- Save original in case CoA alias doesn't match CLASS_ICON_TCOORDS_ROUND
-    local originalClassFileName = classFileName
-
     if addon.CoA and addon.CoA.active and addon.CoA.ResolvePortraitClass then
         classFileName = addon.CoA:ResolvePortraitClass(unit) or classFileName
     end
 
     local applied = UF.ApplyClassPortraitIcon(portraitTexture, classFileName, useAlternative)
-
-    -- Fallback: if CoA aliased to a token not in CLASS_ICON_TCOORDS_ROUND,
-    -- try the original server token (e.g. MONK→TEMPLAR, SPIRITMAGE→RUNEMASTER)
-    if not applied and classFileName ~= originalClassFileName then
-        applied = UF.ApplyClassPortraitIcon(portraitTexture, originalClassFileName, useAlternative)
-    end
-
     if applied then
         portraitTexture:SetAlpha(1)
         return true
