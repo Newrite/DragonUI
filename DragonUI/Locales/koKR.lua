@@ -478,6 +478,3 @@ L["Position & Scale"] = "위치 및 크기"
 L["Scale of the BNet toast frame."] = "배틀넷 알림 프레임의 크기 비율입니다."
 L["Horizontal position of the BNet toast from the screen center. Negative values move left, positive values move right."] = "화면 중앙에서 배틀넷 알림의 가로 위치입니다. 음수는 왼쪽, 양수는 오른쪽으로 이동합니다."
 L["Vertical offset of the BNet toast frame. Negative values move down, positive values move up."] = "배틀넷 알림 프레임의 세로 오프셋입니다. 음수는 아래로, 양수는 위로 이동합니다."
-
-L["Version Check"] = "버전 확인"
-L["Notifies when other players have a different addon version"] = "다른 플레이어가 다른 애드온 버전을 사용할 때 알림"

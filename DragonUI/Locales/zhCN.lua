@@ -508,6 +508,3 @@ L["Position & Scale"] = "位置与缩放"
 L["Scale of the BNet toast frame."] = "战网提示框的缩放比例。"
 L["Horizontal position of the BNet toast from the screen center. Negative values move left, positive values move right."] = "战网提示距屏幕中心的水平位置。负值向左移动，正值向右移动。"
 L["Vertical offset of the BNet toast frame. Negative values move down, positive values move up."] = "战网提示框的垂直偏移。负值向下移动，正值向上移动。"
-
-L["Version Check"] = "版本检查"
-L["Notifies when other players have a different addon version"] = "当其他玩家使用不同插件版本时通知"

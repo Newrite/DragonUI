@@ -477,6 +477,3 @@ L["Position & Scale"] = "Position & Skalierung"
 L["Scale of the BNet toast frame."] = "Skalierung des Battle.net-Benachrichtigungsrahmens."
 L["Horizontal position of the BNet toast from the screen center. Negative values move left, positive values move right."] = "Horizontale Position der Battle.net-Benachrichtigung ab Bildschirmmitte. Negative Werte bewegen nach links, positive nach rechts."
 L["Vertical offset of the BNet toast frame. Negative values move down, positive values move up."] = "Vertikaler Versatz des Battle.net-Benachrichtigungsrahmens. Negative Werte bewegen nach unten, positive nach oben."
-
-L["Version Check"] = "Versionsprüfung"
-L["Notifies when other players have a different addon version"] = "Benachrichtigt, wenn andere Spieler eine andere Addon-Version haben"
