@@ -1,6 +1,10 @@
 # 🐉 DragonUI for Asencion Wow, Conquest of Azeroth - Bronzebeard
 ## 📥 Download for Ascension Server
 
+### Join Discord: ⬎
+
+[![](https://dcbadge.limes.pink/api/server/https://discord.gg/fUw5C6tcZs)](https://discord.gg/fUw5C6tcZs)
+
 | Method | Link |
 |--------|------|
 | **Latest stable release** | [Download](https://github.com/PentSec/DragonUI/releases/latest/download/DragonUI.zip) |
