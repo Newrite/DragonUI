@@ -486,6 +486,29 @@ local function OnProfileChanged()
 end
 
 -- ============================================================================
+-- ERROR GUARD: GameTooltipMods nil lineText fix
+-- Blizzard's GameTooltipMods.lua can crash when a spell has incomplete
+-- tooltip data (nil lineText from corrupt server data). Wrapping the
+-- OnUpdate in pcall prevents these errors from killing the UI.
+-- ============================================================================
+
+local function InstallTooltipErrorGuard()
+    if TooltipModule.guardInstalled then return end
+
+    local origOnUpdate = GameTooltip:GetScript("OnUpdate")
+    if origOnUpdate then
+        GameTooltip:SetScript("OnUpdate", function(self, elapsed)
+            local ok, err = pcall(origOnUpdate, self, elapsed)
+            if not ok then
+                -- Log to error frame without crashing the UI
+                geterrorhandler()(err)
+            end
+        end)
+        TooltipModule.guardInstalled = true
+    end
+end
+
+-- ============================================================================
 -- INITIALIZATION
 -- ============================================================================
 
@@ -495,6 +518,9 @@ eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 eventFrame:SetScript("OnEvent", function(self, event, arg1)
     if event == "ADDON_LOADED" and arg1 == "DragonUI" then
+        -- Install error guard first — always active, even if module is disabled
+        InstallTooltipErrorGuard()
+
         EnsureTooltipAnchorHook()
         EnsureTooltipWidget()
         ApplyTooltipWidgetPosition()
@@ -511,6 +537,9 @@ eventFrame:SetScript("OnEvent", function(self, event, arg1)
         end)
 
     elseif event == "PLAYER_ENTERING_WORLD" then
+        -- Safety net: ensure guard is installed even if ADDON_LOADED was missed
+        InstallTooltipErrorGuard()
+
         EnsureTooltipAnchorHook()
         EnsureTooltipWidget()
         ApplyTooltipWidgetPosition()
