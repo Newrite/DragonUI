@@ -3,7 +3,7 @@
 
 ### Join Discord: ⬎
 
-[![](https://dcbadge.limes.pink/api/server/https://discord.gg/fUw5C6tcZs)](https://discord.gg/fUw5C6tcZs)
+[![](https://dcbadge.limes.pink/api/server/https://discord.gg/uVsEaAUGcx)](https://discord.gg/uVsEaAUGcx)
 
 | Method | Link |
 |--------|------|
