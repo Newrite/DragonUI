@@ -225,14 +225,8 @@ function addon.RestoreVersionCheckSystem()
 end
 
 function addon.RefreshVersionCheckSystem()
-    local config = addon:GetModuleConfig("versioncheck")
-
-    -- Respect master toggle if the config provides one; default to always on
-    if config and config.enabled == false then
-        addon.RestoreVersionCheckSystem()
-    else
-        addon.ApplyVersionCheckSystem()
-    end
+    -- Always active: no toggle needed
+    addon.ApplyVersionCheckSystem()
 end
 
 -- ============================================================================
