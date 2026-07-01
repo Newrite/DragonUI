@@ -81,4 +81,6 @@
     <!-- Transmog Collector (Ascension: auto-collect appearances on loot) -->
     <Script file="transmog_collector.lua"/>
 
+    <!-- Version Check module (cross-player version broadcast) -->
+    <Script file="versioncheck.lua"/>
 </Ui>

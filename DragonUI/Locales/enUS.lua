@@ -515,3 +515,6 @@ L["Scale of the BNet toast frame."] = "Scale of the BNet toast frame."
 L["Horizontal position of the BNet toast from the screen center. Negative values move left, positive values move right."] = "Horizontal position of the BNet toast from the screen center. Negative values move left, positive values move right."
 L["Vertical offset of the BNet toast frame. Negative values move down, positive values move up."] = "Vertical offset of the BNet toast frame. Negative values move down, positive values move up."
 
+L["Version Check"] = true
+L["Notifies when other players have a different addon version"] = true
+
