@@ -128,3 +128,7 @@ L["Sort"] = "整理"
 L["Click to sort items in the currently open guild bank tab."] = "點擊整理目前開啟的公會銀行頁籤中的物品。"
 L["Never moves items between tabs."] = "永遠不會跨頁籤移動物品。"
 L["Sort Guild Bank Tab"] = "整理公會銀行頁籤"
+
+-- Version Check Module
+L["Version Check"] = true
+L["Broadcast and detect addon version updates across group members"] = true

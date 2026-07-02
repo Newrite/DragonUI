@@ -1486,6 +1486,10 @@ L["Only apply Retail-like stacking inside party and raid instances. It remains d
 L["Scales the nameplate clickbox relative to its original size. Changes made during combat are applied when combat ends."] = true
 L["Show icons for recognized shaman totems. DragonUI uses localized spell names and automatically learns your own active totems."] = true
 
+-- Version Check
+L["Version Check"] = true
+L["Broadcast and detect addon version updates across group members."] = true
+
 -- Search
 
 L["Search settings..."] = true

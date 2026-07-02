@@ -480,6 +480,10 @@ L["Error in SafeCall:"] = "Ошибка в SafeCall:"
 
 L["Copy Text"] = "Копировать текст"
 
+-- Version Check Module
+L["Version Check"] = true
+L["Broadcast and detect addon version updates across group members"] = true
+
 -- BNet Toast Module
 L["BNet Toast"] = "BNet Уведомления"
 L["Friend online/offline notifications with Battle.net toasts and chat messages"] = "Уведомления о входе/выходе друзей через Battle.net тосты и чат"

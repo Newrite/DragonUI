@@ -633,6 +633,10 @@ L["Fire abilities on key press instead of key release."] = "Ativa habilidades ao
 L["Lock Icon Color"] = "Cor do ícone de bloqueio"
 L["Color used to tint the padlock icon shown on locked bag/bank slots."] = "Cor usada para tingir o ícone de cadeado exibido nos slots de bolsa/banco bloqueados."
 
+-- Version Check
+L["Version Check"] = "Verificação de versão"
+L["Broadcast and detect addon version updates across group members."] = "Detecta atualizações do addon entre membros do grupo enviando e recebendo a versão."
+
 -- Search
 
 L["Search settings..."] = "Buscar configurações..."

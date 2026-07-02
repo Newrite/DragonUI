@@ -901,6 +901,9 @@ local defaults = {
                 builder_spender = false, -- Mana gain/loss glow feedback (experimental)
                 missing_health = false -- Show missing health deficit text on health bars
             },
+            versioncheck = {
+                enabled = true, -- Cross-player version broadcast and update detection
+            },
             hp_low_alert = {
                 enabled = true, -- Screen flash and sound when HP drops below threshold
                 threshold = 30, -- HP percentage threshold to trigger warning

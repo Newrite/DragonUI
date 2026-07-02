@@ -511,6 +511,10 @@ L["Double-Click to Copy"] = "双击复制"
 L["Copy Text"] = "复制文本"
 L["URL"] = "URL"
 
+-- Version Check Module
+L["Version Check"] = true
+L["Broadcast and detect addon version updates across group members"] = true
+
 -- BNet Toast Module
 L["BNet Toast"] = "BNet 提醒"
 L["Friend online/offline notifications with Battle.net toasts and chat messages"] = "好友上线/下线的战网提醒和聊天通知"

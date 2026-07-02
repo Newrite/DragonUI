@@ -480,6 +480,10 @@ L["Error in SafeCall:"] = "SafeCall ì˜¤ë¥˜:"
 L["Double-Click to Copy"] = "|cff33ff11ë”ë¸” í´ë¦­|rí•˜ì—¬ ë³µì‚¬"
 L["Copy Text"] = "í…ìŠ¤íŠ¸ ë³µì‚¬"
 
+-- Version Check Module
+L["Version Check"] = true
+L["Broadcast and detect addon version updates across group members"] = true
+
 -- BNet Toast Module
 L["BNet Toast"] = "BNet 알림"
 L["Friend online/offline notifications with Battle.net toasts and chat messages"] = "Battle.net 토스트 및 채팅 메시지로 친구 온라인/오프라인 알림"
