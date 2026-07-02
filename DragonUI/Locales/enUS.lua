@@ -320,6 +320,7 @@ L["Slot locked (bag %d, slot %d)."] = true
 L["Slot unlocked (bag %d, slot %d)."] = true
 L["Could not clear locks (config not ready)."] = true
 L["Cleared all sort-locked slots."] = true
+L["Cannot sort bags while in combat."] = true
 
 -- Sell Scrap
 L["Sell Scrap"] = true

@@ -315,6 +315,7 @@ L["Slot locked (bag %d, slot %d)."] = "Ячейка заблокирована (
 L["Slot unlocked (bag %d, slot %d)."] = "Ячейка разблокирована (сумка %d, ячейка %d)."
 L["Could not clear locks (config not ready)."] = "Не удалось очистить блокировки (конфигурация не готова)."
 L["Cleared all sort-locked slots."] = "Все заблокированные ячейки очищены."
+L["Cannot sort bags while in combat."] = "Невозможно сортировать сумки во время боя!"
 
 -- Sell Scrap
 L["Sell Scrap"] = "Продать хлам"

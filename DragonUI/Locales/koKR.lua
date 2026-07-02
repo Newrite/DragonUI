@@ -324,6 +324,7 @@ L["Never moves items between tabs."] = "탭 간에는 절대 아이템을 이동
 L["Sort Guild Bank Tab"] = "길드 은행 탭 정렬"
 L["Could not clear locks (config not ready)."] = "ìž ê¸ˆì„ í•´ì œí•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤ (ì„¤ì •ì´ ì•„ì§ ì¤€ë¹„ë˜ì§€ ì•ŠìŒ)."
 L["Cleared all sort-locked slots."] = "ì •ë ¬ ìž ê¸ˆ ìŠ¬ë¡¯ì„ ëª¨ë‘ í•´ì œí–ˆìŠµë‹ˆë‹¤."
+L["Cannot sort bags while in combat."] = "전투 중에는 가방을 정렬할 수 없습니다."
 
 -- Sell Scrap
 L["Sell Scrap"] = "ê³ ì²  íŒë§¤"

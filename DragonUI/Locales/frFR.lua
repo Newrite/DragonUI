@@ -70,6 +70,8 @@ L["A merchant window must be open."] = "Une fenêtre de marchand doit être ouve
 L["Open a merchant window first to sell scrap items."] = "Ouvrez d'abord une fenêtre de marchand pour vendre la ferraille."
 L["Sold %d scrap item(s) for %s."] = "Vendu %d objet(s) de ferraille pour %s."
 L["No scrap items to sell."] = "Aucun objet de ferraille à vendre."
+-- Bag Sort
+L["Cannot sort bags while in combat."] = "Impossible de trier les sacs en combat."
 
 -- Transmog Collect
 L["Collect Transmog"] = "Collectionner Transmog"

@@ -310,6 +310,7 @@ L["Slot locked (bag %d, slot %d)."] = "格子已锁定（背包 %d，槽位 %d�
 L["Slot unlocked (bag %d, slot %d)."] = "格子已解锁（背包 %d，槽位 %d）。"
 L["Could not clear locks (config not ready)."] = "无法清除锁定（配置尚未就绪）。"
 L["Cleared all sort-locked slots."] = "已清除所有整理锁定格子。"
+L["Cannot sort bags while in combat."] = "战斗中无法整理背包！"
 
 -- Sell Scrap
 L["Sell Scrap"] = "出售垃圾"

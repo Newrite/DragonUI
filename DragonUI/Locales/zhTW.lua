@@ -71,6 +71,8 @@ L["A merchant window must be open."] = "必須先開啟商人視窗。"
 L["Open a merchant window first to sell scrap items."] = "請先開啟商人視窗再出售垃圾物品。"
 L["Sold %d scrap item(s) for %s."] = "出售了%d件垃圾物品，獲得%s。"
 L["No scrap items to sell."] = "沒有可出售的垃圾物品。"
+-- Bag Sort
+L["Cannot sort bags while in combat."] = "戰鬥中無法整理背包！"
 
 -- Transmog Collect
 L["Collect Transmog"] = "收集幻化外觀"

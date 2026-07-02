@@ -315,6 +315,7 @@ L["Slot locked (bag %d, slot %d)."] = "Slot bloqueado (bolsa %d, slot %d)."
 L["Slot unlocked (bag %d, slot %d)."] = "Slot desbloqueado (bolsa %d, slot %d)."
 L["Could not clear locks (config not ready)."] = "No se pudieron limpiar los bloqueos (configuración no lista)."
 L["Cleared all sort-locked slots."] = "Se limpiaron todos los slots bloqueados del ordenado."
+L["Cannot sort bags while in combat."] = "No se pueden ordenar las bolsas durante el combate."
 
 -- Sell Scrap
 L["Sell Scrap"] = "Vender Chatarra"
