@@ -76,6 +76,100 @@ local TEXTURES = UF.TEXTURES.targetStyle
 local BOSS_COORDS = UF.BOSS_COORDS.targetStyle
 local PORTRAIT_MASK = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
 
+-- Atlas border name by classification (boss frames always >= elite)
+local CLASSIFICATION_ATLAS = {
+    worldboss = "TargetFrame-TextureFrame-Elite",
+    elite     = "TargetFrame-TextureFrame-Elite",
+    rareelite = "TargetFrame-TextureFrame-RareElite",
+    rare      = "TargetFrame-TextureFrame-Rare",
+}
+local DEFAULT_BOSS_ATLAS = "TargetFrame-TextureFrame-Elite"
+
+-- Blizzard can re-anchor TextureFrame back to its default screen position; lock it.
+local function HookTextureFrameSetPoint(textureFrame, bossFrame)
+    if textureFrame.__DragonUI_SetPointHooked then return end
+    hooksecurefunc(textureFrame, "SetPoint", function(self, ...)
+        if self._DragonUI_SettingPoint then return end
+        self._DragonUI_SettingPoint = true
+        self:ClearAllPoints()
+        self:SetPoint("TOPLEFT", bossFrame, "TOPLEFT", 0, 0)
+        self._DragonUI_SettingPoint = nil
+    end)
+    textureFrame.__DragonUI_SetPointHooked = true
+end
+
+-- Re-anchor border (called from hooks after Blizzard resets)
+local function UpdateBossFrameBorder(bossFrame)
+    if not bossFrame.DragonUI_FrameBorder or not bossFrame.DragonUI_FrameBG then return end
+    bossFrame.DragonUI_FrameBG:ClearAllPoints()
+    bossFrame.DragonUI_FrameBG:SetPoint("TOPLEFT", bossFrame, "TOPLEFT", 0, -8)
+    -- Border is on its own overlay frame — just reanchor the frame
+    local borderFrame = bossFrame.DragonUI_BorderFrame
+    if borderFrame then
+        borderFrame:ClearAllPoints()
+        borderFrame:SetAllPoints(bossFrame)
+        borderFrame:SetFrameLevel(bossFrame:GetFrameLevel() + 2)
+    end
+    -- Blizzard TextureFrame above border AND above decoFrame (elite dragon).
+    -- borderFrame = N+2, decoFrame (child) = N+3, TextureFrame must be N+4.
+    local frameName = bossFrame:GetName()
+    if frameName then
+        local textureFrame = _G[frameName .. "TextureFrame"]
+        if textureFrame and borderFrame then
+            textureFrame._DragonUI_SettingPoint = true
+            textureFrame:ClearAllPoints()
+            textureFrame:SetPoint("TOPLEFT", bossFrame, "TOPLEFT", 0, 0)
+            textureFrame._DragonUI_SettingPoint = nil
+            textureFrame:SetFrameLevel(borderFrame:GetFrameLevel() + 2)
+            HookTextureFrameSetPoint(textureFrame, bossFrame)
+        end
+    end
+    -- Decoration frame (child of borderFrame) always renders above border
+    local decoFrame = bossFrame.DragonUI_DecoFrame
+    if decoFrame then
+        decoFrame:ClearAllPoints()
+        decoFrame:SetAllPoints(bossFrame)
+    end
+    bossFrame.DragonUI_FrameBorder:ClearAllPoints()
+    bossFrame.DragonUI_FrameBorder:SetPoint(
+        "TOPLEFT", bossFrame.DragonUI_FrameBG, "TOPLEFT", 0, 0)
+end
+
+-- Re-apply custom flash styling on our mirror texture (on BorderFrame)
+local function EnforceFlashStyle(flashTex, parentFrame)
+    if not flashTex then return end
+    -- Hide the Blizzard flash — we use our own mirror
+    flashTex:SetAlpha(0)
+
+    local bossFrame = parentFrame
+
+    -- Create mirror flash on bossFrame itself (once).
+    -- bossFrame is level N, borderFrame is level N+2, so the flash
+    -- naturally renders BELOW the border — correct "glow behind border" look.
+    if not bossFrame.DragonUI_Flash then
+        local mirror = bossFrame:CreateTexture(nil, "OVERLAY")
+        mirror:SetDrawLayer("OVERLAY", 7)
+        bossFrame.DragonUI_Flash = mirror
+        -- Sync: when Blizzard shows/hides the original flash, mirror it
+        hooksecurefunc(flashTex, "Show", function() mirror:Show() end)
+        hooksecurefunc(flashTex, "Hide", function() mirror:Hide() end)
+        mirror:Hide()
+    end
+
+    local mirror = bossFrame.DragonUI_Flash
+    mirror:SetTexture(TEXTURES.THREAT)
+    mirror:SetTexCoord(0, 376/512, 0, 134/256)
+    mirror:SetVertexColor(1, 0, 0, 1)
+    mirror:SetBlendMode("ADD")
+    mirror:SetAlpha(0.7)
+    mirror:SetDrawLayer("OVERLAY", 7)
+    mirror:ClearAllPoints()
+    mirror:SetPoint("BOTTOMLEFT", bossFrame, "BOTTOMLEFT", 3, 25)
+    mirror:SetSize(188, 67)
+    -- Match current visibility
+    if flashTex:IsShown() then mirror:Show() else mirror:Hide() end
+end
+
 -- ============================================================================
 -- CREATE CUSTOM BOSS FRAME
 -- ============================================================================
@@ -437,6 +531,312 @@ end
 
 -- ============================================================================
 -- POSITION BOSS FRAMES
+-- HIDE BLIZZARD BACKGROUNDS
+-- ============================================================================
+
+local function HideBlizzardBossBackgrounds()
+    local backgrounds = {
+        _G.Boss1TargetFrameBackground,
+        _G.Boss2TargetFrameBackground,
+        _G.Boss3TargetFrameBackground,
+        _G.Boss4TargetFrameBackground,
+    }
+    for _, bg in ipairs(backgrounds) do
+        if bg then bg:SetAlpha(0) end
+    end
+end
+
+-- ============================================================================
+-- CLASSIFICATION HOOK (re-apply styling after Blizzard resets it)
+-- ============================================================================
+
+local function HookClassification()
+    if BossModule.classificationHooked then return end
+
+    hooksecurefunc("TargetFrame_CheckClassification", function(self, forceNormalTexture)
+        -- Only process boss frames
+        local frameName = self:GetName()
+        if not frameName or not frameName:match("^Boss%dTargetFrame$") then return end
+
+        -- Hide Blizzard border (we use our own custom textures)
+        local blizzBorder = _G[frameName .. "TextureFrameTexture"]
+        if blizzBorder then blizzBorder:SetAlpha(0) end
+
+        -- Re-apply bar size and anchor — Blizzard also re-anchors these here.
+        local portrait = _G[frameName .. "Portrait"]
+        local healthBar = _G[frameName .. "HealthBar"]
+        if healthBar then
+            healthBar:SetSize(125, 20)
+            if portrait then
+                healthBar:ClearAllPoints()
+                healthBar:SetPoint("RIGHT", portrait, "LEFT", -1, 0)
+            end
+        end
+
+        local manaBar = _G[frameName .. "ManaBar"]
+        if manaBar then
+            manaBar:SetSize(132, 9)
+            if portrait then
+                manaBar:ClearAllPoints()
+                manaBar:SetPoint("RIGHT", portrait, "LEFT", 6.5, -16.5)
+            end
+        end
+
+        local nameText = _G[frameName .. "TextureFrameName"]
+        if nameText then
+            nameText:ClearAllPoints()
+            local healthBar = _G[frameName .. "HealthBar"]
+            if healthBar then
+                nameText:SetPoint("BOTTOM", healthBar, "TOP", 4, 3)
+            end
+        end
+
+        local levelText = _G[frameName .. "TextureFrameLevelText"]
+        if levelText then
+            levelText:ClearAllPoints()
+            local healthBar = _G[frameName .. "HealthBar"]
+            if healthBar then
+                levelText:SetPoint("BOTTOMRIGHT", healthBar, "TOPLEFT", 18, 3)
+            end
+        end
+
+        local pvpIcon = _G[frameName .. "TextureFramePVPIcon"]
+        if pvpIcon then
+            pvpIcon:ClearAllPoints()
+            pvpIcon:SetPoint("CENTER", self, "BOTTOMRIGHT", 6, 14)
+        end
+
+        -- Update border textures
+        UpdateBossFrameBorder(self)
+
+        -- Re-enforce elite decoration on decoFrame
+        local portrait = _G[frameName .. "Portrait"]
+        if self.DragonUI_Elite and portrait then
+            local unit = self.unit or self:GetAttribute("unit")
+            local classification
+            if unit and UnitExists(unit) then
+                classification = UnitClassification(unit)
+            end
+            local coords
+            if classification == "worldboss" then
+                coords = BOSS_COORDS.rareelite
+            elseif classification == "elite" then
+                coords = BOSS_COORDS.elite
+            elseif classification == "rareelite" then
+                coords = BOSS_COORDS.rareelite
+            elseif classification == "rare" then
+                coords = BOSS_COORDS.rare
+            else
+                coords = BOSS_COORDS.rareelite
+            end
+            if coords then
+                self.DragonUI_Elite:SetTexCoord(coords[1], coords[2], coords[3], coords[4])
+                self.DragonUI_Elite:SetSize(coords[5], coords[6])
+                self.DragonUI_Elite:ClearAllPoints()
+                self.DragonUI_Elite:SetPoint("CENTER", portrait, "CENTER", coords[7], coords[8])
+                self.DragonUI_Elite:SetDrawLayer("OVERLAY", 6)
+                self.DragonUI_Elite:Show()
+            end
+        end
+
+        -- Re-enforce flash after classification change
+        local flashTex = _G[frameName .. "Flash"]
+        EnforceFlashStyle(flashTex, self)
+
+        -- Re-enforce raid target icon draw layer (like target_style.lua)
+        local raidTargetIcon = _G[frameName .. "TextureFrameRaidTargetIcon"]
+        if raidTargetIcon then
+            raidTargetIcon:SetDrawLayer("OVERLAY", 7)
+            raidTargetIcon:SetSize(24, 24)
+            raidTargetIcon:ClearAllPoints()
+            local portrait = _G[frameName .. "Portrait"]
+            if portrait then
+                raidTargetIcon:SetPoint("CENTER", portrait, "TOP", 0, 5)
+            end
+        end
+    end)
+
+    BossModule.classificationHooked = true
+end
+
+-- ============================================================================
+-- HEALTH BAR COLOR HOOK
+-- ============================================================================
+
+local function HookHealthBarColor()
+    if BossModule.healthHooked then return end
+
+    hooksecurefunc("UnitFrameHealthBar_Update", function(statusbar, unit)
+        if not statusbar or statusbar.lockValues then return end
+        if not unit or not unit:match("^boss%d$") then return end
+        if unit ~= statusbar.unit then return end
+
+        -- Re-enforce bar sizing — Blizzard can reset during combat
+        statusbar:SetSize(125, 20)
+        local parent = statusbar:GetParent()
+        if parent then statusbar:SetFrameLevel(parent:GetFrameLevel() + 1) end
+        local statusBarTex = statusbar:GetStatusBarTexture()
+        if statusBarTex then
+            statusBarTex:SetAllPoints(statusbar)
+        end
+    end)
+
+    BossModule.healthHooked = true
+end
+
+-- ============================================================================
+-- TARGET FRAME UPDATE HOOK — re-enforce reskin after Blizzard resets layout
+-- ============================================================================
+-- Blizzard's TargetFrame_Update runs during combat and can reset health/mana
+-- bar sizes, anchors, and the boss frame size itself. This hook fires after
+-- every such update to maintain our Dragonflight styling.
+
+local function HookTargetFrameUpdate()
+    if BossModule.targetFrameUpdateHooked then return end
+
+    local function RefreshBossTargetFrameLayout(self)
+        local frameName = self:GetName()
+        if not frameName or not frameName:match("^Boss%dTargetFrame$") then return end
+
+        -- Find which wrapper this boss frame belongs to
+        local bossIdx = tonumber(frameName:match("Boss(%d)TargetFrame"))
+        local wrapper = bossIdx and BossModule.wrapperFrames[bossIdx]
+        if wrapper then
+            -- Re-anchor boss frame to our wrapper — Blizzard's TargetFrame_Update
+            -- repositions frames to their default location during combat.
+            -- (SetPoint hook also enforces this, but we double-check here.)
+            self._DragonUI_SettingPoint = true
+            self:ClearAllPoints()
+            self:SetPoint("TOPLEFT", wrapper, "TOPLEFT", 0, 0)
+            self:SetHitRectInsets(0, 0, 0, 0)
+            self._DragonUI_SettingPoint = nil
+        end
+
+        -- Re-enforce portrait positioning and refresh texture
+        local portrait = _G[frameName .. "Portrait"]
+        if portrait then
+            portrait:ClearAllPoints()
+            portrait:SetSize(56, 56)
+            portrait:SetPoint("TOPRIGHT", self, "TOPRIGHT", -47, -15)
+            portrait:SetDrawLayer("ARTWORK", 1)
+            local unit = self.unit or self:GetAttribute("unit")
+            if unit and UnitExists(unit) then
+                SetPortraitTexture(portrait, unit)
+            end
+        end
+
+        -- Re-enforce health bar sizing and position
+        local healthBar = _G[frameName .. "HealthBar"]
+        if healthBar and portrait then
+            healthBar:ClearAllPoints()
+            healthBar:SetSize(125, 20)
+            healthBar:SetPoint("RIGHT", portrait, "LEFT", -1, 0)
+            healthBar:SetFrameLevel(self:GetFrameLevel() + 1)
+            local statusBarTex = healthBar:GetStatusBarTexture()
+            if statusBarTex then
+                statusBarTex:SetAllPoints(healthBar)
+            end
+        end
+
+        -- Re-enforce mana bar sizing and position
+        local manaBar = _G[frameName .. "ManaBar"]
+        if manaBar and portrait then
+            manaBar:ClearAllPoints()
+            manaBar:SetSize(132, 9)
+            manaBar:SetPoint("RIGHT", portrait, "LEFT", 6.5, -16.5)
+            manaBar:SetFrameLevel(self:GetFrameLevel() + 1)
+            local statusBarTex = manaBar:GetStatusBarTexture()
+            if statusBarTex then
+                statusBarTex:SetAllPoints(manaBar)
+            end
+        end
+
+        -- Hide Blizzard border and re-anchor our textures
+        local blizzBorder = _G[frameName .. "TextureFrameTexture"]
+        if blizzBorder then blizzBorder:SetAlpha(0) end
+        UpdateBossFrameBorder(self)
+
+        -- Re-enforce elite decoration on decoFrame
+        if self.DragonUI_Elite and portrait then
+            local unit = self.unit or self:GetAttribute("unit")
+            local classification
+            if unit and UnitExists(unit) then
+                classification = UnitClassification(unit)
+            end
+            local coords
+            if classification == "worldboss" then
+                coords = BOSS_COORDS.rareelite
+            elseif classification == "elite" then
+                coords = BOSS_COORDS.elite
+            elseif classification == "rareelite" then
+                coords = BOSS_COORDS.rareelite
+            elseif classification == "rare" then
+                coords = BOSS_COORDS.rare
+            else
+                coords = BOSS_COORDS.rareelite
+            end
+            if coords then
+                self.DragonUI_Elite:SetTexCoord(coords[1], coords[2], coords[3], coords[4])
+                self.DragonUI_Elite:SetSize(coords[5], coords[6])
+                self.DragonUI_Elite:ClearAllPoints()
+                self.DragonUI_Elite:SetPoint("CENTER", portrait, "CENTER", coords[7], coords[8])
+                self.DragonUI_Elite:SetDrawLayer("OVERLAY", 6)
+                self.DragonUI_Elite:Show()
+            end
+        end
+
+        -- Re-enforce name background
+        local nameBG = _G[frameName .. "NameBackground"]
+        if nameBG and healthBar then
+            nameBG:ClearAllPoints()
+            nameBG:SetPoint("BOTTOMLEFT", healthBar, "TOPLEFT", -2, -5)
+            nameBG:SetSize(135, 18)
+            nameBG:SetTexture(TEXTURES.NAME_BACKGROUND)
+        end
+
+        -- Re-enforce flash (race condition fix)
+        local flashTex = _G[frameName .. "Flash"]
+        EnforceFlashStyle(flashTex, self)
+
+        -- Re-enforce raid target icon draw layer (like target_style.lua)
+        local raidTargetIcon = _G[frameName .. "TextureFrameRaidTargetIcon"]
+        if raidTargetIcon then
+            raidTargetIcon:SetDrawLayer("OVERLAY", 7)
+            raidTargetIcon:SetSize(24, 24)
+            raidTargetIcon:ClearAllPoints()
+            if portrait then
+                raidTargetIcon:SetPoint("CENTER", portrait, "TOP", 0, 5)
+            end
+        end
+
+        -- Re-hide Blizzard background
+        local bg = _G[frameName .. "Background"]
+        if bg then bg:SetAlpha(0) end
+    end
+
+    hooksecurefunc("TargetFrame_Update", function(self)
+        if InCombatLockdown() then
+            if addon.CombatQueue and self and self.GetName then
+                local frameName = self:GetName()
+                if frameName and frameName:match("^Boss%dTargetFrame$") then
+                    addon.CombatQueue:Add("boss_targetframe_update_" .. frameName, function()
+                        if self and self.GetName and self:GetName() == frameName and not InCombatLockdown() then
+                            RefreshBossTargetFrameLayout(self)
+                        end
+                    end)
+                end
+            end
+            return
+        end
+
+        RefreshBossTargetFrameLayout(self)
+    end)
+
+    BossModule.targetFrameUpdateHooked = true
+end
+
+-- ============================================================================
+-- POSITIONING
 -- ============================================================================
 
 local function PositionBossFrames()
