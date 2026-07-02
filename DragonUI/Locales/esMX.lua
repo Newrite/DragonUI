@@ -327,6 +327,16 @@ L["No scrap items to sell."] = "No hay objetos de chatarra para vender."
 -- Transmog Collect
 L["Collect Transmog"] = "Coleccionar Transmog"
 L["Click to collect all uncollected transmog appearances from your bags."] = "Haz clic para coleccionar todas las apariencias de transmog no coleccionadas de tus bolsas."
+-- Guild Bank Sort
+L["You must be at the guild bank."] = "Debes estar en el banco de hermandad."
+L["Could not determine the current guild bank tab."] = "No se pudo determinar la pestaña actual del banco de hermandad."
+L["You need full deposit and withdraw access to this tab to sort it."] = "Necesitas acceso completo de depósito y retiro en esta pestaña para ordenarla."
+L["This guild bank tab is already sorted!"] = "¡Esta pestaña del banco de hermandad ya está ordenada!"
+L["Sort this guild bank tab? Depending on your server, this may be logged and count against your guild's shared withdrawal allowance, the same as moving items by hand."] = "¿Ordenar esta pestaña del banco de hermandad? Dependiendo de tu servidor, esto puede quedar registrado y contar contra el límite de retiro compartido de tu hermandad, igual que si movieras los objetos a mano."
+L["Sort"] = "Ordenar"
+L["Click to sort items in the currently open guild bank tab."] = "Haz clic para ordenar los objetos de la pestaña del banco de hermandad actualmente abierta."
+L["Never moves items between tabs."] = "Nunca mueve objetos entre pestañas."
+L["Sort Guild Bank Tab"] = "Ordenar pestaña del banco de hermandad"
 
 -- Micromenu Latency
 L["Network"] = "Red"
