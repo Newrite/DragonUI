@@ -635,7 +635,7 @@ L["Color used to tint the padlock icon shown on locked bag/bank slots."] = "Cor 
 
 -- Version Check
 L["Version Check"] = "Verificação de versão"
-L["Broadcast and detect addon version updates across group members."] = "Detecta atualizações do addon entre membros do grupo enviando e recebendo a versão."
+L["Broadcast and detect addon version updates across group members."] = "Detecta atualizações de versão do addon entre membros do grupo transmitindo e recebendo a versão."
 
 -- Search
 

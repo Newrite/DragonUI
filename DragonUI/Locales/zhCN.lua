@@ -513,8 +513,8 @@ L["Copy Text"] = "复制文本"
 L["URL"] = "URL"
 
 -- Version Check Module
-L["Version Check"] = true
-L["Broadcast and detect addon version updates across group members"] = true
+L["Version Check"] = "版本检查"
+L["Broadcast and detect addon version updates across group members"] = "检测队伍成员间插件版本更新，通过广播和接收版本信息"
 
 -- BNet Toast Module
 L["BNet Toast"] = "BNet 提醒"
@@ -523,3 +523,4 @@ L["Position & Scale"] = "位置与缩放"
 L["Scale of the BNet toast frame."] = "战网提示框的缩放比例。"
 L["Horizontal position of the BNet toast from the screen center. Negative values move left, positive values move right."] = "战网提示距屏幕中心的水平位置。负值向左移动，正值向右移动。"
 L["Vertical offset of the BNet toast frame. Negative values move down, positive values move up."] = "战网提示框的垂直偏移。负值向下移动，正值向上移动。"
+
