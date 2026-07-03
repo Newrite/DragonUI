@@ -342,6 +342,23 @@ local function InitializeMainbars()
         ]])
 
         RegisterStateDriver(mainBar, 'page', GetMainBarPageCondition())
+
+        -- For unknown CoA custom classes: regenerate the page condition when
+        -- shapeshift forms become available (GetNumShapeshiftForms() may return
+        -- 0 at init because talents haven't loaded yet, making the [form:X]
+        -- fallback conditions empty until a /reload).
+        if not mainBarPageByClass[class] then
+            local formsFrame = CreateFrame("Frame")
+            formsFrame:RegisterEvent("UPDATE_SHAPESHIFT_FORMS")
+            formsFrame:SetScript("OnEvent", function()
+                if GetNumShapeshiftForms() > 0 then
+                    RegisterStateDriver(mainBar, 'page', GetMainBarPageCondition())
+                    MainbarsModule.stateDrivers.page = { frame = mainBar, state = 'page' }
+                    formsFrame:UnregisterEvent("UPDATE_SHAPESHIFT_FORMS")
+                end
+            end)
+        end
+
         MainbarsModule.stateDrivers.page = { frame = mainBar, state = 'page' }
         MainbarsModule.pageDriverInstalled = true
         MainbarsModule.pageDriverFrame = mainBar
