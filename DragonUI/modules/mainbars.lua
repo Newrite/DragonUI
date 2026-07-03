@@ -139,16 +139,27 @@ local mainBarPageByClass = {
   PRIEST = '[bonusbar:1] 7;',
   ROGUE = '[bonusbar:1] 7; [bonusbar:2] 8;',
   -- CoA custom classes with stealth (use [stealth] condition, not bonusbar)
-  PROPHET = '[stealth] 7; [nostealth] 1;',
   RANGER = '[stealth] 7; [nostealth] 1;',
   REAPER = '[stealth] 7; [nostealth] 1;',
   SPIRITMAGE = '[stealth] 7; [nostealth] 1;',
+  HERO = '[bonusbar:1,nostealth] 7; [bonusbar:1,stealth] 8; [bonusbar:2] 8; [bonusbar:3] 9; [bonusbar:4] 10;',
   DEFAULT = '[bonusbar:5] 11; [bar:2] 2; [bar:3] 3; [bar:4] 4; [bar:5] 5; [bar:6] 6;'
 }
 
 local function GetMainBarPageCondition()
     local condition = mainBarPageByClass.DEFAULT
     local classCondition = mainBarPageByClass[class]
+    -- Fallback: auto-generate form-based paging for unknown CoA custom classes
+    if not classCondition then
+        local numForms = GetNumShapeshiftForms()
+        if numForms and numForms > 0 then
+            local parts = {}
+            for i = 1, numForms do
+                parts[i] = string.format('[form:%d] %d;', i, 6 + i)
+            end
+            classCondition = table.concat(parts, ' ')
+        end
+    end
     if classCondition then
         condition = condition .. ' ' .. classCondition
     end
