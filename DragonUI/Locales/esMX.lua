@@ -247,11 +247,21 @@ L["DragonUI - Party Frame Issue"] = true
 L["You joined a party while in combat. Due to CompactRaidFrame taint issues, party frames may not display correctly."] = true
 L["Reload the UI to fix party frame display?"] = true
 
+-- Nameplate conflict detection
+L["DragonUI - Nameplate Conflict"] = "DragonUI - Conflicto de Nameplates"
+L["The addon |cFFFFFF00%s|r provides nameplate functionality which conflicts with DragonUI Nameplates."] = "El addon |cFFFFFF00%s|r tiene funcionalidad de nameplates que entra en conflicto con los Nameplates de DragonUI."
+L["Select which nameplate system to keep:"] = "Elegí qué sistema de nameplates querés mantener:"
+L["DragonUI Nameplates"] = "Nameplates de DragonUI"
+L["Keep DragonUI Nameplates and disable %s"] = "Conservar Nameplates de DragonUI y desactivar %s"
+L["Keep %s and disable DragonUI Nameplates"] = "Conservar %s y desactivar Nameplates de DragonUI"
+L["Don't ask again"] = "No preguntar de nuevo"
+
 -- Conflict reasons
 L["Conflicts with DragonUI's custom unit frame textures and power bar system."] = "Entra en conflicto con las texturas personalizadas de marcos de unidad y el sistema de barra de poder de DragonUI."
 L["Known taint issues when manipulating party frames during combat. DragonUI provides automatic fixes."] = "Problemas conocidos de contaminación al manipular marcos de grupo en combate. DragonUI proporciona correcciones automáticas."
 L["Resets minimap mask and blip textures. DragonUI re-applies its custom textures automatically."] = "Restablece la máscara del minimapa y las texturas de puntos. DragonUI vuelve a aplicar sus texturas personalizadas automáticamente."
 L["SexyMap modifies the minimap borders, shape, and zone text which conflicts with DragonUI's minimap module."] = "SexyMap modifica los bordes del minimapa, la forma y el texto de zona, lo cual entra en conflicto con el módulo de minimapa de DragonUI."
+L["Nameplate functionality conflicts with DragonUI's nameplate module."] = "La funcionalidad de nameplates entra en conflicto con el módulo de nameplates de DragonUI."
 
 -- SexyMap compatibility popup
 L["DragonUI - SexyMap Detected"] = "DragonUI - SexyMap Detectado"

@@ -20,6 +20,24 @@ local CONFIG = {
     d3d9ExWarningDelay = 1.0
 }
 
+local function GetCompatibilityConfig()
+    if not addon.db or not addon.db.profile then
+        return nil
+    end
+
+    addon.db.profile.compatibility = addon.db.profile.compatibility or {}
+    return addon.db.profile.compatibility
+end
+
+-- Session state for tracking processed addons and warnings
+local state = {
+    processedAddons = {},
+    activeAddons = {},
+    initialized = false,
+    d3d9ExWarningShown = false,
+    d3d9ExWarningFrame = nil
+}
+
 local ADDON_REGISTRY
 
 -- ============================================================================
@@ -70,6 +88,33 @@ local function IsRegistryAddonLoaded(addonName)
             or IsAddonLoadedCached("CompactRaidFrames")
             or IsAddonLoadedCached("Blizzard_CompactRaidFrames")
             or _G.CompactRaidFrameManager ~= nil
+    end
+
+    -- Ascension_NamePlates is a virtual addon — detect whether the Ascension
+    -- custom nameplate CVar is active instead of checking IsAddOnLoaded.
+    if addonName == "ascension_nameplates" then
+        -- On 3.3.5a, Ascension/CoA enables its custom nameplate system via CVar
+        local useNewPlates = GetCVarBool and GetCVarBool("useNewNamePlates")
+        if useNewPlates then
+            return true
+        end
+        -- Also check if the addon itself is loaded (some CoA builds expose it)
+        return IsAddonLoadedCached("Ascension_NamePlates")
+    end
+
+    -- Nameplate addons: IsAddOnLoaded is case-insensitive on 3.3.5a, but try
+    -- the canonical case as well to cover edge cases.
+    if addonName == "aloft" then
+        return IsAddonLoadedCached("Aloft")
+    end
+    if addonName == "tidyplates" then
+        return IsAddonLoadedCached("TidyPlates")
+    end
+    if addonName == "kui_nameplates" then
+        return IsAddonLoadedCached("Kui_Nameplates") or IsAddonLoadedCached("KuiNameplates")
+    end
+    if addonName == "healers-have-to-die" then
+        return IsAddonLoadedCached("Healers-Have-To-Die")
     end
 
     return false
@@ -543,6 +588,77 @@ end
 
 
 -- ============================================================================
+-- NAMEPLATE CONFLICT DETECTION
+-- ============================================================================
+
+-- Behavior: Nameplate conflict detection popup.
+-- Triggered when a known nameplate addon is loaded AND DragonUI nameplates
+-- module is enabled. Shows a two-button popup (ElvUI pattern):
+--   Button 1: Keep DragonUI Nameplates → disable the other addon
+--   Button 2: Keep the other addon → disable DragonUI Nameplates
+--   Button 3: Disable this warning permanently
+behaviors.NameplateConflict = function(addonName, addonInfo)
+    -- Only show if DragonUI nameplates module is enabled
+    if not addon:IsModuleEnabled("nameplates") then return end
+
+    -- Check if user has dismissed this warning permanently
+    local compatCfg = GetCompatibilityConfig()
+    if compatCfg and compatCfg.ignoreNameplateConflict then return end
+
+    -- Only show ONE nameplate conflict popup per session (first addon wins)
+    if state._nameplateConflictShown then return end
+    state._nameplateConflictShown = true
+
+    local popupName = "DRAGONUI_NAMEPLATE_CONFLICT"
+    local addonDisplayName = addonInfo.name or addonName
+
+    StaticPopupDialogs[popupName] = {
+        text = "|cFFFF0000" .. L["DragonUI - Nameplate Conflict"] .. "|r\n\n" ..
+            string.format(L["The addon |cFFFFFF00%s|r provides nameplate functionality which conflicts with DragonUI Nameplates."], addonDisplayName) .. "\n\n" ..
+            L["Select which nameplate system to keep:"] ..
+            "\n\n|cFF00FF00" .. string.format(L["Keep DragonUI Nameplates and disable %s"], addonDisplayName) .. "|r" ..
+            "\n|cFFFFFF00" .. string.format(L["Keep %s and disable DragonUI Nameplates"], addonDisplayName) .. "|r",
+        button1 = (L["DragonUI Nameplates"]) or "DragonUI Nameplates",
+        button2 = addonDisplayName,
+        button3 = (L["Don't ask again"]) or "Don't ask again",
+        OnAccept = function()
+            -- Keep DragonUI nameplates → disable the other addon
+            -- Ascension_NamePlates is a virtual addon; disable via CVar
+            if addonName == "ascension_nameplates" then
+                SetCVar("useNewNamePlates", "0")
+            else
+                -- Use the canonical addon name from the registry entry
+                DisableAddOn(addonInfo.name or addonName)
+            end
+            ReloadUI()
+        end,
+        OnCancel = function()
+            -- Keep the other addon → disable DragonUI nameplates module
+            if addon.db and addon.db.profile and addon.db.profile.modules then
+                addon.db.profile.modules.nameplates = addon.db.profile.modules.nameplates or {}
+                addon.db.profile.modules.nameplates.enabled = false
+            end
+            ReloadUI()
+        end,
+        OnAlt = function()
+            -- Don't ask again
+            local cfg = GetCompatibilityConfig()
+            if cfg then
+                cfg.ignoreNameplateConflict = true
+            end
+        end,
+        timeout = 0,
+        whileDead = true,
+        hideOnEscape = false,
+        preferredIndex = 3,
+    }
+
+    StaticPopup_Show(popupName)
+end
+
+
+
+-- ============================================================================
 -- SEXYMAP COMPATIBILITY SYSTEM
 -- ============================================================================
 
@@ -1003,32 +1119,52 @@ ADDON_REGISTRY = {
         behavior = behaviors.SexyMapCompatibility,
         checkOnce = true
     },
+
+    -- ============================================================================
+    -- NAMEPLATE ADDONS (conflict with DragonUI Nameplates)
+    -- Each entry shares the NameplateConflict behavior. The first one detected in
+    -- a session shows a popup; subsequent entries are silently skipped.
+    -- ============================================================================
+
+    ["aloft"] = {
+        name = "Aloft",
+        reason = L["Nameplate functionality conflicts with DragonUI's nameplate module."],
+        behavior = behaviors.NameplateConflict,
+        checkOnce = true,
+    },
+    ["tidyplates"] = {
+        name = "TidyPlates",
+        reason = L["Nameplate functionality conflicts with DragonUI's nameplate module."],
+        behavior = behaviors.NameplateConflict,
+        checkOnce = true,
+    },
+    ["kui_nameplates"] = {
+        name = "Kui_Nameplates",
+        reason = L["Nameplate functionality conflicts with DragonUI's nameplate module."],
+        behavior = behaviors.NameplateConflict,
+        checkOnce = true,
+    },
+    ["ascension_nameplates"] = {
+        name = "Ascension_NamePlates",
+        reason = L["Nameplate functionality conflicts with DragonUI's nameplate module."],
+        behavior = behaviors.NameplateConflict,
+        checkOnce = true,
+    },
+    ["healers-have-to-die"] = {
+        name = "Healers-Have-To-Die",
+        reason = L["Nameplate functionality conflicts with DragonUI's nameplate module."],
+        behavior = behaviors.NameplateConflict,
+        checkOnce = true,
+    },
 }
 
 -- ============================================================================
 -- STATE TRACKING
 -- ============================================================================
 
-local state = {
-    processedAddons = {},
-    activeAddons = {},
-    initialized = false,
-    d3d9ExWarningShown = false,
-    d3d9ExWarningFrame = nil
-}
-
 local function IsD3D9ExActive()
     local gxApi = GetCVar("gxApi")
     return gxApi and string.lower(gxApi) == "d3d9ex"
-end
-
-local function GetCompatibilityConfig()
-    if not addon.db or not addon.db.profile then
-        return nil
-    end
-
-    addon.db.profile.compatibility = addon.db.profile.compatibility or {}
-    return addon.db.profile.compatibility
 end
 
 local function HasSeenD3D9ExWarning()

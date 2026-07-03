@@ -131,6 +131,15 @@ L["Click to sort items in the currently open guild bank tab."] = "點擊整理�
 L["Never moves items between tabs."] = "永遠不會跨頁籤移動物品。"
 L["Sort Guild Bank Tab"] = "整理公會銀行頁籤"
 
+-- Nameplate conflict detection
+L["DragonUI - Nameplate Conflict"] = "DragonUI - 姓名版衝突"
+L["The addon |cFFFFFF00%s|r provides nameplate functionality which conflicts with DragonUI Nameplates."] = "插件 |cFFFFFF00%s|r 提供了與 DragonUI 姓名版衝突的姓名版功能。"
+L["Select which nameplate system to keep:"] = "選擇要保留的姓名版系統："
+L["DragonUI Nameplates"] = "DragonUI 姓名版"
+L["Keep DragonUI Nameplates and disable %s"] = "保留 DragonUI 姓名版並停用 %s"
+L["Keep %s and disable DragonUI Nameplates"] = "保留 %s 並停用 DragonUI 姓名版"
+L["Don't ask again"] = "不再詢問"
+
 -- Version Check Module
 L["Version Check"] = "版本檢查"
 L["Broadcast and detect addon version updates across group members"] = "檢測隊伍成員間插件版本更新，通過廣播和接收版本資訊"

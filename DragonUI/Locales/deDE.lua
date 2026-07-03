@@ -247,6 +247,15 @@ L["DragonUI - Party Frame Issue"] = true
 L["You joined a party while in combat. Due to CompactRaidFrame taint issues, party frames may not display correctly."] = true
 L["Reload the UI to fix party frame display?"] = true
 
+-- Nameplate conflict detection
+L["DragonUI - Nameplate Conflict"] = "DragonUI - Namensschild-Konflikt"
+L["The addon |cFFFFFF00%s|r provides nameplate functionality which conflicts with DragonUI Nameplates."] = "Das Addon |cFFFFFF00%s|r bietet Namensschild-Funktionen, die mit den DragonUI-Namensschildern kollidieren."
+L["Select which nameplate system to keep:"] = "Wähle, welches Namensschild-System behalten werden soll:"
+L["DragonUI Nameplates"] = "DragonUI Namensschilder"
+L["Keep DragonUI Nameplates and disable %s"] = "DragonUI Namensschilder behalten und %s deaktivieren"
+L["Keep %s and disable DragonUI Nameplates"] = "%s behalten und DragonUI Namensschilder deaktivieren"
+L["Don't ask again"] = "Nicht erneut fragen"
+
 -- Conflict reasons
 L["Conflicts with DragonUI's custom unit frame textures and power bar system."] = "Kollidiert mit DragonUIs benutzerdefinierten Einheiten-Rahmen-Texturen und dem Machtleistensystem."
 L["Known taint issues when manipulating party frames during combat. DragonUI provides automatic fixes."] = "Bekannte Kontaminationsprobleme beim Manipulieren von Gruppenrahmen im Kampf. DragonUI bietet automatische Korrekturen."

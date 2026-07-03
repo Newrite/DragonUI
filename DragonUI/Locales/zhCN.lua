@@ -243,6 +243,15 @@ L["DragonUI - Party Frame Issue"] = "DragonUI - 小队框架问题"
 L["You joined a party while in combat. Due to CompactRaidFrame taint issues, party frames may not display correctly."] = "你在战斗中加入了队伍。由于 CompactRaidFrame 的污染问题，小队框架可能无法正确显示。"
 L["Reload the UI to fix party frame display?"] = "是否重新加载界面以修复小队框架显示？"
 
+-- Nameplate conflict detection
+L["DragonUI - Nameplate Conflict"] = "DragonUI - 姓名板冲突"
+L["The addon |cFFFFFF00%s|r provides nameplate functionality which conflicts with DragonUI Nameplates."] = "插件 |cFFFFFF00%s|r 提供了与 DragonUI 姓名板冲突的姓名板功能。"
+L["Select which nameplate system to keep:"] = "选择要保留的姓名板系统："
+L["DragonUI Nameplates"] = "DragonUI 姓名板"
+L["Keep DragonUI Nameplates and disable %s"] = "保留 DragonUI 姓名板并禁用 %s"
+L["Keep %s and disable DragonUI Nameplates"] = "保留 %s 并禁用 DragonUI 姓名板"
+L["Don't ask again"] = "不再询问"
+
 L["Conflicts with DragonUI's custom unit frame textures and power bar system."] = "与 DragonUI 的自定义单位框架纹理和能量条系统冲突。"
 L["Known taint issues when manipulating party frames during combat. DragonUI provides automatic fixes."] = "在战斗中操作小队框架会产生已知污染问题。DragonUI 会自动处理。"
 L["Resets minimap mask and blip textures. DragonUI re-applies its custom textures automatically."] = "会重置小地图遮罩和图标纹理。DragonUI 会自动重新应用自定义纹理。"

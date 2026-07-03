@@ -131,6 +131,15 @@ L["Click to sort items in the currently open guild bank tab."] = "Clique para or
 L["Never moves items between tabs."] = "Nunca move itens entre abas."
 L["Sort Guild Bank Tab"] = "Organizar aba do banco da guilda"
 
+-- Nameplate conflict detection
+L["DragonUI - Nameplate Conflict"] = "DragonUI - Conflito de Nameplates"
+L["The addon |cFFFFFF00%s|r provides nameplate functionality which conflicts with DragonUI Nameplates."] = "O addon |cFFFFFF00%s|r fornece funcionalidade de nameplates que conflita com os Nameplates do DragonUI."
+L["Select which nameplate system to keep:"] = "Selecione qual sistema de nameplates manter:"
+L["DragonUI Nameplates"] = "Nameplates do DragonUI"
+L["Keep DragonUI Nameplates and disable %s"] = "Manter Nameplates do DragonUI e desativar %s"
+L["Keep %s and disable DragonUI Nameplates"] = "Manter %s e desativar Nameplates do DragonUI"
+L["Don't ask again"] = "Não perguntar novamente"
+
 -- Version Check Module
 L["Version Check"] = "Verificação de versão"
 L["Broadcast and detect addon version updates across group members"] = "Detecta atualizações de versão do addon entre membros do grupo transmitindo e recebendo a versão"

@@ -247,6 +247,15 @@ L["DragonUI - Party Frame Issue"] = true
 L["You joined a party while in combat. Due to CompactRaidFrame taint issues, party frames may not display correctly."] = true
 L["Reload the UI to fix party frame display?"] = true
 
+-- Nameplate conflict detection
+L["DragonUI - Nameplate Conflict"] = "DragonUI - 이름표 충돌"
+L["The addon |cFFFFFF00%s|r provides nameplate functionality which conflicts with DragonUI Nameplates."] = "애드온 |cFFFFFF00%s|r(이)가 DragonUI 이름표와 충돌하는 이름표 기능을 제공합니다."
+L["Select which nameplate system to keep:"] = "유지할 이름표 시스템을 선택하세요:"
+L["DragonUI Nameplates"] = "DragonUI 이름표"
+L["Keep DragonUI Nameplates and disable %s"] = "DragonUI 이름표 유지 및 %s 비활성화"
+L["Keep %s and disable DragonUI Nameplates"] = "%s 유지 및 DragonUI 이름표 비활성화"
+L["Don't ask again"] = "다시 묻지 않음"
+
 -- Conflict reasons
 L["Conflicts with DragonUI's custom unit frame textures and power bar system."] = "DragonUIì˜ ì‚¬ìš©ìž ì§€ì • ìœ ë‹› í”„ë ˆìž„ í…ìŠ¤ì²˜ ë° ìžì› ë°” ì‹œìŠ¤í…œê³¼ ì¶©ëŒí•©ë‹ˆë‹¤."
 L["Known taint issues when manipulating party frames during combat. DragonUI provides automatic fixes."] = "ì „íˆ¬ ì¤‘ íŒŒí‹° í”„ë ˆìž„ ì¡°ìž‘ ì‹œ ì•Œë ¤ì§„ ì˜¤ì—¼ ë¬¸ì œê°€ ìžˆìŠµë‹ˆë‹¤. DragonUIê°€ ìžë™ ìˆ˜ì • ê¸°ëŠ¥ì„ ì œê³µí•©ë‹ˆë‹¤."
