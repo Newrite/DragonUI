@@ -1325,24 +1325,19 @@ end
 
 -- Setup alternate mana bar text system based on configuration
 local function SetupAlternateManaBarAlwaysVisible()
-    local _, playerClass = UnitClass("player")
-    if playerClass ~= "DRUID" then
-        return
-    end
-    
     local alternateManaBar = _G.PlayerFrameAlternateManaBar
     if not alternateManaBar then
         return
     end
     
-    -- ALWAYS hide Blizzard text - we always use DragonUI system for druids
+    -- ALWAYS hide Blizzard text - we always use DragonUI system
     local blizzardText = alternateManaBar.TextString or _G.PlayerFrameAlternateManaBarText
     if blizzardText then
         blizzardText:Hide()
         blizzardText:SetAlpha(0)
     end
     
-    -- ALWAYS setup DragonUI text elements for druids
+    -- ALWAYS setup DragonUI text elements
     SetupAlternateManaTextElements()
     
     -- Get configuration to determine visibility behavior
@@ -2327,7 +2322,7 @@ local function ApplyPlayerConfig()
     UpdatePlayerDragonDecoration()
     UpdateGlowVisibility()
     
-    -- Setup alternate mana bar text to always be visible for druids
+    -- Setup alternate mana bar text visibility
     SetupAlternateManaBarAlwaysVisible()
 
 end
@@ -2841,19 +2836,16 @@ local function SetupPlayerEvents()
         elseif POWER_EVENTS[event] then
             UpdateManaBarColor(PlayerFrameManaBar)
             UpdatePowerBarTexture(PlayerFrameManaBar)
-            -- Update alternate mana text for druids (both always visible and hover modes)
-            local _, playerClass = UnitClass("player")
-            if playerClass == "DRUID" then
-                local config = GetPlayerConfig()
-                if config and config.alwaysShowAlternateManaText then
-                    -- Always visible mode: update immediately
+            -- Update alternate mana text (both always visible and hover modes)
+            local config = GetPlayerConfig()
+            if config and config.alwaysShowAlternateManaText then
+                -- Always visible mode: update immediately
+                UpdateAlternateManaText()
+            else
+                -- Hover mode: only update if currently showing (mouse over)
+                local alternateManaBar = _G.PlayerFrameAlternateManaBar
+                if alternateManaBar and alternateManaBar:IsMouseOver() then
                     UpdateAlternateManaText()
-                else
-                    -- Hover mode: only update if currently showing (mouse over)
-                    local alternateManaBar = _G.PlayerFrameAlternateManaBar
-                    if alternateManaBar and alternateManaBar:IsMouseOver() then
-                        UpdateAlternateManaText()
-                    end
                 end
             end
         end
@@ -2949,18 +2941,15 @@ end)
 -- Hook to update alternate mana bar text when power changes
 hooksecurefunc("UnitFrameManaBar_Update", function(statusbar, unit)
     if unit == "player" then
-        local _, playerClass = UnitClass("player")
-        if playerClass == "DRUID" then
-            local config = GetPlayerConfig()
-            if config and config.alwaysShowAlternateManaText then
-                -- Always visible mode: update immediately
+        local config = GetPlayerConfig()
+        if config and config.alwaysShowAlternateManaText then
+            -- Always visible mode: update immediately
+            UpdateAlternateManaText()
+        else
+            -- Hover mode: only update if currently showing (mouse over)
+            local alternateManaBar = _G.PlayerFrameAlternateManaBar
+            if alternateManaBar and alternateManaBar:IsMouseOver() then
                 UpdateAlternateManaText()
-            else
-                -- Hover mode: only update if currently showing (mouse over)
-                local alternateManaBar = _G.PlayerFrameAlternateManaBar
-                if alternateManaBar and alternateManaBar:IsMouseOver() then
-                    UpdateAlternateManaText()
-                end
             end
         end
     end
