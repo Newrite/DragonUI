@@ -146,11 +146,17 @@ local mainBarPageByClass = {
   DEFAULT = '[bonusbar:5] 11; [bar:2] 2; [bar:3] 3; [bar:4] 4; [bar:5] 5; [bar:6] 6;'
 }
 
+-- Classes whose forms are too short-lived to justify auto-generating [form:X]
+-- paging (e.g. Demon Hunter metamorphosis — lasts seconds, not worth a bar swap).
+local noAutoFormPaging = {
+    DEMONHUNTER = true,
+}
+
 local function GetMainBarPageCondition()
     local condition = mainBarPageByClass.DEFAULT
     local classCondition = mainBarPageByClass[class]
     -- Fallback: auto-generate form-based paging for unknown CoA custom classes
-    if not classCondition then
+    if not classCondition and not noAutoFormPaging[class] then
         local numForms = GetNumShapeshiftForms()
         if numForms and numForms > 0 then
             local parts = {}
@@ -347,7 +353,7 @@ local function InitializeMainbars()
         -- shapeshift forms become available (GetNumShapeshiftForms() may return
         -- 0 at init because talents haven't loaded yet, making the [form:X]
         -- fallback conditions empty until a /reload).
-        if not mainBarPageByClass[class] then
+        if not mainBarPageByClass[class] and not noAutoFormPaging[class] then
             local formsFrame = CreateFrame("Frame")
             formsFrame:RegisterEvent("UPDATE_SHAPESHIFT_FORMS")
             formsFrame:SetScript("OnEvent", function()
