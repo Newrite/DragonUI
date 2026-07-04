@@ -349,6 +349,20 @@ local function InitializeMainbars()
 
         RegisterStateDriver(mainBar, 'page', GetMainBarPageCondition())
 
+        -- Ensure all action buttons refresh their display after the page
+        -- driver registers. Without this, ActionButton_Update may never
+        -- run with the correct actionpage on first login because:
+        --   1) The initial condition may lack [form:N] entries (forms
+        --      not yet loaded), or
+        --   2) The re-registration later evaluates to the same page,
+        --      so _onstate-page doesn't fire.
+        for i = 1, NUM_ACTIONBAR_BUTTONS do
+            local button = _G["ActionButton" .. i]
+            if button then
+                ActionButton_Update(button)
+            end
+        end
+
         -- For unknown CoA custom classes: regenerate the page condition when
         -- shapeshift forms become available (GetNumShapeshiftForms() may return
         -- 0 at init because talents haven't loaded yet, making the [form:X]
@@ -360,6 +374,12 @@ local function InitializeMainbars()
                 if GetNumShapeshiftForms() > 0 then
                     RegisterStateDriver(mainBar, 'page', GetMainBarPageCondition())
                     MainbarsModule.stateDrivers.page = { frame = mainBar, state = 'page' }
+                    for i = 1, NUM_ACTIONBAR_BUTTONS do
+                        local button = _G["ActionButton" .. i]
+                        if button then
+                            ActionButton_Update(button)
+                        end
+                    end
                     formsFrame:UnregisterEvent("UPDATE_SHAPESHIFT_FORMS")
                 end
             end)
