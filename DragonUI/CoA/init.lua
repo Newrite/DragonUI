@@ -10,20 +10,6 @@ local function InitializeCoA()
     CoA:SetupClassColors()
     addon:Debug("|cFF00FF00[DragonUI CoA]|r Conquest of Azeroth detected. Loading compatibility layer.")
 
-    if addon.RegisterHook then
-        if addon.ModuleRegistry.modules["player"] then
-            addon:RegisterHook("player", "post", function()
-                if CoA.modules and CoA.modules.player then
-                    CoA.modules.player:Apply()
-                end
-            end)
-        end
-    end
-
-    if CoA.modules and CoA.modules.player then
-        CoA.modules.player:Apply()
-    end
-
     CoA.initialized = true
 end
 

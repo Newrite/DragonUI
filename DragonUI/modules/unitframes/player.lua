@@ -466,6 +466,7 @@ local function RemoveBlizzardFrames(isVehicle)
             PlayerFrameVehicleTexture:SetAlpha(0)
         end
     end
+
 end
 
 -- ============================================================================

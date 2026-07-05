@@ -3,6 +3,4 @@
     <!-- Detection and initialization -->
     <Script file="detection.lua"/>
     <Script file="init.lua"/>
-    <!-- Unit frame overrides -->
-    <Include file="unitframes\unitframes.xml"/>
 </Ui>
