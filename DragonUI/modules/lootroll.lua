@@ -124,8 +124,9 @@ local function InstallHooks()
         end)
     end
 
-    -- Fallback: hook individual frame openers for clients without the container
-    if not GroupLootContainer and GroupLootFrame_OpenNewFrame then
+    -- Hook individual frame openers even when GroupLootContainer exists.
+
+    if GroupLootFrame_OpenNewFrame then
         hooksecurefunc("GroupLootFrame_OpenNewFrame", function()
             if not LootRollModule.applied then return end
             AttachContainer()
@@ -314,7 +315,6 @@ function LootRollModule:ShowEditorTest()
 
             f:ClearAllPoints()
             f:SetPoint(point, UIParent, point, x, y)
-            f:SetUserPlaced(false)
 
             -- Save to DB
             if addon.db and addon.db.profile then
@@ -357,9 +357,10 @@ addon.package:RegisterEvents(function()
     LootRollModule:Initialize()
 end, "PLAYER_LOGIN")
 
--- Re-attach after zone changes, reloads, etc. (same as DragonflightUI pattern)
+-- Re-apply position and re-attach after zone changes, reloads, etc.
 addon.package:RegisterEvents(function()
     if LootRollModule.applied then
+        UpdateAnchorPosition()
         AttachContainer()
     end
 end, "PLAYER_ENTERING_WORLD")
