@@ -733,6 +733,7 @@ L["Configure the position and scale of the bag bar independently from the micro 
 L["Bag Bar Scale"] = "Escala de Barra de Bolsas"
 
 -- XP & Rep Bars
+L["XP Bar"] = "Barra de XP"
 L["XP & Rep Bars (Legacy Offsets)"] = "Barras de XP y Rep (Desfases Legado)"
 L["Main XP & Rep bar options have moved to the XP & Rep Bars tab."] = "Las opciones principales de barras de XP y Rep se han movido a la pestaña Barras de XP y Rep."
 L["These offset options are for advanced positioning adjustments."] = "Estas opciones de desfase son para ajustes avanzados de posicionamiento."

@@ -776,6 +776,7 @@ L["Configure the position and scale of the bag bar independently from the micro 
 L["Bag Bar Scale"] = true
 
 -- XP & Rep Bars
+L["XP Bar"] = true
 L["XP & Rep Bars (Legacy Offsets)"] = true
 L["Main XP & Rep bar options have moved to the XP & Rep Bars tab."] = true
 L["These offset options are for advanced positioning adjustments."] = true

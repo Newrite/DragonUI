@@ -719,6 +719,7 @@ L["Configure the position and scale of the bag bar independently from the micro 
 L["Bag Bar Scale"] = "Skalierung Taschenleiste"
 
 -- XP & Rep Bars
+L["XP Bar"] = "EP-Leiste"
 L["XP & Rep Bars (Legacy Offsets)"] = "EP- & Rufleisten (Legacy-Versatz)"
 L["Main XP & Rep bar options have moved to the XP & Rep Bars tab."] = "Die Hauptoptionen für EP- & Rufleisten sind in den Tab „EP- & Rufleisten“ umgezogen."
 L["These offset options are for advanced positioning adjustments."] = "Diese Versatz-Optionen sind für erweiterte Positionsanpassungen."

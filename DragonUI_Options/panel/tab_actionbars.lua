@@ -774,6 +774,20 @@ local function BuildVisibilityTab(scroll)
     })
     AddVisibilityModeOptions(totemVis, "totem")
 
+    -- XP bar hover/combat
+    local xpVis = C:AddSection(scroll, LO["XP Bar"])
+    C:AddToggle(xpVis, {
+        label = LO["Show on Hover Only"],
+        dbPath = "actionbars.xpbar_show_on_hover",
+        callback = RefreshVisibility,
+    })
+    C:AddToggle(xpVis, {
+        label = LO["Show in Combat Only"],
+        dbPath = "actionbars.xpbar_show_in_combat",
+        callback = RefreshVisibility,
+    })
+    AddVisibilityModeOptions(xpVis, "xpbar")
+
 end
 
 -- ============================================================================

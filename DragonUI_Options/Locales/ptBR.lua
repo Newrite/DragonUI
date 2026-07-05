@@ -644,3 +644,6 @@ L["Search settings..."] = "Buscar configurações..."
 L["Type to find a setting"] = "Digite para encontrar uma configuração"
 L["No settings match '%s'."] = "Nenhuma configuração corresponde a '%s'."
 L["Showing top %d results. Type at least 3 characters for the full list."] = "Mostrando os %d melhores resultados. Digite pelo menos 3 caracteres para ver todos."
+
+-- XP & Rep Bars
+L["XP Bar"] = "Barra de XP"

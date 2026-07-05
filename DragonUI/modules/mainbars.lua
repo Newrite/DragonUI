@@ -2870,6 +2870,7 @@ addon.visibilityStates = addon.visibilityStates or {
     pet          = { hovered = false, inCombat = false },
     stance       = { hovered = false, inCombat = false },
     totem        = { hovered = false, inCombat = false },
+    xpbar        = { hovered = false, inCombat = false },
 }
 
 local VISIBILITY_BAR_ORDER = {
@@ -2883,6 +2884,7 @@ local VISIBILITY_BAR_ORDER = {
     "pet",
     "stance",
     "totem",
+    "xpbar",
 }
 
 local MICROMENU_BUTTON_NAMES = {
@@ -2923,6 +2925,7 @@ local function GetVisibilityBarFrameMap()
         pet          = addon.GetPetBarVisibilityFrame and addon.GetPetBarVisibilityFrame() or PetActionBarFrame,
         stance       = addon.GetStanceBarVisibilityFrame and addon.GetStanceBarVisibilityFrame() or ShapeshiftBarFrame,
         totem        = addon.GetTotemBarVisibilityFrame and addon.GetTotemBarVisibilityFrame() or MultiCastActionBarFrame,
+        xpbar        = addon.ActionBarFrames and addon.ActionBarFrames.xpbar,
     }
 end
 
@@ -3221,12 +3224,20 @@ function addon.UpdateActionBarVisibility(barName, frame)
     -- Skip during vehicle — vehicle module handles bar visibility
     if UnitHasVehicleUI and UnitHasVehicleUI("player") then return end
 
+    -- XP bar: skip if hidden by level check (max level or XP disabled)
+    if barName == "xpbar" then
+        local maxXP = UnitXPMax("player")
+        if not maxXP or maxXP <= 0 then return end
+        local currXP = UnitXP("player") or 0
+        if currXP >= maxXP then return end
+    end
+
     local config = addon.db.profile.actionbars
     local state  = addon.visibilityStates and addon.visibilityStates[barName]
     if not state then return end
 
     -- Check if bar is disabled (secondary bars only)
-    if barName ~= "main" and barName ~= "micro" and barName ~= "bag" and barName ~= "pet" then
+    if barName ~= "main" and barName ~= "micro" and barName ~= "bag" and barName ~= "pet" and barName ~= "xpbar" then
         local enabled = IsSecondaryBarEnabled(config, barName)
 
         SetSecondaryBarContainerVisibility(barName, enabled)

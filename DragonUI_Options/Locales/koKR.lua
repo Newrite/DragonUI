@@ -727,6 +727,7 @@ L["Configure the position and scale of the bag bar independently from the micro 
 L["Bag Bar Scale"] = "가방 바 크기 비율"
 
 -- XP & Rep Bars
+L["XP Bar"] = "경험치 바"
 L["XP & Rep Bars (Legacy Offsets)"] = "경험치 및 평판 바 (레거시 오프셋)"
 L["Main XP & Rep bar options have moved to the XP & Rep Bars tab."] = "주요 경험치 및 평판 바 옵션이 경험치 및 평판 바 탭으로 이동했습니다."
 L["These offset options are for advanced positioning adjustments."] = "이 오프셋 옵션은 고급 위치 미세 조정용입니다."

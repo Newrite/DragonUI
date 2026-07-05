@@ -698,6 +698,7 @@ L["Configure the position and scale of the bag bar independently from the micro 
 L["Bag Bar Scale"] = "背包栏缩放"
 
 -- 经验值和声望条
+L["XP Bar"] = "经验值条"
 L["XP & Rep Bars (Legacy Offsets)"] = "经验值和声望条（旧版偏移量）"
 L["Main XP & Rep bar options have moved to the XP & Rep Bars tab."] = "主要的经验值和声望条选项已移至“经验值和声望条”标签页。"
 L["These offset options are for advanced positioning adjustments."] = "这些偏移量选项用于高级位置微调。"

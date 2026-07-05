@@ -295,7 +295,12 @@ local defaults = {
             -- Totem bar visibility
             totem_show_on_hover = false,
             totem_show_in_combat = false,
-            totem_visibility_logic = "and"
+            totem_visibility_logic = "and",
+
+            -- XP bar visibility
+            xpbar_show_on_hover = false,
+            xpbar_show_in_combat = false,
+            xpbar_visibility_logic = "and"
         },
 
         micromenu = {

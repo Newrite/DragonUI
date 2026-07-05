@@ -719,6 +719,7 @@ L["Configure the position and scale of the bag bar independently from the micro 
 L["Bag Bar Scale"] = "Масштаб панели сумок"
 
 -- XP & Rep Bars
+L["XP Bar"] = "Полоса опыта"
 L["XP & Rep Bars (Legacy Offsets)"] = "Опыт и репутация (Смещения)"
 L["Main XP & Rep bar options have moved to the XP & Rep Bars tab."] = "Основные настройки перенесены на вкладку «Опыт и репутация»."
 L["These offset options are for advanced positioning adjustments."] = "Эти параметры смещения предназначены для расширенной настройки позиционирования."
