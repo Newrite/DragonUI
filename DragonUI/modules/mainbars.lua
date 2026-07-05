@@ -2867,6 +2867,7 @@ addon.visibilityStates = addon.visibilityStates or {
     left         = { hovered = false, inCombat = false },
     micro        = { hovered = false, inCombat = false },
     bag          = { hovered = false, inCombat = false },
+    pet          = { hovered = false, inCombat = false },
 }
 
 local VISIBILITY_BAR_ORDER = {
@@ -2877,6 +2878,7 @@ local VISIBILITY_BAR_ORDER = {
     "left",
     "micro",
     "bag",
+    "pet",
 }
 
 local MICROMENU_BUTTON_NAMES = {
@@ -2914,6 +2916,7 @@ local function GetVisibilityBarFrameMap()
         left         = MultiBarLeft,
         micro        = _G.pUiMicroMenu,
         bag          = _G.pUiBagsBar,
+        pet          = addon.GetPetBarVisibilityFrame and addon.GetPetBarVisibilityFrame() or PetActionBarFrame,
     }
 end
 
@@ -2967,6 +2970,9 @@ local function GetVisibilityFadeConfigPrefix(barName)
     end
     if barName == "bag" then
         return "bag_visibility_"
+    end
+    if barName == "pet" then
+        return "pet_visibility_"
     end
     return "visibility_"
 end
@@ -3179,6 +3185,17 @@ function addon.UpdateActionBarVisibility(barName, frame)
         return
     end
 
+    -- For pet bar: re-resolve the frame dynamically.  The petbar module may have
+    -- created DragonUI_PetBar *after* the initial hover hooks were set up on
+    -- PetActionBarFrame, leaving button-level closures pointing at the old hidden
+    -- frame.  Re-resolving here ensures alpha lands on the visible frame.
+    if barName == "pet" then
+        local currentFrame = addon.GetPetBarVisibilityFrame and addon.GetPetBarVisibilityFrame()
+        if currentFrame then
+            frame = currentFrame
+        end
+    end
+
     -- Skip during vehicle — vehicle module handles bar visibility
     if UnitHasVehicleUI and UnitHasVehicleUI("player") then return end
 
@@ -3187,7 +3204,7 @@ function addon.UpdateActionBarVisibility(barName, frame)
     if not state then return end
 
     -- Check if bar is disabled (secondary bars only)
-    if barName ~= "main" and barName ~= "micro" and barName ~= "bag" then
+    if barName ~= "main" and barName ~= "micro" and barName ~= "bag" and barName ~= "pet" then
         local enabled = IsSecondaryBarEnabled(config, barName)
 
         SetSecondaryBarContainerVisibility(barName, enabled)
@@ -3280,6 +3297,7 @@ local function SetupActionBarHoverDetection(barName, frame)
     elseif barName == "bottom_right" then buttonPrefix = "MultiBarBottomRightButton"
     elseif barName == "right"    then buttonPrefix = "MultiBarRightButton"
     elseif barName == "left"     then buttonPrefix = "MultiBarLeftButton"
+    elseif barName == "pet"      then buttonPrefix = "PetActionButton"
     end
 
     -- Frame enter/leave

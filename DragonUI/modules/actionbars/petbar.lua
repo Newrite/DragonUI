@@ -620,6 +620,14 @@ end
 -- Export petbar position update for dual-bar offset system
 addon.UpdatePetbarPosition = UpdateAnchorPosition
 
+-- Export the petbar frame for the action bar visibility system (hover/combat fade)
+function addon.GetPetBarVisibilityFrame()
+    if PetbarModule.petbar then
+        return PetbarModule.petbar
+    end
+    return PetActionBarFrame
+end
+
 -- Global functions for DragonUI system
 function addon.RefreshPetbarSystem()
     -- Skip refresh during editor mode (prevents overlay from disappearing)

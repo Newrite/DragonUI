@@ -730,6 +730,22 @@ local function BuildVisibilityTab(scroll)
     })
     AddVisibilityModeOptions(leftVis, "left")
 
+    -- Pet bar hover/combat
+    local petVis = C:AddSection(scroll, LO["Pet Bar"])
+
+    C:AddToggle(petVis, {
+        label = LO["Show on Hover Only"],
+        dbPath = "actionbars.pet_show_on_hover",
+        callback = RefreshVisibility,
+    })
+
+    C:AddToggle(petVis, {
+        label = LO["Show in Combat Only"],
+        dbPath = "actionbars.pet_show_in_combat",
+        callback = RefreshVisibility,
+    })
+    AddVisibilityModeOptions(petVis, "pet")
+
 end
 
 -- ============================================================================
