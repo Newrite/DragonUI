@@ -150,6 +150,7 @@ local mainBarPageByClass = {
 -- paging (e.g. Demon Hunter metamorphosis — lasts seconds, not worth a bar swap).
 local noAutoFormPaging = {
     DEMONHUNTER = true,
+    CULTIST = true,
 }
 
 local function GetMainBarPageCondition()

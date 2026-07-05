@@ -1213,11 +1213,12 @@ local function UpdateAlternateManaText()
         return
     end
     
-    -- Get current mana values
-    local currentMana = UnitPower("player", POWER_TYPE_MANA or 0)
-    local maxMana = UnitPowerMax("player", POWER_TYPE_MANA or 0)
+    -- Read values from the bar itself so we match whatever power type
+    -- the frame is displaying (mana for druids, or custom resources on CoA).
+    local currentValue = alternateManaBar:GetValue()
+    local minValue, maxValue = alternateManaBar:GetMinMaxValues()
     
-    if not currentMana or not maxMana or maxMana == 0 then
+    if not currentValue or not maxValue or maxValue == 0 then
         return
     end
     
@@ -1229,8 +1230,8 @@ local function UpdateAlternateManaText()
     -- Custom handling for alternate mana bar
     if textFormat == "both" then
         -- Custom separation for alternate mana bar - adjust spacing here
-        local currentText = useBreakup and addon.TextSystem.AbbreviateLargeNumbers(currentMana) or tostring(currentMana)
-        local percent = math.floor((currentMana / maxMana) * 100)
+        local currentText = useBreakup and addon.TextSystem.AbbreviateLargeNumbers(currentValue) or tostring(currentValue)
+        local percent = math.floor((currentValue / maxValue) * 100)
         local customSeparator = "    " -- Custom spacing for alternate mana bar (adjust here) 
         local combinedText = percent .. "%" .. customSeparator .. currentText
         
@@ -1245,8 +1246,8 @@ local function UpdateAlternateManaText()
     else
         -- Use normal TextSystem for other formats
         local formattedText = addon.TextSystem.FormatStatusText(
-            currentMana, 
-            maxMana, 
+            currentValue, 
+            maxValue, 
             textFormat, 
             useBreakup, 
             "alternateMana"
