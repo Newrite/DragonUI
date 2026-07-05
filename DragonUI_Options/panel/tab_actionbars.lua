@@ -788,6 +788,20 @@ local function BuildVisibilityTab(scroll)
     })
     AddVisibilityModeOptions(xpVis, "xpbar")
 
+    -- Minimap hover/combat
+    local minimapVis = C:AddSection(scroll, LO["Minimap"])
+    C:AddToggle(minimapVis, {
+        label = LO["Show on Hover Only"],
+        dbPath = "actionbars.minimap_show_on_hover",
+        callback = RefreshVisibility,
+    })
+    C:AddToggle(minimapVis, {
+        label = LO["Show in Combat Only"],
+        dbPath = "actionbars.minimap_show_in_combat",
+        callback = RefreshVisibility,
+    })
+    AddVisibilityModeOptions(minimapVis, "minimap")
+
 end
 
 -- ============================================================================

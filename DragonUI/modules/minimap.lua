@@ -2867,3 +2867,8 @@ initFrame:SetScript("OnEvent", function(self, event, addonName)
     end
 end)
 
+-- Export for hover/combat visibility system (mainbars.lua)
+function addon.GetMinimapVisibilityFrame()
+    return MinimapCluster
+end
+

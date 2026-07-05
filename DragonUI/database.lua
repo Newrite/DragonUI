@@ -300,7 +300,12 @@ local defaults = {
             -- XP bar visibility
             xpbar_show_on_hover = false,
             xpbar_show_in_combat = false,
-            xpbar_visibility_logic = "and"
+            xpbar_visibility_logic = "and",
+
+            -- Minimap visibility
+            minimap_show_on_hover = false,
+            minimap_show_in_combat = false,
+            minimap_visibility_logic = "and"
         },
 
         micromenu = {

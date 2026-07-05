@@ -2871,6 +2871,7 @@ addon.visibilityStates = addon.visibilityStates or {
     stance       = { hovered = false, inCombat = false },
     totem        = { hovered = false, inCombat = false },
     xpbar        = { hovered = false, inCombat = false },
+    minimap      = { hovered = false, inCombat = false },
 }
 
 local VISIBILITY_BAR_ORDER = {
@@ -2885,6 +2886,7 @@ local VISIBILITY_BAR_ORDER = {
     "stance",
     "totem",
     "xpbar",
+    "minimap",
 }
 
 local MICROMENU_BUTTON_NAMES = {
@@ -2926,6 +2928,7 @@ local function GetVisibilityBarFrameMap()
         stance       = addon.GetStanceBarVisibilityFrame and addon.GetStanceBarVisibilityFrame() or ShapeshiftBarFrame,
         totem        = addon.GetTotemBarVisibilityFrame and addon.GetTotemBarVisibilityFrame() or MultiCastActionBarFrame,
         xpbar        = addon.ActionBarFrames and addon.ActionBarFrames.xpbar,
+        minimap      = addon.GetMinimapVisibilityFrame and addon.GetMinimapVisibilityFrame() or Minimap,
     }
 end
 
@@ -3219,6 +3222,11 @@ function addon.UpdateActionBarVisibility(barName, frame)
         if currentFrame then
             frame = currentFrame
         end
+    elseif barName == "minimap" then
+        local currentFrame = addon.GetMinimapVisibilityFrame and addon.GetMinimapVisibilityFrame()
+        if currentFrame then
+            frame = currentFrame
+        end
     end
 
     -- Skip during vehicle — vehicle module handles bar visibility
@@ -3237,7 +3245,7 @@ function addon.UpdateActionBarVisibility(barName, frame)
     if not state then return end
 
     -- Check if bar is disabled (secondary bars only)
-    if barName ~= "main" and barName ~= "micro" and barName ~= "bag" and barName ~= "pet" and barName ~= "xpbar" then
+    if barName ~= "main" and barName ~= "micro" and barName ~= "bag" and barName ~= "pet" and barName ~= "xpbar" and barName ~= "minimap" then
         local enabled = IsSecondaryBarEnabled(config, barName)
 
         SetSecondaryBarContainerVisibility(barName, enabled)
@@ -3416,6 +3424,18 @@ local function SetupActionBarHoverDetection(barName, frame)
     elseif barName == "totem" then
         extraButtons = {}
         for _, name in ipairs({ "MultiCastSummonSpellButton", "MultiCastRecallSpellButton" }) do
+            local btn = _G[name]
+            if btn then
+                table.insert(extraButtons, btn)
+            end
+        end
+    elseif barName == "minimap" then
+        extraButtons = {}
+        for _, name in ipairs({
+            "Minimap", "MinimapZoomIn", "MinimapZoomOut",
+            "MiniMapTrackingButton", "MinimapZoneTextButton",
+            "MiniMapMailFrame", "GameTimeFrame", "TimeManagerClockButton",
+        }) do
             local btn = _G[name]
             if btn then
                 table.insert(extraButtons, btn)
