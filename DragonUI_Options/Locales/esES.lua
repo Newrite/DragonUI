@@ -385,6 +385,9 @@ L["Choose which category tabs appear on the bag frame. Changes require closing a
 L["Choose which category tabs appear on the inventory bag frame."] = "Elige qué pestañas de categoría aparecen en el marco de la mochila."
 L["Choose which category tabs appear on the bank frame."] = "Elige qué pestañas de categoría aparecen en el marco del banco."
 L["Display"] = "Mostrar"
+L["Gold Display"] = "Mostrar Oro"
+L["Text Only"] = "Solo Texto"
+L["Gold Icons"] = "Iconos de Oro"
 
 -- Advanced modules - Fallback display names
 L["Main Bars"] = "Barras Principales"

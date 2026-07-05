@@ -406,6 +406,9 @@ L["Choose which category tabs appear on the bag frame. Changes require closing a
 L["Choose which category tabs appear on the inventory bag frame."] = true
 L["Choose which category tabs appear on the bank frame."] = true
 L["Display"] = true
+L["Gold Display"] = true
+L["Text Only"] = true
+L["Gold Icons"] = true
 
 -- Advanced modules - Fallback display names
 L["Main Bars"] = true

@@ -665,6 +665,27 @@ local function BuildBagsTab(scroll)
         end,
         disabled = function() return not IsCombuctorEnabled() end,
     })
+
+    local moneyValues = {
+        text = (LO["Text Only"]) or "Text Only",
+        icons = (LO["Gold Icons"]) or "Gold Icons",
+    }
+    C:AddDropdown(displaySection, {
+        label = LO["Gold Display"] or "Gold Display",
+        values = moneyValues,
+        getFunc = function()
+            local mc = addon.db.profile.modules and addon.db.profile.modules.combuctor
+            return (mc and mc.money_display) or "icons"
+        end,
+        setFunc = function(val)
+            if not addon.db.profile.modules then addon.db.profile.modules = {} end
+            if not addon.db.profile.modules.combuctor then addon.db.profile.modules.combuctor = {} end
+            addon.db.profile.modules.combuctor.money_display = val
+            if addon.RefreshCombuctorFrames then addon.RefreshCombuctorFrames() end
+        end,
+        disabled = function() return not IsCombuctorEnabled() end,
+        width = 180,
+    })
 end
 
 -- Register the tab

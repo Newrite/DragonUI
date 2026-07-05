@@ -652,3 +652,8 @@ L["Showing top %d results. Type at least 3 characters for the full list."] = "Af
 
 -- XP & Rep Bars
 L["XP Bar"] = "Barre d'XP"
+
+-- Bags / Combuctor
+L["Gold Display"] = "Affichage Or"
+L["Text Only"] = "Texte seul"
+L["Gold Icons"] = "Icônes d'Or"

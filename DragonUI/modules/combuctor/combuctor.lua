@@ -512,6 +512,7 @@ local function SetupDatabase()
 
     local mc = addon.db.profile.modules.combuctor
     if not mc.db then mc.db = {} end
+    if mc.money_display == nil then mc.money_display = "icons" end
 
     DB = mc.db
     if not DB.inventory then
@@ -2541,11 +2542,30 @@ do
     mod.MoneyFrame = MoneyFrame
 
     local moneyId = 1
+
     function MoneyFrame:New(parent)
-        local f = self:Bind(CreateFrame("Frame", format("DragonUI_CombuctorMoney%d", moneyId), parent, "SmallMoneyFrameTemplate"))
+        local f = self:Bind(CreateFrame("Frame", format("DragonUI_CombuctorMoney%d", moneyId), parent, "MoneyFrameTemplate"))
+        f:SetHeight(19)
         f:SetScript("OnShow", self.OnShow)
         f:SetFrameLevel(f:GetFrameLevel() + 4)
+
+        local name = f:GetName()
+        f.iconGold    = _G[name .. "GoldButton"]
+        f.iconSilver  = _G[name .. "SilverButton"]
+        f.iconCopper  = _G[name .. "CopperButton"]
+        f.amtGold     = _G[name .. "GoldButtonText"]
+        f.amtSilver   = _G[name .. "SilverButtonText"]
+        f.amtCopper   = _G[name .. "CopperButtonText"]
+
+        local txt = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        txt:SetAllPoints(f)
+        txt:SetJustifyH("RIGHT")
+        txt:SetJustifyV("MIDDLE")
+        txt:Hide()
+        f.textFull = txt
+
         moneyId = moneyId + 1
+        f:Update()
         return f
     end
 
@@ -2553,9 +2573,99 @@ do
         self:Update()
     end
 
+    function MoneyFrame:GetDisplayMode()
+        local mc = addon.db and addon.db.profile and addon.db.profile.modules and addon.db.profile.modules.combuctor
+        return (mc and mc.money_display) or "icons"
+    end
+
+    function MoneyFrame:New(parent)
+        local f = self:Bind(CreateFrame("Frame", format("DragonUI_CombuctorMoney%d", moneyId), parent))
+        f:SetHeight(19)
+        f:SetWidth(90)
+        f:SetScript("OnShow", self.OnShow)
+        f:SetFrameLevel(f:GetFrameLevel() + 4)
+
+        -- Copper (ancla a la derecha)
+        f.iconCopper = f:CreateTexture(nil, "OVERLAY")
+        f.iconCopper:SetTexture("Interface\\MoneyFrame\\UI-CopperIcon")
+        f.iconCopper:SetSize(13, 13)
+        f.iconCopper:SetPoint("RIGHT", f, "RIGHT", 0, 0)
+        f.amtCopper = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        f.amtCopper:SetPoint("RIGHT", f.iconCopper, "LEFT", -2, 0)
+
+        -- Silver
+        f.iconSilver = f:CreateTexture(nil, "OVERLAY")
+        f.iconSilver:SetTexture("Interface\\MoneyFrame\\UI-SilverIcon")
+        f.iconSilver:SetSize(13, 13)
+        f.iconSilver:SetPoint("RIGHT", f.amtCopper, "LEFT", -4, 0)
+        f.amtSilver = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        f.amtSilver:SetPoint("RIGHT", f.iconSilver, "LEFT", -2, 0)
+
+        -- Gold
+        f.iconGold = f:CreateTexture(nil, "OVERLAY")
+        f.iconGold:SetTexture("Interface\\MoneyFrame\\UI-GoldIcon")
+        f.iconGold:SetSize(13, 13)
+        f.iconGold:SetPoint("RIGHT", f.amtSilver, "LEFT", -4, 0)
+        f.amtGold = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        f.amtGold:SetPoint("RIGHT", f.iconGold, "LEFT", -2, 0)
+
+        local txt = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        txt:SetAllPoints(f)
+        txt:SetJustifyH("RIGHT")
+        txt:SetJustifyV("MIDDLE")
+        txt:Hide()
+        f.textFull = txt
+
+        moneyId = moneyId + 1
+        f:Update()
+        return f
+    end
+
     function MoneyFrame:Update()
         local money = mod("PlayerInfo"):GetMoney(self:GetParent():GetPlayer())
-        MoneyFrame_Update(self:GetName(), money)
+        local mode = self:GetDisplayMode()
+
+        local gold   = floor(money / 10000)
+        local silver = floor((money % 10000) / 100)
+        local copper = money % 100
+
+        if mode == "text" then
+            self.iconGold:Hide();  self.amtGold:Hide()
+            self.iconSilver:Hide(); self.amtSilver:Hide()
+            self.iconCopper:Hide(); self.amtCopper:Hide()
+
+            self.textFull:SetText(format("|cffffd700%d %s |r|cffc7c7cf%d %s |r|cffeda55f%d %s|r",
+                gold, "g", silver, "s", copper, "c"))
+            self.textFull:Show()
+        else
+            self.textFull:Hide()
+
+            -- Gold: solo se muestra si hay > 0
+            if gold > 0 then
+                self.iconGold:Show(); self.amtGold:Show()
+                self.amtGold:SetText(gold)
+            else
+                self.iconGold:Hide(); self.amtGold:Hide()
+            end
+
+            -- Silver: se muestra si hay gold O si hay silver
+            if gold > 0 or silver > 0 then
+                self.iconSilver:Show(); self.amtSilver:Show()
+                self.amtSilver:SetText(silver)
+            else
+                self.iconSilver:Hide(); self.amtSilver:Hide()
+            end
+
+            -- Copper: siempre se muestra
+            self.iconCopper:Show(); self.amtCopper:Show()
+            self.amtCopper:SetText(copper)
+        end
+    end
+
+    function MoneyFrame:RefreshDisplay()
+        if self:IsShown() then
+            self:Update()
+        end
     end
 end
 
@@ -3662,6 +3772,10 @@ local function RefreshCombuctorFrames()
                 CombuctorSkinItems(gframe)
                 CombuctorSkinBagSlots(gframe)
             end
+        end
+
+        if frame and frame.moneyFrame and frame.moneyFrame.RefreshDisplay then
+            frame.moneyFrame:RefreshDisplay()
         end
     end
 end
