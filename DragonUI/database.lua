@@ -395,6 +395,8 @@ local defaults = {
             },
             pet = {
                 scale = 1.0,
+                columns = 10,
+                buttons_shown = 10,
                 grid = false, -- Disable grid by default (matches original Dragonflight port)
                 show_hotkey = false
             },

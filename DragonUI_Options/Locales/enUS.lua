@@ -604,6 +604,7 @@ L["Horizontal position of stance bar from screen center. Negative values move le
 
 -- Pet Bar
 L["Pet Bar"] = true
+L["Pet Bar Layout"] = true
 L["Hunters, Warlocks, Death Knights - Use editor mode to move"] = true
 L["Show Empty Slots"] = true
 L["Display empty action slots on pet bar"] = true

@@ -579,6 +579,7 @@ L["Horizontal position of stance bar from screen center. Negative values move le
 
 -- Pet Bar
 L["Pet Bar"] = "Barra de Mascota"
+L["Pet Bar Layout"] = "Distribución de Barra de Mascota"
 L["Hunters, Warlocks, Death Knights - Use editor mode to move"] = "Cazadores, Brujos, Caballeros de la Muerte - Usa el modo editor para mover"
 L["Show Empty Slots"] = "Mostrar Espacios Vacíos"
 L["Display empty action slots on pet bar"] = "Mostrar espacios de acción vacíos en la barra de mascota"

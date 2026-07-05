@@ -565,6 +565,7 @@ L["Horizontal position of stance bar from screen center. Negative values move le
 
 -- Pet Bar
 L["Pet Bar"] = "Панель питомца"
+L["Pet Bar Layout"] = "Расположение панели питомца"
 L["Hunters, Warlocks, Death Knights - Use editor mode to move"] = "Охотники, Чернокнижники, Рыцари смерти — используйте режим редактора для перемещения"
 L["Show Empty Slots"] = "Показать пустые ячейки"
 L["Display empty action slots on pet bar"] = "Отображать пустые ячейки на панели питомца"

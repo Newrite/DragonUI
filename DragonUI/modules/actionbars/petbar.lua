@@ -66,6 +66,8 @@ local function GetDynamicConfig()
         rightbar_offset = 0,
         size = 30,
         spacing = 6,
+        columns = 10,
+        buttons_shown = 10,
         grid = false,
         scale = 1.0
     }
@@ -80,6 +82,8 @@ local function GetDynamicConfig()
         rightbar_offset = petConfig.rightbar_offset or defaults.rightbar_offset,
         size = petConfig.size or (additionalConfig and additionalConfig.size) or defaults.size,
         spacing = petConfig.spacing or (additionalConfig and additionalConfig.spacing) or defaults.spacing,
+        columns = (additionalConfig and additionalConfig.pet and additionalConfig.pet.columns) or defaults.columns,
+        buttons_shown = (additionalConfig and additionalConfig.pet and additionalConfig.pet.buttons_shown) or defaults.buttons_shown,
         grid = petConfig.grid or defaults.grid,
         scale = (additionalConfig and additionalConfig.pet and additionalConfig.pet.scale) or defaults.scale
     }
@@ -109,12 +113,15 @@ local function CreateAnchorFrame()
     
     local config = GetDynamicConfig()
     
-    -- Calculate proper petbar size based on config
+    -- Calculate proper petbar size based on config (grid layout)
     local btnsize = config.size or 30
     local space = config.spacing or 6
-    local numButtons = 10
-    local petbarWidth = (btnsize * numButtons) + (space * (numButtons - 1))
-    local petbarHeight = btnsize
+    local numButtons = config.buttons_shown or 10
+    local columns = config.columns or 10
+    local effectiveCols = math.min(columns, numButtons)
+    local rows = math.ceil(numButtons / columns)
+    local petbarWidth = (btnsize * effectiveCols) + (space * (effectiveCols - 1))
+    local petbarHeight = (btnsize * rows) + (space * (rows - 1))
     
     -- Always create using DragonUI widgets system for proper editor mode support
     local anchor = addon.CreateUIFrame(petbarWidth, petbarHeight, "petbar")
@@ -293,7 +300,7 @@ local function petbutton_updatestate(self, event)
     end
 end
 
--- Position pet buttons (legacy approach - this is what makes it work!)
+-- Position pet buttons in a configurable grid layout
 local function petbutton_position()
     if not IsModuleEnabled() then return end
     
@@ -303,27 +310,50 @@ local function petbutton_position()
     local config = GetDynamicConfig()
     local btnsize = config.size
     local space = config.spacing
+    local columns = math.max(1, config.columns or 10)
+    local buttonsShown = math.min(NUM_PET_ACTION_SLOTS or 10, config.buttons_shown or 10)
     
     local button
-    for index=1, 10 do
+    for index = 1, NUM_PET_ACTION_SLOTS do
         button = _G['PetActionButton'..index]
         if button then
             button:ClearAllPoints()
             button:SetParent(petbar)
             button:SetSize(btnsize, btnsize)
-            if index == 1 then
-                button:SetPoint('BOTTOMLEFT', 0, 0)
+            
+            if index <= buttonsShown then
+                -- Place in grid (BOTTOMLEFT origin to match main bar layout)
+                local gridIndex = index - 1
+                local row = math.floor(gridIndex / columns)
+                local col = gridIndex % columns
+                
+                local x = col * (btnsize + space)
+                local y = row * (btnsize + space)
+                
+                button:SetPoint('BOTTOMLEFT', petbar, 'BOTTOMLEFT', x, y)
+                button:Show()
+                petbar:SetAttribute('addchild', button)
             else
-                button:SetPoint('LEFT', _G['PetActionButton'..(index-1)], 'RIGHT', space, 0)
+                -- Move off-screen and hide
+                button:ClearAllPoints()
+                button:SetPoint('CENTER', UIParent, 'BOTTOM', 0, -666)
+                button:Hide()
             end
-            button:Show()
-            petbar:SetAttribute('addchild', button)
             
             -- Apply DragonUI button styling if buttons module available
             if addon.petbuttons_template then
                 addon.petbuttons_template()
             end
         end
+    end
+    
+    -- Resize anchor frame to match the visible grid
+    if PetbarModule.anchor then
+        local effectiveCols = math.min(columns, buttonsShown)
+        local rows = math.ceil(buttonsShown / columns)
+        local width = (btnsize * effectiveCols) + (space * (effectiveCols - 1))
+        local height = (btnsize * rows) + (space * (rows - 1))
+        PetbarModule.anchor:SetSize(width, height)
     end
     
     -- Register state driver for pet visibility (skip during editor mode to keep petbar visible)
@@ -429,13 +459,16 @@ local function UpdateEditorFrameRegistration()
     if addon.EditableFrames and addon.EditableFrames.petbar and PetbarModule.anchor then
         addon.EditableFrames.petbar.frame = PetbarModule.anchor
         
-        -- Update the frame size to match current config
+        -- Update the frame size to match current config (grid layout)
         local config = GetDynamicConfig()
         local btnsize = config.size or 30
         local space = config.spacing or 6
-        local numButtons = 10
-        local petbarWidth = (btnsize * numButtons) + (space * (numButtons - 1))
-        local petbarHeight = btnsize
+        local numButtons = config.buttons_shown or 10
+        local columns = config.columns or 10
+        local effectiveCols = math.min(columns, numButtons)
+        local rows = math.ceil(numButtons / columns)
+        local petbarWidth = (btnsize * effectiveCols) + (space * (effectiveCols - 1))
+        local petbarHeight = (btnsize * rows) + (space * (rows - 1))
         
         PetbarModule.anchor:SetSize(petbarWidth, petbarHeight)
     end
@@ -624,13 +657,16 @@ function addon.RefreshPetbarFrame()
         return
     end
     
-    -- Update frame size based on current config
+    -- Update frame size based on current config (grid layout)
     local config = GetDynamicConfig()
     local btnsize = config.size or 30
     local space = config.spacing or 6
-    local numButtons = 10
-    local petbarWidth = (btnsize * numButtons) + (space * (numButtons - 1))
-    local petbarHeight = btnsize
+    local numButtons = config.buttons_shown or 10
+    local columns = config.columns or 10
+    local effectiveCols = math.min(columns, numButtons)
+    local rows = math.ceil(numButtons / columns)
+    local petbarWidth = (btnsize * effectiveCols) + (space * (effectiveCols - 1))
+    local petbarHeight = (btnsize * rows) + (space * (rows - 1))
     
     PetbarModule.anchor:SetSize(petbarWidth, petbarHeight)
     

@@ -122,6 +122,75 @@ local function BuildAdditionalBarsTab(scroll)
         end,
     })
 
+    -- ---- Pet Bar Layout (grid: columns/buttons) ----
+    local petLayout = C:AddSection(scroll, LO["Pet Bar Layout"])
+
+    C:AddSlider(petLayout, {
+        dbPath = "additional.pet.columns",
+        label = LO["Columns"],
+        min = 1, max = 10, step = 1,
+        width = 200,
+        callback = function()
+            if addon.RefreshPetbarFrame then addon.RefreshPetbarFrame() end
+        end,
+    })
+
+    C:AddSlider(petLayout, {
+        dbPath = "additional.pet.buttons_shown",
+        label = LO["Buttons Shown"],
+        min = 1, max = 10, step = 1,
+        width = 200,
+        callback = function()
+            if addon.RefreshPetbarFrame then addon.RefreshPetbarFrame() end
+        end,
+    })
+
+    local petPresetRow = C:AddRow(petLayout)
+
+    C:AddButton(petPresetRow, {
+        label = "1x10",
+        width = 60,
+        callback = function()
+            C:SetDBValue("additional.pet.columns", 10)
+            C:SetDBValue("additional.pet.buttons_shown", 10)
+            if addon.RefreshPetbarFrame then addon.RefreshPetbarFrame() end
+            Panel:SelectTab("additionalbars")
+        end,
+    })
+
+    C:AddButton(petPresetRow, {
+        label = "2x5",
+        width = 60,
+        callback = function()
+            C:SetDBValue("additional.pet.columns", 5)
+            C:SetDBValue("additional.pet.buttons_shown", 10)
+            if addon.RefreshPetbarFrame then addon.RefreshPetbarFrame() end
+            Panel:SelectTab("additionalbars")
+        end,
+    })
+
+    C:AddButton(petPresetRow, {
+        label = "5x2",
+        width = 60,
+        callback = function()
+            C:SetDBValue("additional.pet.columns", 2)
+            C:SetDBValue("additional.pet.buttons_shown", 10)
+            if addon.RefreshPetbarFrame then addon.RefreshPetbarFrame() end
+            Panel:SelectTab("additionalbars")
+        end,
+    })
+
+    C:AddButton(petPresetRow, {
+        label = "10x1",
+        width = 60,
+        callback = function()
+            C:SetDBValue("additional.pet.columns", 1)
+            C:SetDBValue("additional.pet.buttons_shown", 10)
+            if addon.RefreshPetbarFrame then addon.RefreshPetbarFrame() end
+            Panel:SelectTab("additionalbars")
+        end,
+    })
+
     -- ====================================================================
     -- VEHICLE BAR
     -- ====================================================================

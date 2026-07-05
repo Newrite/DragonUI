@@ -565,6 +565,7 @@ L["Horizontal position of stance bar from screen center. Negative values move le
 
 -- Pet Bar
 L["Pet Bar"] = "Begleiterleiste"
+L["Pet Bar Layout"] = "Begleiterleisten-Layout"
 L["Hunters, Warlocks, Death Knights - Use editor mode to move"] = "Jäger, Hexenmeister, Todesritter – zum Verschieben Editor-Modus nutzen"
 L["Show Empty Slots"] = "Leere Plätze anzeigen"
 L["Display empty action slots on pet bar"] = "Leere Aktionsplätze auf der Begleiterleiste anzeigen"

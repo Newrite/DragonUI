@@ -565,6 +565,7 @@ L["Horizontal position of stance bar from screen center. Negative values move le
 
 -- 宠物动作条
 L["Pet Bar"] = "宠物动作条"
+L["Pet Bar Layout"] = "宠物动作条布局"
 L["Hunters, Warlocks, Death Knights - Use editor mode to move"] = "猎人、术士、死亡骑士 - 使用编辑模式移动"
 L["Show Empty Slots"] = "显示空技能槽"
 L["Display empty action slots on pet bar"] = "在宠物动作条上显示空的技能槽"

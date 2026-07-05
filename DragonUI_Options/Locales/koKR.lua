@@ -573,6 +573,7 @@ L["Horizontal position of stance bar from screen center. Negative values move le
 
 -- Pet Bar
 L["Pet Bar"] = "소환수바"
+L["Pet Bar Layout"] = "소환수바 배치"
 L["Hunters, Warlocks, Death Knights - Use editor mode to move"] = "사냥꾼, 흑마법사, 죽음의 기사 - 편집 모드로 이동하세요"
 L["Show Empty Slots"] = "빈 슬롯 표시"
 L["Display empty action slots on pet bar"] = "소환수 바에 빈 액션 슬롯을 표시합니다"
