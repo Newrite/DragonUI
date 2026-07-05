@@ -51,6 +51,8 @@ local QUESTTRACKER_POSITION_KEYS = {
     anchor = true,
     x = true,
     y = true,
+    width = true,
+    height = true,
 }
 
 local LOOTROLL_POSITION_KEYS = {
