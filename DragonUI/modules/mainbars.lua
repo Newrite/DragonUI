@@ -2868,6 +2868,8 @@ addon.visibilityStates = addon.visibilityStates or {
     micro        = { hovered = false, inCombat = false },
     bag          = { hovered = false, inCombat = false },
     pet          = { hovered = false, inCombat = false },
+    stance       = { hovered = false, inCombat = false },
+    totem        = { hovered = false, inCombat = false },
 }
 
 local VISIBILITY_BAR_ORDER = {
@@ -2879,6 +2881,8 @@ local VISIBILITY_BAR_ORDER = {
     "micro",
     "bag",
     "pet",
+    "stance",
+    "totem",
 }
 
 local MICROMENU_BUTTON_NAMES = {
@@ -2917,6 +2921,8 @@ local function GetVisibilityBarFrameMap()
         micro        = _G.pUiMicroMenu,
         bag          = _G.pUiBagsBar,
         pet          = addon.GetPetBarVisibilityFrame and addon.GetPetBarVisibilityFrame() or PetActionBarFrame,
+        stance       = addon.GetStanceBarVisibilityFrame and addon.GetStanceBarVisibilityFrame() or ShapeshiftBarFrame,
+        totem        = addon.GetTotemBarVisibilityFrame and addon.GetTotemBarVisibilityFrame() or MultiCastActionBarFrame,
     }
 end
 
@@ -2973,6 +2979,12 @@ local function GetVisibilityFadeConfigPrefix(barName)
     end
     if barName == "pet" then
         return "pet_visibility_"
+    end
+    if barName == "stance" then
+        return "stance_visibility_"
+    end
+    if barName == "totem" then
+        return "totem_visibility_"
     end
     return "visibility_"
 end
@@ -3185,12 +3197,22 @@ function addon.UpdateActionBarVisibility(barName, frame)
         return
     end
 
-    -- For pet bar: re-resolve the frame dynamically.  The petbar module may have
-    -- created DragonUI_PetBar *after* the initial hover hooks were set up on
-    -- PetActionBarFrame, leaving button-level closures pointing at the old hidden
-    -- frame.  Re-resolving here ensures alpha lands on the visible frame.
+    -- For pet/stance/totem: re-resolve the frame dynamically.  Each module may
+    -- have created its custom frame *after* the initial hover hooks were set up
+    -- on the Blizzard fallback, leaving button-level closures pointing at the old
+    -- hidden frame.  Re-resolving here ensures alpha lands on the visible frame.
     if barName == "pet" then
         local currentFrame = addon.GetPetBarVisibilityFrame and addon.GetPetBarVisibilityFrame()
+        if currentFrame then
+            frame = currentFrame
+        end
+    elseif barName == "stance" then
+        local currentFrame = addon.GetStanceBarVisibilityFrame and addon.GetStanceBarVisibilityFrame()
+        if currentFrame then
+            frame = currentFrame
+        end
+    elseif barName == "totem" then
+        local currentFrame = addon.GetTotemBarVisibilityFrame and addon.GetTotemBarVisibilityFrame()
         if currentFrame then
             frame = currentFrame
         end
@@ -3298,6 +3320,8 @@ local function SetupActionBarHoverDetection(barName, frame)
     elseif barName == "right"    then buttonPrefix = "MultiBarRightButton"
     elseif barName == "left"     then buttonPrefix = "MultiBarLeftButton"
     elseif barName == "pet"      then buttonPrefix = "PetActionButton"
+    elseif barName == "stance"   then buttonPrefix = "ShapeshiftButton"
+    elseif barName == "totem"    then buttonPrefix = "MultiCastSlotButton"
     end
 
     -- Frame enter/leave
@@ -3374,6 +3398,14 @@ local function SetupActionBarHoverDetection(barName, frame)
         extraButtons = {}
         for _, buttonName in ipairs(BAG_BUTTON_NAMES) do
             local btn = _G[buttonName]
+            if btn then
+                table.insert(extraButtons, btn)
+            end
+        end
+    elseif barName == "totem" then
+        extraButtons = {}
+        for _, name in ipairs({ "MultiCastSummonSpellButton", "MultiCastRecallSpellButton" }) do
+            local btn = _G[name]
             if btn then
                 table.insert(extraButtons, btn)
             end

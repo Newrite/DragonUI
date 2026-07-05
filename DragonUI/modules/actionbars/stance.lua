@@ -771,6 +771,14 @@ function addon.DebugStanceBar()
 	return info;
 end
 
+-- Export the stance bar frame for the action bar visibility system (hover/combat fade)
+function addon.GetStanceBarVisibilityFrame()
+    if StanceModule.frames.stancebar then
+        return StanceModule.frames.stancebar
+    end
+    return ShapeshiftBarFrame
+end
+
 -- ============================================================================
 -- INITIALIZATION
 -- ============================================================================

@@ -280,7 +280,22 @@ local defaults = {
             micro_visibility_logic = "and",
             bag_show_on_hover = false,
             bag_show_in_combat = false,
-            bag_visibility_logic = "and"
+            bag_visibility_logic = "and",
+
+            -- Pet bar visibility
+            pet_show_on_hover = false,
+            pet_show_in_combat = false,
+            pet_visibility_logic = "and",
+
+            -- Stance bar visibility
+            stance_show_on_hover = false,
+            stance_show_in_combat = false,
+            stance_visibility_logic = "and",
+
+            -- Totem bar visibility
+            totem_show_on_hover = false,
+            totem_show_in_combat = false,
+            totem_visibility_logic = "and"
         },
 
         micromenu = {

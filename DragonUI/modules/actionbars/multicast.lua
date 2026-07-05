@@ -571,6 +571,14 @@ local function OnProfileChanged()
     end)
 end
 
+-- Export the totem bar frame for the action bar visibility system (hover/combat fade)
+function addon.GetTotemBarVisibilityFrame()
+    if MulticastModule.frames.totembar then
+        return MulticastModule.frames.totembar
+    end
+    return MultiCastActionBarFrame
+end
+
 -- =============================================================================
 -- CENTRALIZED EVENT HANDLER
 -- =============================================================================

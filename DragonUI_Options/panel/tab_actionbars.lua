@@ -746,6 +746,34 @@ local function BuildVisibilityTab(scroll)
     })
     AddVisibilityModeOptions(petVis, "pet")
 
+    -- Stance bar hover/combat
+    local stanceVis = C:AddSection(scroll, LO["Stance Bar"])
+    C:AddToggle(stanceVis, {
+        label = LO["Show on Hover Only"],
+        dbPath = "actionbars.stance_show_on_hover",
+        callback = RefreshVisibility,
+    })
+    C:AddToggle(stanceVis, {
+        label = LO["Show in Combat Only"],
+        dbPath = "actionbars.stance_show_in_combat",
+        callback = RefreshVisibility,
+    })
+    AddVisibilityModeOptions(stanceVis, "stance")
+
+    -- Totem bar hover/combat
+    local totemVis = C:AddSection(scroll, LO["Totem Bar"])
+    C:AddToggle(totemVis, {
+        label = LO["Show on Hover Only"],
+        dbPath = "actionbars.totem_show_on_hover",
+        callback = RefreshVisibility,
+    })
+    C:AddToggle(totemVis, {
+        label = LO["Show in Combat Only"],
+        dbPath = "actionbars.totem_show_in_combat",
+        callback = RefreshVisibility,
+    })
+    AddVisibilityModeOptions(totemVis, "totem")
+
 end
 
 -- ============================================================================
