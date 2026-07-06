@@ -435,40 +435,66 @@ local CCSpellList = {
     [47528] = 5, -- Mind Freeze
 }
 
+local function DebuffPriorityComparator(a, b)
+    local pa = (a.spellId and CCSpellList[a.spellId]) or 0
+    local pb = (b.spellId and CCSpellList[b.spellId]) or 0
+    if pa ~= pb then
+        return pa > pb
+    end
+    return a.expiration < b.expiration
+end
+
+-- Pooled debuff list; callers consume synchronously and copy scalars only.
+local cachedDebuffPool = {}
+local cachedDebuffResult = {}
+
 function DebuffRuntime.GetCachedDebuffs(guid, maxCount, cfg)
     if not guid or not NP.state.PlateAuraCache[guid] then return nil end
     local now = GetTime()
-    local result = {}
+    local result = cachedDebuffResult
+    for i = #result, 1, -1 do
+        result[i] = nil
+    end
+    local n = 0
     for _, data in pairs(NP.state.PlateAuraCache[guid]) do
         local active = data.expiration and (data.expiration == 0 or data.expiration > now)
         if active and DebuffRuntime.PassesFilters(cfg, data) then
             local _, _, tex = GetSpellInfo(data.spellId)
-            tinsert(result, {
-                texture = data.texture or tex,
-                count = data.count,
-                expiration = data.expiration,
-                debuffType = data.debuffType,
-                spellId = data.spellId,
-            })
+            n = n + 1
+            local slot = cachedDebuffPool[n]
+            if not slot then
+                slot = {}
+                cachedDebuffPool[n] = slot
+            end
+            slot.texture = data.texture or tex
+            slot.count = data.count
+            slot.expiration = data.expiration
+            slot.debuffType = data.debuffType
+            slot.spellId = data.spellId
+            result[n] = slot
         end
     end
-    sort(result, function(a, b)
-        local pa = (a.spellId and CCSpellList[a.spellId]) or 0
-        local pb = (b.spellId and CCSpellList[b.spellId]) or 0
-        if pa ~= pb then
-            return pa > pb
-        end
-        return a.expiration < b.expiration
-    end)
-    if maxCount and #result > maxCount then
-        for i = maxCount + 1, #result do
-            tremove(result)
+    sort(result, DebuffPriorityComparator)
+    if maxCount and n > maxCount then
+        for i = maxCount + 1, n do
+            result[i] = nil
         end
     end
     return result
 end
 
 -- UnitDebuff scan when unitid is available
+
+local knownCastersScratch = {}
+
+local RAID_TARGET_TOKENS = {}
+for i = 1, 40 do
+    RAID_TARGET_TOKENS[i] = "raid" .. i .. "target"
+end
+local PARTY_TARGET_TOKENS = {}
+for i = 1, 4 do
+    PARTY_TARGET_TOKENS[i] = "party" .. i .. "target"
+end
 
 function DebuffRuntime.UpdateAuraCacheFromUnit(unit)
     if not unit or not UnitExists(unit) then
@@ -484,7 +510,9 @@ function DebuffRuntime.UpdateAuraCacheFromUnit(unit)
     end
 
     -- Preserve known casterGUID across rescans when UnitDebuff returns nil caster.
-    local knownCasters = {}
+    -- Scratch table; wiped per UNIT_AURA and aura CLEU event.
+    local knownCasters = knownCastersScratch
+    wipe(knownCasters)
     if NP.state.PlateAuraCache[guid] then
         for _, data in pairs(NP.state.PlateAuraCache[guid]) do
             if data.spellId and data.casterGUID then
@@ -534,18 +562,21 @@ function DebuffRuntime.UpdateAuraCacheByLookup(guid)
     if guid == UnitGUID("focus") then
         return DebuffRuntime.UpdateAuraCacheFromUnit("focus") ~= nil
     end
-    -- Group-target lookup (GroupCache model): a party/raid member's target is
-    -- an authoritative unitid for this GUID.
-    for i = 1, GetNumPartyMembers() do
-        local targetUnit = "party" .. i .. "target"
-        if UnitExists(targetUnit) and UnitGUID(targetUnit) == guid then
-            return DebuffRuntime.UpdateAuraCacheFromUnit(targetUnit) ~= nil
+    -- Group-target lookup: in raids prefer raidN (partyN ⊆ raidN; probing both doubles API calls).
+    local numRaid = GetNumRaidMembers() or 0
+    if numRaid > 0 then
+        for i = 1, numRaid do
+            local targetUnit = RAID_TARGET_TOKENS[i] or ("raid" .. i .. "target")
+            if UnitExists(targetUnit) and UnitGUID(targetUnit) == guid then
+                return DebuffRuntime.UpdateAuraCacheFromUnit(targetUnit) ~= nil
+            end
         end
-    end
-    for i = 1, GetNumRaidMembers() do
-        local targetUnit = "raid" .. i .. "target"
-        if UnitExists(targetUnit) and UnitGUID(targetUnit) == guid then
-            return DebuffRuntime.UpdateAuraCacheFromUnit(targetUnit) ~= nil
+    else
+        for i = 1, GetNumPartyMembers() do
+            local targetUnit = PARTY_TARGET_TOKENS[i] or ("party" .. i .. "target")
+            if UnitExists(targetUnit) and UnitGUID(targetUnit) == guid then
+                return DebuffRuntime.UpdateAuraCacheFromUnit(targetUnit) ~= nil
+            end
         end
     end
     return false
@@ -553,14 +584,32 @@ end
 
 -- Aura widget render and per-icon expiration polling
 
+-- Cache formatted cooldown text (~1/s or ~1/min updates); minutes capped at MINUTES_CACHE_MAX.
+local SECONDS_TEXT_CACHE = {}
+for i = 1, 60 do
+    SECONDS_TEXT_CACHE[i] = tostring(i)
+end
+local MINUTES_TEXT_CACHE = {}
+local MINUTES_CACHE_MAX = 180
+
 local function FormatAuraTimeLeft(seconds)
     if not seconds or seconds <= 0 then
         return ""
     end
     if seconds > 60 then
-        return tostring(math.ceil(seconds / 60)) .. "m"
+        local minutes = math.ceil(seconds / 60)
+        local cached = MINUTES_TEXT_CACHE[minutes]
+        if cached then
+            return cached
+        end
+        local text = tostring(minutes) .. "m"
+        if minutes <= MINUTES_CACHE_MAX then
+            MINUTES_TEXT_CACHE[minutes] = text
+        end
+        return text
     end
-    return tostring(math.ceil(seconds))
+    local wholeSeconds = math.ceil(seconds)
+    return SECONDS_TEXT_CACHE[wholeSeconds] or tostring(wholeSeconds)
 end
 
 local function ApplyCooldownTextAnchor(icon, anchor)
@@ -581,9 +630,7 @@ local function ApplyCooldownTextAnchor(icon, anchor)
     end
 end
 
--- Forward declarations; defined alongside the cooldown-swipe implementation
--- below. Hoisted so the per-host pollers can resolve the swipe style once per
--- sweep instead of once per icon.
+-- Forward declarations for swipe helpers; hoisted so pollers resolve style once per sweep.
 local UpdateSwipeProgress
 local UpdateSwipeProgressStyled
 local GetSwipeStyle
@@ -733,9 +780,7 @@ local function HidePriorityHighlight(icon)
     if icon and icon.priorityBorder then icon.priorityBorder:Hide() end
 end
 
--- Cooldown "swipe" providers. These are plain textures updated on the poll
--- tick, immune to the native Cooldown widget's tendency to go stale on a
--- moving nameplate.
+-- Plain-texture swipe; native Cooldown goes stale on moving plates.
 local SWIPE_MIN = 0.00001
 local floor = math.floor
 local min = NP.min
@@ -940,15 +985,11 @@ local function HideSwipeCooldown(icon)
     icon._swipeDuration = nil
 end
 
--- Keep the debuff icon sub-hierarchy in lockstep with the host frame level.
--- The depth sort re-levels minaDebuffHost on every pass (and on camera move),
--- but the dynamically created icon children do not follow on their own.
--- Re-derive the icon < text order from the host's current level.
+-- Re-level debuff icon children with minaDebuffHost after depth sort.
 function NP.auras.ApplyDebuffIconFrameLevels(host)
     if not host or not host.icons then return end
     local base = (host.GetFrameLevel and host:GetFrameLevel()) or 0
-    -- Guard each SetFrameLevel: it re-layers the strata frame list, so skip when
-    -- the icon already sits at its target level (this runs every depth tick).
+    -- Guard SetFrameLevel when icon already at target level (runs every depth tick).
     for _, icon in ipairs(host.icons) do
         if icon.SetFrameLevel then
             if not icon.GetFrameLevel or icon:GetFrameLevel() ~= base + 1 then
@@ -1023,9 +1064,11 @@ function NP.auras.RenderDebuffWidgets(host, cachedAuras, maxIcons, cfg)
         icon.expiration = aura.expiration
         ApplyPriorityHighlight(icon, aura, cfg)
         ApplySwipeCooldown(icon, aura, cfg)
-        icon.cooldownText:SetFont("Fonts\\FRIZQT__.TTF", cooldownFontSize, "OUTLINE")
-        -- Keep the poller's SetFont/SetText guards coherent from the first tick.
-        icon._appliedCdFontSize = cooldownFontSize
+        -- Re-apply SetFont only on size change.
+        if icon._appliedCdFontSize ~= cooldownFontSize then
+            icon.cooldownText:SetFont("Fonts\\FRIZQT__.TTF", cooldownFontSize, "OUTLINE")
+            icon._appliedCdFontSize = cooldownFontSize
+        end
         ApplyCooldownTextAnchor(icon, cooldownTextAnchor)
         if showCooldown then
             local txt = FormatAuraTimeLeft((aura.expiration or 0) - GetTime())
@@ -1174,10 +1217,7 @@ end
 
 -- Combat log path
 
--- Only aura sub-events touch the debuff cache. Gate here so non-aura traffic
--- (SPELL_DAMAGE, SPELL_PERIODIC_DAMAGE, SPELL_HEAL, ...) returns before flag
--- parsing, GUID lookup and the up-to-40 UnitDebuff rescan in
--- UpdateAuraCacheByLookup. These fire many times per second on the target.
+-- Gate aura CLEU to debuff sub-events; avoids UnitDebuff rescan on damage/heal traffic.
 local AURA_COMBATLOG_EVENTS = {
     SPELL_AURA_APPLIED = true,
     SPELL_AURA_REFRESH = true,
@@ -1187,14 +1227,14 @@ local AURA_COMBATLOG_EVENTS = {
     SPELL_AURA_BROKEN = true,
     SPELL_AURA_BROKEN_SPELL = true,
 }
+-- Exported for engine CLEU subevent gating.
+NP.auras.AURA_COMBATLOG_EVENTS = AURA_COMBATLOG_EVENTS
 
 function NP.auras.HandleCombatLog(timestamp, event, sourceGUID, sourceName, sourceFlags, destGUID, destName, destFlags, spellId, spellName, spellSchool, ...)
     if not AURA_COMBATLOG_EVENTS[event] then
         return
     end
-    -- SPELL_AURA_BROKEN_SPELL has an irregular suffix (extraSpellID first, so
-    -- select(1, ...) is a number there); the string guard intentionally lets it
-    -- through to the removal path below.
+    -- SPELL_AURA_BROKEN_SPELL: irregular suffix; string guard lets it reach removal path.
     local auraType = select(1, ...)
     if type(auraType) == "string" and auraType ~= "DEBUFF" then
         return

@@ -44,28 +44,39 @@ function NP.threat.IsThreatSuppressedContext()
 end
 
 -- With unit token: UnitDetailedThreatSituation; else native glow color buckets.
+-- Memoize per tick; threat tint/glow/scan share unit resolution.
 function NP.threat.ResolveAggroStatus(plateData)
     if not plateData then
         return 0
     end
+    local tick = NP.module._engineFrame
+    if tick and plateData._aggroStatusTick == tick then
+        return plateData._aggroStatus
+    end
+    local status
     local unit = NP.identity and NP.identity.ResolvePlateCastUnit
         and NP.identity.ResolvePlateCastUnit(plateData)
     if unit and UnitExists(unit) and not UnitIsUnit(unit, "player") and UnitDetailedThreatSituation then
-        local _, status = UnitDetailedThreatSituation("player", unit)
-        if status ~= nil then
-            return status
+        local _, detailed = UnitDetailedThreatSituation("player", unit)
+        if detailed ~= nil then
+            status = detailed
         end
     end
-    return NP.threat.GetAggroStatus(plateData.threat)
+    if status == nil then
+        status = NP.threat.GetAggroStatus(plateData.threat)
+    end
+    if tick then
+        plateData._aggroStatusTick = tick
+        plateData._aggroStatus = status
+    end
+    return status
 end
 
 function NP.threat.IsTankMode()
     return NP.config.GetCfg().tankMode == true
 end
 
--- Damage-role perspective: any aggro signal is a warning, with status 3 as the
--- highest risk. Tank perspective is inverted: status 3 is safe, while losing
--- aggro on an engaged hostile unit is the warning condition.
+-- Damage role: any aggro is warning; tank role inverts (status 3 safe, lost aggro warns).
 local function ResolveAggroColor(plateData, status)
     if status <= 0 then
         if not NP.threat.IsTankMode() then

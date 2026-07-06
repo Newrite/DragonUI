@@ -14,9 +14,8 @@ function NP.widgets.UpdateComboTargetPlate()
         NP.module.comboTargetPlate = nil
         return
     end
-    -- Keyed by target GUID; survives plate hide/show.
+    -- Keyed by target GUID; GetTargetPlate() caches UpdateTargetContext's scan.
     local plate = NP.identity.GetTargetPlate()
-        or NP.identity.FindUniquePlateForUnit("target")
     if not plate then
         local targetGUID = UnitGUID("target")
         if targetGUID then
@@ -58,6 +57,8 @@ function NP.widgets.EnsureComboWidget(plateData)
     host.icon = tex
     plateData._comboHost = host
     plateData._comboIcon = tex
+    -- New frame; mark depth dirty for next pass.
+    plateData._depthDirty = true
     return host
 end
 

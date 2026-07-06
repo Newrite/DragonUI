@@ -153,15 +153,8 @@ end
 
 -- Target / mouseover / focus context
 
--- Disambiguate the target when several plates read full alpha at once (Blizzard
--- has not applied target dimming yet, e.g. right after a zone transition): the
--- unique shown plate that is both at target alpha and matches the target's
--- name+health fingerprint.
---
--- The alpha gate is required for correctness: an off-screen target has a hidden
--- plate and its same-name bystanders are dimmed, so none qualify and nothing is
--- bound — a plain fingerprint match would instead leak the target's GUID onto a
--- same-name plate while the real target is out of view.
+-- Target disambiguation when alpha is ambiguous (pre-dim): name+health at target alpha.
+-- Alpha gate prevents GUID leak to same-name plates when the real target is off-screen.
 local function FindTargetByAlphaFingerprint()
     local found, count = nil, 0
     for _, pd in pairs(NP.module.plates) do
@@ -189,9 +182,7 @@ function identity.UpdateTargetContext()
 
     local targetGUID = NP.module.targetGUID
 
-    -- Fast path: the cached target plate is still shown and still bound to this
-    -- GUID, so it remains the answer without rescanning every plate's alpha.
-    -- Any mismatch (hidden, GUID moved, unbound) falls through to full resolution.
+    -- Fast path: cached target plate still shown and GUID-bound.
     local cachedTarget = NP.module.targetPlate
     if cachedTarget and targetGUID
         and NP.state.GetPlateGUID(cachedTarget) == targetGUID
@@ -240,9 +231,7 @@ function identity.UpdateMouseoverContext()
 
     local mouseoverGUID = NP.module.mouseoverGUID
 
-    -- Fast path: cached mouseover plate still shown, bound to this GUID, and name
-    -- still matches. The name check mirrors the guard the normal bind path below
-    -- applies before trusting mouseoverGUID, so we keep the same guarantee.
+    -- Fast path: cached mouseover plate shown, GUID-bound, name still matches.
     local cachedMouseover = NP.module.mouseoverPlate
     if cachedMouseover and mouseoverGUID
         and NP.state.GetPlateGUID(cachedMouseover) == mouseoverGUID
@@ -424,6 +413,12 @@ function identity.ResolvePlateUnit(plateData)
 end
 
 -- Extended unit tokens (nameplate1..40, arena/party)
+
+-- Precomputed nameplateN tokens (avoid per-probe string concat).
+local NAMEPLATE_TOKEN_NAMES = {}
+for i = 1, 40 do
+    NAMEPLATE_TOKEN_NAMES[i] = "nameplate" .. i
+end
 
 local MIRROR_IMAGE_MAX_HEALTH_THRESHOLD = 10000
 
@@ -739,11 +734,23 @@ function identity.UpdatePlateUnitToken(plateData)
     -- Open-world fallback: nameplate1..40 probe.
     local now = GetTime and GetTime() or 0
     if not plateData._tokenProbeAt or now >= plateData._tokenProbeAt then
+        -- Global per-tick probe budget atop 0.2s cooldown; deferred plates retry without consuming it.
+        local tick = NP.module._engineFrame
+        if tick then
+            if NP.module._tokenProbeTick ~= tick then
+                NP.module._tokenProbeTick = tick
+                NP.module._tokenProbeBudget = 0
+            end
+            if NP.module._tokenProbeBudget >= (C.TOKEN_PROBE_PLATES_PER_TICK or 3) then
+                return nil
+            end
+            NP.module._tokenProbeBudget = NP.module._tokenProbeBudget + 1
+        end
         plateData._tokenProbeAt = now + 0.2
         local matchedToken = nil
         local matchCount = 0
         for i = 1, 40 do
-            local token = "nameplate" .. i
+            local token = NAMEPLATE_TOKEN_NAMES[i]
             if UnitExists(token)
                 and identity.UnitNameMatchesPlate(token, plateData)
                 and identity.UnitMatchesPlateHealth(token, plateData) then
@@ -948,19 +955,45 @@ function identity.FindPlateForGroupGUID(guid, fallbackName)
     return found
 end
 
+local GROUP_TARGET_TOKENS_PARTY = {}
+for i = 1, 4 do
+    GROUP_TARGET_TOKENS_PARTY[i] = "party" .. i .. "target"
+end
+local GROUP_TARGET_TOKENS_RAID = {}
+for i = 1, 40 do
+    GROUP_TARGET_TOKENS_RAID[i] = "raid" .. i .. "target"
+end
+
 local function ForEachGroupTargetUnit(callback)
     for i = 1, GetNumPartyMembers() do
-        local unit = "party" .. i .. "target"
+        local unit = GROUP_TARGET_TOKENS_PARTY[i] or ("party" .. i .. "target")
         if UnitExists(unit) then
             callback(unit)
         end
     end
     for i = 1, GetNumRaidMembers() do
-        local unit = "raid" .. i .. "target"
+        local unit = GROUP_TARGET_TOKENS_RAID[i] or ("raid" .. i .. "target")
         if UnitExists(unit) then
             callback(unit)
         end
     end
+end
+
+-- Inlined group-target scan with early exit (matches ForEachGroupTargetUnit order).
+local function FindGroupTargetUnitForPlate(plateData)
+    for i = 1, GetNumPartyMembers() do
+        local unit = GROUP_TARGET_TOKENS_PARTY[i] or ("party" .. i .. "target")
+        if UnitExists(unit) and identity.FindPlateForUnit(unit) == plateData then
+            return unit
+        end
+    end
+    for i = 1, GetNumRaidMembers() do
+        local unit = GROUP_TARGET_TOKENS_RAID[i] or ("raid" .. i .. "target")
+        if UnitExists(unit) and identity.FindPlateForUnit(unit) == plateData then
+            return unit
+        end
+    end
+    return nil
 end
 
 function identity.FindPlateForUnit(unit, allowFullHealthNPC)
@@ -998,16 +1031,7 @@ function identity.UpdatePlateGroupTargetMatch(plateData, force)
         end
         plateData._nextGroupTargetProbeAt = now + 0.2
     end
-    local match
-    ForEachGroupTargetUnit(function(unit)
-        if match then
-            return
-        end
-        local owner = identity.FindPlateForUnit(unit)
-        if owner == plateData then
-            match = unit
-        end
-    end)
+    local match = FindGroupTargetUnitForPlate(plateData)
     plateData._matchedCastUnit = match
     if match and not NP.state.GetPlateGUID(plateData) then
         local guid = UnitGUID(match)

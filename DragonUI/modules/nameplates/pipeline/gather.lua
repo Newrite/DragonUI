@@ -47,6 +47,8 @@ end
 
 -- Identity invalidation and fresh bar color capture.
 function NP.gather.PreparePlateForRefresh(plateData, snapshot)
+    -- Invalidate gate memos before identity/color/config may change.
+    NP.gather.InvalidatePlateGates(plateData)
     local freshName = snapshot.plateName
     NP.native_style.ResetPlateEliteIfIdentityChanged(plateData, freshName)
     NP.castbar.ResetPlateCastIfIdentityChanged(plateData, freshName)
@@ -130,9 +132,7 @@ local function BuildLayoutSignature(plateData)
     return tostring(NP.module._cfgRev or 0) .. ":" .. isPlayer
 end
 
--- Totem icon-only: hide bar/name/cast; shared gate for all refresh paths.
-function NP.gather.IsTotemIconOnlyActive(plateData)
-    if not plateData then return false end
+local function ComputeTotemIconOnlyActive(plateData)
     local cfg = NP.config.GetCfg()
     if cfg.totemIconOnly ~= true or cfg.showTotemIcons == false then
         return false
@@ -151,6 +151,28 @@ function NP.gather.IsTotemIconOnlyActive(plateData)
     return NP.widgets.ResolveTotemTexturePath(plateName) ~= nil
 end
 
+-- Totem icon-only (hide bar/name/cast); memoized per tick, busted on input change.
+function NP.gather.IsTotemIconOnlyActive(plateData)
+    if not plateData then return false end
+    local tick = NP.module._engineFrame
+    if tick and plateData._totemOnlyTick == tick then
+        return plateData._totemOnlyVal
+    end
+    local result = ComputeTotemIconOnlyActive(plateData) and true or false
+    if tick then
+        plateData._totemOnlyTick = tick
+        plateData._totemOnlyVal = result
+    end
+    return result
+end
+
+function NP.gather.InvalidatePlateGates(plateData)
+    if plateData then
+        plateData._totemOnlyTick = nil
+        plateData._headlineTick = nil
+    end
+end
+
 function NP.gather.EnsurePlateVisualRoot(plateData, state, context)
     -- Reapply chrome suppression on every full refresh; subsequent calls are idempotent.
     NP.discovery.SuppressNativeChrome(plateData)
@@ -162,21 +184,31 @@ function NP.gather.EnsurePlateVisualRoot(plateData, state, context)
     end
 end
 
+-- Module-scoped sync lists to avoid per-refresh allocation.
+local FULL_SYNC_WIDGETS = {
+    "Debuffs",
+    "ThreatGlow",
+    "RaidMarker",
+    "Elite",
+    "Combo",
+    "Totem",
+    "TargetHighlight",
+}
+local TARGET_SYNC_WIDGETS = {
+    "Debuffs",
+    "ThreatGlow",
+    "Elite",
+    "Combo",
+    "TargetHighlight",
+}
+
 function NP.gather.ApplyVisualState(plateData, snapshot, context, state, reason)
     NP.gather.EnsurePlateVisualRoot(plateData, state, context)
 
     NP.gather.SyncHealth(plateData, snapshot.healthCur)
     NP.gather.SyncPower(plateData, state.showPower and context.resolvedUnit or nil)
     NP.gather.SyncName(plateData, context.resolvedUnit)
-    NP.widgets.SyncList({
-        "Debuffs",
-        "ThreatGlow",
-        "RaidMarker",
-        "Elite",
-        "Combo",
-        "Totem",
-        "TargetHighlight",
-    }, plateData, context, state)
+    NP.widgets.SyncList(FULL_SYNC_WIDGETS, plateData, context, state)
     if state.showCastbar and NP.castbar.ShouldSkipCastSync(plateData) then
         NP.castbar.HideNativeCastVisual(plateData)
         NP.layout.LayoutCastBarStack(plateData)
@@ -203,8 +235,7 @@ local function GetPartyUnitForPlate(plateData)
     return nil
 end
 
--- Resolve a plate to its party/raid unit token by name (cached ~0.3s). Player
--- names are unique on a realm, so a name match is a reliable group identifier.
+-- Resolve group unit by name (~0.3s cache); realm-unique player names are reliable identifiers.
 function NP.gather.GetGroupUnitForPlate(plateData)
     local name = plateData and plateData.plateName
     if not name then
@@ -239,9 +270,7 @@ function NP.gather.GetGroupUnitForPlate(plateData)
     return nil
 end
 
--- Headline mode: party/raid member plates show only the name (no health/power/
--- cast bars). Reaction is checked first so enemy plates short-circuit before the
--- group lookup. Group membership is what restricts this to party/raid.
+-- Headline mode for party/raid: name only; reaction checked before group lookup.
 function NP.gather.IsFriendlyNameOnlyActive(plateData)
     if not plateData then
         return false
@@ -265,9 +294,7 @@ function NP.gather.IsFriendlyNameOnlyActive(plateData)
     return false
 end
 
--- Headline mode for friendly NPCs: hide bars and show only the name. Works on
--- stock 3.3.5a; the optional NPC title subtitle needs awesome_wotlk (a tooltip
--- scan requires a unit token).
+-- Headline mode for friendly NPCs; title subtitle needs awesome_wotlk (tooltip scan needs token).
 function NP.gather.IsFriendlyNPCNameOnlyActive(plateData)
     if not plateData then
         return false
@@ -280,10 +307,7 @@ function NP.gather.IsFriendlyNPCNameOnlyActive(plateData)
     return reaction == "FRIENDLY" and unitType == "NPC"
 end
 
--- Combined gate for every headline-suppression site (players + NPCs).
--- Returns false for the current target when headlineExcludeTarget is enabled,
--- so the target plate shows its full plate normally.
-function NP.gather.IsHeadlineActive(plateData)
+local function ComputeHeadlineActive(plateData)
     if not (NP.gather.IsFriendlyNameOnlyActive(plateData)
         or NP.gather.IsFriendlyNPCNameOnlyActive(plateData)) then
         return false
@@ -295,11 +319,23 @@ function NP.gather.IsHeadlineActive(plateData)
     return true
 end
 
--- Hidden tooltip used to read an NPC's title/occupation (e.g. <General Supplies>).
--- Reading any of guild/title/subname needs a unit token; in stock 3.3.5a that
--- token exists only for the unit you target/mouseover/focus, so these resolve as
--- you look at units and are cached persistently. With awesome_wotlk (nameplate
--- tokens) they resolve for every plate immediately.
+-- Headline suppression gate (players + NPCs); excludes target when configured.
+-- Memoized per tick; PreparePlateForRefresh busts on target transition.
+function NP.gather.IsHeadlineActive(plateData)
+    if not plateData then return false end
+    local tick = NP.module._engineFrame
+    if tick and plateData._headlineTick == tick then
+        return plateData._headlineVal
+    end
+    local result = ComputeHeadlineActive(plateData) and true or false
+    if tick then
+        plateData._headlineTick = tick
+        plateData._headlineVal = result
+    end
+    return result
+end
+
+-- Subtitle tooltip; stock resolves on target/mouseover only, awesome_wotlk resolves all plates.
 local SubtitleScanTip = CreateFrame("GameTooltip", "DragonUINPSubtitleScan", UIParent, "GameTooltipTemplate")
 SubtitleScanTip:SetOwner(UIParent, "ANCHOR_NONE")
 
@@ -320,9 +356,7 @@ local function ResolvePlateToken(plateData)
     return nil
 end
 
--- Static subtitle (guild for friendly players, title/occupation for NPCs).
--- Returns nil when nothing is resolvable yet, so the caller keeps any cached
--- value and retries on later refreshes (e.g. once the unit is moused over).
+-- Static subtitle (guild/title); nil until resolvable, then cached.
 function NP.gather.GetPlateSubtitleText(plateData, unit)
     local cfg = NP.config.GetCfg()
     unit = unit or ResolvePlateToken(plateData)
@@ -401,9 +435,7 @@ function NP.gather.GetHealthBarColor(plateData)
     if reaction == "FRIENDLY" and unitType == "PLAYER"
         and plateData.barB
         and plateData.barB > 0.5 and (plateData.barR or 0) < 0.3 and (plateData.barG or 0) < 0.3 then
-        -- Class-color any friendly player (not just group). Token resolves from
-        -- group / target / mouseover / nameplate; cached so it persists once known.
-        -- Stock 3.3.5a fills in on hover/target; awesome_wotlk resolves every plate.
+        -- Friendly class color from any resolved token; cached, fills in on hover/target in stock.
         if cfg.friendlyClassColors then
             if not plateData._friendlyHealthClass then
                 local token = ResolvePlateToken(plateData)
@@ -471,15 +503,23 @@ function NP.gather.SyncHealth(plateData, value)
 
     local cfg = NP.config.GetCfg()
     local showHpNum = cfg.showHealthNumber == true
+    -- Guard SetText on unchanged health values.
     if showHpNum and maxVal and maxVal > 0 then
         if plateData.minaHpPct then plateData.minaHpPct:Hide() end
         if plateData.minaHpNum then
-            local abbr = addon.TextSystem and addon.TextSystem.AbbreviateLargeNumbers(cur) or tostring(math.floor(cur))
-            plateData.minaHpNum:SetText(abbr)
+            if plateData._lastHpNumValue ~= cur then
+                plateData._lastHpNumValue = cur
+                local abbr = addon.TextSystem and addon.TextSystem.AbbreviateLargeNumbers(cur) or tostring(math.floor(cur))
+                plateData.minaHpNum:SetText(abbr)
+            end
             plateData.minaHpNum:Show()
         end
         if plateData.minaHpBarPct then
-            plateData.minaHpBarPct:SetText(string.format("%d%%", math.floor(cur / maxVal * 100 + 0.5)))
+            local pct = math.floor(cur / maxVal * 100 + 0.5)
+            if plateData._lastHpBarPct ~= pct then
+                plateData._lastHpBarPct = pct
+                plateData.minaHpBarPct:SetText(pct .. "%")
+            end
             plateData.minaHpBarPct:Show()
         end
     else
@@ -487,7 +527,11 @@ function NP.gather.SyncHealth(plateData, value)
         if plateData.minaHpBarPct then plateData.minaHpBarPct:Hide() end
         if plateData.minaHpPct and cfg.showHealthPercent ~= false and cfg.centerNameOnly ~= true then
             if maxVal and maxVal > 0 then
-                plateData.minaHpPct:SetText(string.format("%d%%", math.floor(cur / maxVal * 100 + 0.5)))
+                local pct = math.floor(cur / maxVal * 100 + 0.5)
+                if plateData._lastHpPct ~= pct then
+                    plateData._lastHpPct = pct
+                    plateData.minaHpPct:SetText(pct .. "%")
+                end
                 plateData.minaHpPct:Show()
             else
                 plateData.minaHpPct:Hide()
@@ -568,18 +612,27 @@ function NP.gather.SyncPower(plateData, unit)
 
     if plateData.minaPoCur then
         if cfg.showPowerBarText ~= false then
-            plateData.minaPoCur:SetText(tostring(cur))
+            if plateData._lastPoCurValue ~= cur then
+                plateData._lastPoCurValue = cur
+                plateData.minaPoCur:SetText(tostring(cur))
+            end
             plateData.minaPoCur:Show()
         else
+            plateData._lastPoCurValue = nil
             plateData.minaPoCur:SetText("")
             plateData.minaPoCur:Hide()
         end
     end
     if plateData.minaPoPct then
         if cfg.showPowerBarText ~= false then
-            plateData.minaPoPct:SetText(string.format("%d%%", math.floor(cur / maxVal * 100 + 0.5)))
+            local pct = math.floor(cur / maxVal * 100 + 0.5)
+            if plateData._lastPoPct ~= pct then
+                plateData._lastPoPct = pct
+                plateData.minaPoPct:SetText(pct .. "%")
+            end
             plateData.minaPoPct:Show()
         else
+            plateData._lastPoPct = nil
             plateData.minaPoPct:SetText("")
             plateData.minaPoPct:Hide()
         end
@@ -594,9 +647,7 @@ local function ReadNativeLevelSnapshot(plateData)
         -- Recycled plates may show stale numeric level beside boss skull.
         return "??"
     end
-    -- Already resolved (cached by SuppressNativeChrome, no delay) — use it
-    -- immediately instead of waiting out the settle window below, which only
-    -- exists to protect the raw fallback read on recycled plates.
+    -- Use cached level when available; settle window protects recycled-plate fallback read.
     if plateData.plateLevel and plateData._plateLevelName == plateData.plateName then
         return plateData.plateLevel
     end
@@ -636,8 +687,7 @@ function NP.gather.SyncName(plateData, unit)
     local cfg = NP.config.GetCfg()
     local headline = NP.gather.IsHeadlineActive(plateData) -- players or NPCs (false for excluded target)
     local nameOnly = headline and NP.gather.IsFriendlyNameOnlyActive(plateData) -- friendly PLAYER headline
-    -- Resolve cached data even when this plate is excluded from headline display (headlineExcludeTarget),
-    -- so guild/class/title/AFK are ready the moment the player un-targets.
+    -- Resolve headline data even when headlineExcludeTarget; ready on un-target.
     local nameOnlyResolve = NP.gather.IsFriendlyNameOnlyActive(plateData)
     local centerOnly = cfg.centerNameOnly == true or headline
     local suppressLevel = headline  -- centerNameOnly alone no longer hides level
@@ -713,9 +763,7 @@ function NP.gather.SyncName(plateData, unit)
             r, g, b = 1, 1, 1
         end
     end
-    -- Headline mode: optional class color. Resolved from whatever token is available
-    -- and cached so it persists. Resolution runs even when the target is excluded from
-    -- headline display so the color is ready when un-targeting.
+    -- Resolve headline class color even when headlineExcludeTarget; ready on un-target.
     if nameOnlyResolve and cfg.friendlyNameOnlyClassColor and not plateData._headlineClass then
         local token = ResolvePlateToken(plateData)
         if token and UnitExists(token) and UnitIsPlayer(token) then
@@ -777,10 +825,7 @@ function NP.gather.SyncName(plateData, unit)
     plateData.minaName:Show()
 
     if plateData.minaSubTitle then
-        -- Static part (guild for players, title for NPCs): resolved lazily and
-        -- cached persistently, but only shown while its option is enabled.
-        -- Resolve subtitle text (guild / NPC title) even when target is excluded from
-        -- headline display, so it's cached and ready on un-target.
+        -- Cache subtitle even when headlineExcludeTarget; ready on un-target.
         local wantStaticResolve = (nameOnlyResolve and cfg.friendlyNameOnlyGuild == true)
             or (NP.gather.IsFriendlyNPCNameOnlyActive(plateData) and cfg.friendlyNPCNameOnlyTitle == true)
         if wantStaticResolve and not plateData._subtitleText then
@@ -887,36 +932,62 @@ function NP.gather.RefreshPlateFull(plateData, reason, hpValue)
     NP.gather.ApplyVisualState(plateData, snapshot, context, state, reason)
 end
 
+-- Light refresh skips BuildPlateState once styled; unstyled plates use full path.
+
+-- Escalate to full refresh on plateName drift (native name may settle after OnShow).
+local function PlateIdentityDrifted(plateData)
+    return NP.discovery.GetPlateName(plateData) ~= plateData.plateName
+end
+
 function NP.gather.RefreshPlateHealth(plateData, value, reason)
-    local refreshReason = reason or "health_update"
-    local snapshot, context, state = NP.gather.BuildPlateState(plateData, refreshReason, value)
-    NP.gather.EnsurePlateVisualRoot(plateData, state, context)
-    NP.gather.SyncHealth(plateData, snapshot.healthCur)
-    NP.widgets.Sync("ThreatGlow", plateData, context, state)
-    NP.gather.SyncName(plateData, context.resolvedUnit)
+    if not plateData.minaHp or PlateIdentityDrifted(plateData) then
+        local snapshot, context, state = NP.gather.BuildPlateState(plateData, reason or "health_update", value)
+        NP.gather.EnsurePlateVisualRoot(plateData, state, context)
+        NP.gather.SyncHealth(plateData, snapshot.healthCur)
+        NP.widgets.Sync("ThreatGlow", plateData, context, state)
+        NP.gather.SyncName(plateData, context.resolvedUnit)
+        return
+    end
+    NP.native_style.CaptureBarColor(plateData)
+    NP.gather.SyncHealth(plateData, value)
+    NP.widgets.Sync("ThreatGlow", plateData)
+    NP.gather.SyncName(plateData)
 end
 
 function NP.gather.RefreshPlatePower(plateData, reason)
-    local refreshReason = reason or "power_update"
-    local _, context, state = NP.gather.BuildPlateState(plateData, refreshReason)
-    NP.gather.EnsurePlateVisualRoot(plateData, state, context)
-    NP.gather.SyncPower(plateData, state.showPower and context.resolvedUnit or nil)
+    if not plateData.minaPo or PlateIdentityDrifted(plateData) then
+        local _, context, state = NP.gather.BuildPlateState(plateData, reason or "power_update")
+        NP.gather.EnsurePlateVisualRoot(plateData, state, context)
+        NP.gather.SyncPower(plateData, state.showPower and context.resolvedUnit or nil)
+        return
+    end
+    local cfg = NP.config.GetCfg()
+    local showPower = (not NP.gather.IsHeadlineActive(plateData)) and (cfg.showPowerBar ~= false)
+    NP.gather.SyncPower(plateData, showPower and NP.identity.ResolvePlateUnit(plateData) or nil)
 end
 
 function NP.gather.RefreshPlateName(plateData, reason)
-    local refreshReason = reason or "name_update"
-    local _, context, state = NP.gather.BuildPlateState(plateData, refreshReason)
-    NP.gather.EnsurePlateVisualRoot(plateData, state, context)
-    NP.gather.SyncName(plateData, context.resolvedUnit)
+    if not plateData.minaName or PlateIdentityDrifted(plateData) then
+        local _, context, state = NP.gather.BuildPlateState(plateData, reason or "name_update")
+        NP.gather.EnsurePlateVisualRoot(plateData, state, context)
+        NP.gather.SyncName(plateData, context.resolvedUnit)
+        return
+    end
+    NP.gather.SyncName(plateData)
 end
 
+local scratchAuraContext = {}
+
 function NP.gather.RefreshPlateAuras(plateData, hintedUnit, reason)
-    local refreshReason = reason or "unit_aura"
-    local _, context, state = NP.gather.BuildPlateState(plateData, refreshReason)
-    NP.gather.EnsurePlateVisualRoot(plateData, state, context)
-    NP.widgets.Sync("Debuffs", plateData, {
-        resolvedUnit = hintedUnit or context.resolvedUnit,
-    }, state)
+    if not plateData.minaDebuffHost or PlateIdentityDrifted(plateData) then
+        local _, context, state = NP.gather.BuildPlateState(plateData, reason or "unit_aura")
+        NP.gather.EnsurePlateVisualRoot(plateData, state, context)
+        scratchAuraContext.resolvedUnit = hintedUnit or context.resolvedUnit
+        NP.widgets.Sync("Debuffs", plateData, scratchAuraContext, state)
+        return
+    end
+    scratchAuraContext.resolvedUnit = hintedUnit or NP.identity.ResolvePlateUnit(plateData)
+    NP.widgets.Sync("Debuffs", plateData, scratchAuraContext)
 end
 
 function NP.gather.RefreshPlateCastbar(plateData, reason)
@@ -957,13 +1028,7 @@ function NP.gather.RefreshPlateTargetState(plateData, reason)
     NP.gather.SyncHealth(plateData, snapshot.healthCur)
     NP.gather.SyncPower(plateData, state.showPower and context.resolvedUnit or nil)
     NP.gather.SyncName(plateData, context.resolvedUnit)
-    NP.widgets.SyncList({
-        "Debuffs",
-        "ThreatGlow",
-        "Elite",
-        "Combo",
-        "TargetHighlight",
-    }, plateData, context, state)
+    NP.widgets.SyncList(TARGET_SYNC_WIDGETS, plateData, context, state)
     local ownershipValid = NP.identity.ValidatePlateGUIDOwnership(plateData)
     if not ownershipValid and not NP.castbar.PlateStillCasting(plateData) then
         NP.castbar.HidePlateCastBar(plateData)
@@ -994,20 +1059,13 @@ end
 -- Threat transitions (engine): sync glow and health tint when status changes.
 function NP.gather.ProcessThreatTransitions()
     local inCombat = NP.module.playerInCombat and true or false
-    -- Threat glow and aggro tint are combat-only (see GetAggroBarTint /
-    -- ApplyThreatGlow). Out of combat this loop only ever resolves to status 0
-    -- with no visual effect, while still paying ResolveAggroStatus (unit token
-    -- resolution) per plate every frame. Skip it entirely out of combat, except
-    -- for a single flush pass right after combat ends that reverts glow and
-    -- health tint to their non-combat state.
+    -- Skip out of combat except one post-combat flush (reverts glow/tint without per-frame resolution).
     if not inCombat and not NP.module._threatNeedsFlush then
         return
     end
     local currentBucket = NP.module._budgetFrame or 0
     for _, plateData in pairs(NP.module.plates) do
-        -- Target/focus full-rate; others staggered across threat budget buckets.
-        -- The post-combat flush pass (not inCombat) bypasses staggering so every
-        -- plate reverts in that single frame instead of over several.
+        -- Target/focus full-rate; post-combat flush bypasses bucket stagger.
         local isPriority = NP.identity.IsTargetPlate(plateData) or NP.identity.IsFocusPlate(plateData)
         if isPriority or not inCombat or (plateData._budgetBucket or 0) == currentBucket then
             local status = NP.threat.ResolveAggroStatus(plateData)

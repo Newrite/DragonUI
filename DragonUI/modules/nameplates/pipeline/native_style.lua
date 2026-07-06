@@ -59,9 +59,7 @@ end
 
 function NP.native_style.HideRegion(tex)
     if tex and tex.Hide then
-        -- Never clear Blizzard's texture here. Nameplate frames are recycled and
-        -- HookScript cannot be undone, so destructive suppression makes a later
-        -- module restore (or profile switch) unable to rebuild the native plate.
+        -- Do not clear native texture; HookScript is irreversible on recycled plates.
         if tex.SetAlpha then
             tex:SetAlpha(0)
         end
@@ -310,6 +308,11 @@ function NP.native_style.CaptureBarColor(plateData)
         return
     end
     local r, g, b = bar:GetStatusBarColor()
+    -- Bar-color change busts headline/totem gate memos.
+    if (r ~= plateData.barR or g ~= plateData.barG or b ~= plateData.barB)
+        and NP.gather and NP.gather.InvalidatePlateGates then
+        NP.gather.InvalidatePlateGates(plateData)
+    end
     plateData.barR, plateData.barG, plateData.barB = r, g, b
     plateData.classKey = NP.native_style.ClassKeyFromBarColor(r, g, b)
     if addon.debugMode then

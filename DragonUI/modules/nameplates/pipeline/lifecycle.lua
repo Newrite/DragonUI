@@ -66,6 +66,9 @@ function NP.lifecycle.PrepareNameplate(plateData)
     plateData._lastDirectHover = nil
     plateData._layoutSig = nil
     plateData._lastAppliedVisualAlpha = nil
+    if NP.gather and NP.gather.InvalidatePlateGates then
+        NP.gather.InvalidatePlateGates(plateData)
+    end
 
     -- Fresh native bar color (reaction source).
     NP.native_style.CaptureBarColor(plateData)
@@ -84,9 +87,7 @@ function NP.lifecycle.SetupPlateHooks(plateData)
     local plate = plateData.plate
     local healthBar = plateData.healthBar
 
-    -- HookScript handlers cannot be removed. Keep exactly one dispatcher on the
-    -- Blizzard plate and only replace its current plateData when the module is
-    -- restored/reapplied or the frame is rediscovered.
+    -- One HookScript dispatcher per plate; plateData replaced only on restore/rediscover.
     local hookState = plate and plate._dragonUINameplateHookState
     if hookState then
         hookState.plateData = plateData
