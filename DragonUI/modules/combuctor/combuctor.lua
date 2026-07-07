@@ -1705,8 +1705,6 @@ do
         self:SetReadable(readable)
         self:UpdateSlotColor()
         self:UpdateCooldown()
-        -- Delegate quality border rendering to itemquality module
-        addon.SetCombuctorItemQualityOverlay(self, quality)
         if GameTooltip:IsOwned(self) and self.UpdateTooltip then
             self:UpdateTooltip()
         end
@@ -3841,3 +3839,4 @@ end)
 addon.ApplyCombuctorSystem = ApplyCombuctorSystem
 addon.RestoreCombuctorSystem = RestoreCombuctorSystem
 addon.RefreshCombuctorFrames = RefreshCombuctorFrames
+addon.CombuctorItemSlot = mod.ItemSlot
