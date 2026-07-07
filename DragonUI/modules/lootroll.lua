@@ -103,17 +103,6 @@ local function InstallHooks()
             if attachingContainer then return end   -- our own call
             AttachContainer()
         end)
-
-        -- Hook ClearAllPoints: when Blizzard resets the container (e.g. after
-        -- all loot rolls complete or the window is dismissed), it calls
-        -- ClearAllPoints WITHOUT a subsequent SetPoint.  Our SetPoint hook
-        -- never fires, so the container drifts back to the default (0,0)
-        -- position.  Re-attach immediately so the user never sees the jump.
-        hooksecurefunc(GroupLootContainer, "ClearAllPoints", function()
-            if not LootRollModule.applied then return end
-            if attachingContainer then return end   -- our own call
-            AttachContainer()
-        end)
     end
 
     -- Also hook GroupLootContainer_Update if it exists
@@ -124,9 +113,8 @@ local function InstallHooks()
         end)
     end
 
-    -- Hook individual frame openers even when GroupLootContainer exists.
-
-    if GroupLootFrame_OpenNewFrame then
+    -- Fallback: hook individual frame openers for clients without the container
+    if not GroupLootContainer and GroupLootFrame_OpenNewFrame then
         hooksecurefunc("GroupLootFrame_OpenNewFrame", function()
             if not LootRollModule.applied then return end
             AttachContainer()
@@ -315,6 +303,7 @@ function LootRollModule:ShowEditorTest()
 
             f:ClearAllPoints()
             f:SetPoint(point, UIParent, point, x, y)
+            f:SetUserPlaced(false)
 
             -- Save to DB
             if addon.db and addon.db.profile then
@@ -357,24 +346,12 @@ addon.package:RegisterEvents(function()
     LootRollModule:Initialize()
 end, "PLAYER_LOGIN")
 
--- Re-apply position and re-attach after zone changes, reloads, etc.
+-- Re-attach after zone changes, reloads, etc. (same as DragonflightUI pattern)
 addon.package:RegisterEvents(function()
     if LootRollModule.applied then
-        UpdateAnchorPosition()
         AttachContainer()
     end
 end, "PLAYER_ENTERING_WORLD")
-
--- Re-apply after combat ends — entering combat can reset protected frame
--- positions and the hooks can't safely reposition during lockdown.
-addon.package:RegisterEvents(function()
-    if LootRollModule.applied then
-        addon:After(0.1, function()
-            UpdateAnchorPosition()
-            AttachContainer()
-        end)
-    end
-end, "PLAYER_REGEN_ENABLED")
 
 -- Profile change handler
 if addon.core and addon.core.RegisterMessage then
