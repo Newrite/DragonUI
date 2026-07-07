@@ -256,11 +256,18 @@ function addon.CreateUIFrame(width, height, frameName)
     local frame = CreateFrame("Frame", 'DragonUI_' .. frameName, UIParent)
     frame:SetSize(width, height)
 
+    -- Local guard: only behave as an editable/movable frame while editor mode is active.
+    -- Outside editor mode, all CreateUIFrame widgets must be click-through.
+    local function EditorActive()
+        return addon.EditorMode and addon.EditorMode.IsActive and addon.EditorMode:IsActive()
+    end
+
     frame:RegisterForDrag("LeftButton")
     frame:EnableMouse(false)
     frame:SetMovable(false)
 
     frame:SetScript("OnDragStart", function(self, button)
+        if not EditorActive() then return end
         self:StartMoving()
         -- Ensure this frame is the selected one
         if selectedEditorFrame ~= self then
@@ -271,6 +278,7 @@ function addon.CreateUIFrame(width, height, frameName)
     end)
 
     frame:SetScript("OnDragStop", function(self)
+        if not EditorActive() then return end
         self:StopMovingOrSizing()
 
         -- AUTO-SAVE: Find this frame in EditableFrames and save position automatically
@@ -289,8 +297,9 @@ function addon.CreateUIFrame(width, height, frameName)
         ApplySelectionTint(self)
     end)
 
-    -- Click without drag also selects the frame
+    -- Click without drag also selects the frame — only meaningful inside editor mode.
     frame:SetScript("OnMouseDown", function(self, button)
+        if not EditorActive() then return end
         if button == "LeftButton" then
             addon.SelectEditorFrame(self)
         end
