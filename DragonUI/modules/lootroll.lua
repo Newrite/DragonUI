@@ -365,6 +365,17 @@ addon.package:RegisterEvents(function()
     end
 end, "PLAYER_ENTERING_WORLD")
 
+-- Re-apply after combat ends — entering combat can reset protected frame
+-- positions and the hooks can't safely reposition during lockdown.
+addon.package:RegisterEvents(function()
+    if LootRollModule.applied then
+        addon:After(0.1, function()
+            UpdateAnchorPosition()
+            AttachContainer()
+        end)
+    end
+end, "PLAYER_REGEN_ENABLED")
+
 -- Profile change handler
 if addon.core and addon.core.RegisterMessage then
     addon.core.RegisterMessage(addon, "DRAGONUI_PROFILE_CHANGED", function()
