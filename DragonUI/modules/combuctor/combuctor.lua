@@ -1580,12 +1580,6 @@ do
         item:RegisterForClicks("anyUp")
         item.UpdateTooltip = nil
 
-        -- Expand hit area to cover the visual slot_border (64x64)
-        local btnSize = item:GetWidth()
-        local borderVisualSize = 64
-        local inset = floor((btnSize - borderVisualSize) / 2)
-        item:SetHitRectInsets(inset, inset, inset, inset)
-
         -- Cooldown
         local itemName = item:GetName()
         item.cooldown = _G[itemName .. "Cooldown"]
