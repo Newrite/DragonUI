@@ -137,15 +137,30 @@ local function LookupRareClassification(plateData)
     local guid = NP.state.GetPlateGUID(plateData)
     if guid then
         local entry = ParseNpcCreatureId(guid)
-        if entry and (RareEntryCache[entry] or NpcRareRanks:IsRareEntry(entry)) then
-            return "rare"
+        if entry then
+            if RareEntryCache[entry] or NpcRareRanks:IsRareEntry(entry) then
+                return "rare"
+            end
+            -- Entry confirmed not rare: trust the id over the name, since
+            -- two unrelated NPCs can share a localized display string.
+            return nil
         end
     end
     local name = plateData.plateName
     if not name and plateData.ogNameText and plateData.ogNameText.GetText then
         name = plateData.ogNameText:GetText()
     end
-    if name and NpcRareRanks:IsRareName(name) then
+    if not name then
+        return nil
+    end
+    -- Level is readable pre-target (unlike GUID), so it disambiguates the
+    -- known name collisions in NameLevelHints (npc_rare_ranks.lua).
+    local level
+    local levelText = plateData.levelText
+    if levelText and levelText.GetText then
+        level = tonumber(levelText:GetText())
+    end
+    if NpcRareRanks:IsRareName(name, level) then
         return "rare"
     end
     return nil
@@ -248,18 +263,24 @@ local function ClassificationFromUnit(unit)
 end
 
 function NP.native_style.ResolvePlateClassification(plateData, unit)
+    local fromUnit
     if unit and UnitExists(unit) then
-        local fromUnit = ClassificationFromUnit(unit)
+        fromUnit = ClassificationFromUnit(unit)
         if fromUnit == "rare" then
             RememberRareEntry(unit)
+            return "rare"
         end
-        return fromUnit
     end
     local native = plateData._plateClassification
-    if native == "elite" or native == "rare" then
-        return native
+    if native == "rare" then
+        return "rare"
     end
-    return LookupRareClassification(plateData)
+    -- Not yet confirmed rare: consult the database, since many dungeon/world
+    -- rares are only ever reported as "elite" by the game's own API.
+    if LookupRareClassification(plateData) == "rare" then
+        return "rare"
+    end
+    return fromUnit or native
 end
 
 function NP.native_style.ClassKeyFromBarColor(r, g, b)

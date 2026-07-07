@@ -183,7 +183,7 @@ local defaults = {
         lootroll = {
             anchor = "BOTTOM",
             x = 0,
-            y = 200,
+            y = 220,
         },
         -- ACTIONBAR SETTINGS
         mainbars = {
@@ -623,9 +623,9 @@ local defaults = {
                 showManaTextAlways = false,
                 enableThreatGlow = false,
                 scale = 1.0,
-                override = true,
-                x = 0,
-                y = 0
+                override = false,
+                x = 18,
+                y = -80
             },
             party = {
                 enabled = true,

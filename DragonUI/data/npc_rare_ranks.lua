@@ -5135,6 +5135,36 @@ local function ParseCSVEntries(csv)
     return set
 end
 
+-- Localized names Blizzard reused for both a rare and an unrelated NPC (verified
+-- against NotPlater). Maps to the rare's level; `false` = same-level, unresolvable.
+local NameLevelHints = {
+    ["Glutschwinge"] = 46, -- deDE: Greater Firebird (rare, 46) / Smolderwing (normal, 41)
+    ["벤"] = 1, -- koKR: Ben (rare, 1) / Ven (normal, 30)
+    ["검은아귀"] = 11, -- koKR: Grimmaw (rare, 11) / Blackmaw (normal, 79)
+    ["해골 마녀"] = 61, -- koKR/zhTW: Bone Witch (rare, 61) / The Bone Witch (elite, 80)
+    ["타락한 용사"] = 33, -- koKR: Fallen Champion (rare, 33) / Corrupted Champion (normal, 80)
+    ["꿀꿀이"] = 50, -- koKR: Grunter (rare, 50) / Mr. Wiggles (normal, 1)
+    ["리즐 스프리스프로켓"] = 1, -- koKR: Lizzle Sprysprocket (rare, 1) / Rizzle Sprysprocket (normal, 70)
+    ["붉은십자군 심문관"] = false, -- koKR: Scarlet Interrogator (rare) / Scarlet Inquisitor (elite) - both level 61
+    ["고통받는 영혼"] = 9, -- koKR: Tormented Spirit (rare, 9) / Tormented Soul (normal, 68)
+    ["Болотный скрытень"] = 63, -- ruRU: Bog Lurker (rare, 63) / Marsh Lurker (normal, 62)
+    ["Хрустик"] = 32, -- ruRU: Crusty (rare, 32) / Crunchy (normal, 5)
+    ["Гилмориан"] = 43, -- ruRU: Gilmorian (rare, 43) / Gargoth (normal, 65)
+    ["Полководец из клана Черной Вершины"] = false, -- ruRU: Spirestone Battle Lord (rare) / Spirestone Warlord (elite) - both level 58
+    ["Волхан"] = 60, -- ruRU: Volchan (rare, 60) / Volkhan (elite, 82)
+    ["Acechador nocturno"] = false, -- esES/esMX: Duskstalker (rare) / Nightstalker (normal) - both level 9
+    ["Devastazione"] = 51, -- itIT/zhCN "毁灭": Ravage (rare, 51) / Devastation (elite, 70)
+    ["卡斯克"] = 40, -- zhCN: Kaskk (rare, 40) / Cask (elite, 1)
+    ["毁灭"] = 51, -- zhCN: Ravage (rare, 51) / Devastation (elite, 70)
+    ["赫玛图斯"] = 60, -- zhCN: Hematos (rare, 60) / Hematus (normal, 50)
+    ["库尔莫克"] = 42, -- zhCN: Kurmokk (rare, 42) / Kormok (elite, 60)
+    ["笨拙的憎恶"] = 1, -- zhCN: Lumbering Horror (rare, 1) / Lumbering Abomination (elite, 80)
+    ["腐烂者"] = 43, -- zhCN/zhTW "腐爛者": The Rot (rare, 43) / Rotted One (normal, 26)
+    ["下水道鳄鱼"] = 50, -- zhCN: Sewer Beast (rare, 50) / Sewer Crocolisk (normal, 1)
+    ["骸骨女巫"] = 61, -- zhTW: Bone Witch (rare, 61) / The Bone Witch (elite, 80)
+    ["腐爛者"] = 43, -- zhTW: The Rot (rare, 43) / Rotted One (normal, 26)
+}
+
 local function IsShippableRareName(name)
     if not name or name == "" then
         return false
@@ -5189,11 +5219,21 @@ function M:IsRareEntry(entry)
     return entry and self:EnsureEntrySet()[entry] == true
 end
 
-function M:IsRareName(name)
+function M:IsRareName(name, level)
     if not name then
         return false
     end
-    return self:EnsureNameSet()[name] == true
+    if not self:EnsureNameSet()[name] then
+        return false
+    end
+    local hint = NameLevelHints[name]
+    if hint == nil then
+        return true
+    end
+    if hint == false then
+        return false
+    end
+    return level ~= nil and level == hint
 end
 
 addon.NpcRareRanks = M
