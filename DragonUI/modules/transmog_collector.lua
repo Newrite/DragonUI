@@ -25,6 +25,14 @@ if addon.RegisterModule then
 end
 
 -- =============================================================================
+-- MODULE STATE
+-- =============================================================================
+
+local function IsModuleEnabled()
+    return addon:IsModuleEnabled("transmog_collector")
+end
+
+-- =============================================================================
 -- INTERNAL STATE
 -- =============================================================================
 
@@ -112,6 +120,7 @@ end
 -- =============================================================================
 
 local function OnEvent(self, event, ...)
+    if not IsModuleEnabled() then return end
     if event == "BAG_UPDATE" then
         -- Delay slightly to let bag settle after loot
         addon:After(0.3, ScanBags)
