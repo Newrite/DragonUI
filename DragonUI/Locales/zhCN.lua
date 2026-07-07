@@ -522,6 +522,12 @@ L["Double-Click to Copy"] = "双击复制"
 L["Copy Text"] = "复制文本"
 L["URL"] = "URL"
 
+-- Level Up Enhance Module
+L["Level Up Enhance"] = "Level Up Enhance"
+L["Enhanced level-up notification with animated frame"] = "Enhanced level-up notification with animated frame"
+L["You've Reached"] = "You've Reached"
+L["Level %d"] = "Level %d"
+
 -- Version Check Module
 L["Version Check"] = "版本检查"
 L["Broadcast and detect addon version updates across group members"] = "检测队伍成员间插件版本更新，通过广播和接收版本信息"

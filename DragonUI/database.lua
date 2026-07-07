@@ -947,6 +947,9 @@ local defaults = {
             },
             transmog_collector = {
                 enabled = false, -- Auto-collect transmog appearances on loot (Ascension)
+            },
+            levelupenhance = {
+                enabled = true, -- Enhanced level-up notification with animated frame
             }
         },
 

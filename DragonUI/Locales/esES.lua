@@ -509,3 +509,9 @@ L["Position & Scale"] = "Posición y Escala"
 L["Scale of the BNet toast frame."] = "Escala del marco de notificación de Battle.net."
 L["Horizontal position of the BNet toast from the screen center. Negative values move left, positive values move right."] = "Posición horizontal de la notificación de Battle.net desde el centro de la pantalla. Valores negativos mueven a la izquierda, positivos a la derecha."
 L["Vertical offset of the BNet toast frame. Negative values move down, positive values move up."] = "Desplazamiento vertical del marco de notificación de Battle.net. Valores negativos mueven hacia abajo, positivos hacia arriba."
+
+-- Level Up Enhance Module
+L["Level Up Enhance"] = "Mejora de Subida de Nivel"
+L["Enhanced level-up notification with animated frame"] = "Notificación mejorada de subida de nivel con marco animado"
+L["You've Reached"] = "Has Alcanzado"
+L["Level %d"] = "Nivel %d"

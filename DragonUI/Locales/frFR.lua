@@ -139,6 +139,12 @@ L["Keep DragonUI Nameplates and disable %s"] = "Conserver les barres de nom Drag
 L["Keep %s and disable DragonUI Nameplates"] = "Conserver %s et désactiver les barres de nom DragonUI"
 L["Don't ask again"] = "Ne plus demander"
 
+-- Level Up Enhance Module
+L["Level Up Enhance"] = "Level Up Enhance"
+L["Enhanced level-up notification with animated frame"] = "Enhanced level-up notification with animated frame"
+L["You've Reached"] = "You've Reached"
+L["Level %d"] = "Level %d"
+
 -- Version Check Module
 L["Version Check"] = "Vérification de version"
 L["Broadcast and detect addon version updates across group members"] = "Détecte les mises à jour de l'addon entre les membres du groupe en envoyant et recevant la version"

@@ -165,5 +165,7 @@ function addon.RefreshTransmogCollectorSystem()
     if TransmogCollector.applied then
         addon.RestoreTransmogCollectorSystem()
         addon.ApplyTransmogCollectorSystem()
+    elseif IsModuleEnabled() then
+        addon.ApplyTransmogCollectorSystem()
     end
 end

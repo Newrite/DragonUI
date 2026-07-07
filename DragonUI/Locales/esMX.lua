@@ -503,6 +503,12 @@ L["Copy Text"] = "Copiar texto"
 L["Version Check"] = "Control de Versión"
 L["Broadcast and detect addon version updates across group members"] = "Detecta actualizaciones del addon entre miembros del grupo enviando y recibiendo la versión"
 
+-- Level Up Enhance Module
+L["Level Up Enhance"] = "Mejora de Subida de Nivel"
+L["Enhanced level-up notification with animated frame"] = "Notificación mejorada de subida de nivel con marco animado"
+L["You've Reached"] = "Has Alcanzado"
+L["Level %d"] = "Nivel %d"
+
 -- BNet Toast Module
 L["BNet Toast"] = "Aviso BNet"
 L["Friend online/offline notifications with Battle.net toasts and chat messages"] = "Notificaciones de amigos en línea/desconectados con toasts y mensajes de Battle.net"
