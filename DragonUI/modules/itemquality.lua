@@ -176,6 +176,10 @@ local function UpdateCharacterSlot(button)
     local hasItem = GetInventoryItemTexture("player", slotID)
     if hasItem then
         local quality = GetInventoryItemQuality("player", slotID)
+        if not quality then
+            local link = GetInventoryItemLink("player", slotID)
+            quality = GetQualityFromLink(link)
+        end
         SetOverlayQuality(button, quality)
     else
         SetOverlayQuality(button, nil)
@@ -537,10 +541,6 @@ local function ApplyItemQualitySystem()
     -- Guild Bank: hook is installed dynamically on GUILDBANKFRAME_OPENED
     -- because Blizzard_GuildBankUI is load-on-demand (not available at startup)
 
-    -- Signal that the quality system is ready BEFORE scheduling updates.
-    -- This ensures SetCombuctorItemQualityOverlay calls are not ignored.
-    addon.ItemQualityReady = true
-
     -- Initial update
     addon:After(0.5, UpdateAllQualityBorders)
 
@@ -683,6 +683,5 @@ addon.UpdateAllQualityBorders = UpdateAllQualityBorders
 -- Falls back gracefully if the quality system isn't applied yet.
 function addon.SetCombuctorItemQualityOverlay(button, quality)
     if not button or not IsModuleEnabled() then return end
-    if not addon.ItemQualityReady then return end
     SetOverlayQuality(button, quality)
 end
