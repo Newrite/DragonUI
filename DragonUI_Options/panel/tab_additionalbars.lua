@@ -71,16 +71,6 @@ local function BuildAdditionalBarsTab(scroll)
     })
 
     C:AddSlider(stance, {
-        label = LO["Scale"],
-        dbPath = "additional.stance.scale",
-        min = 0.5, max = 2.0, step = 0.05,
-        width = 200,
-        callback = function()
-            if addon.RefreshStance then addon.RefreshStance() end
-        end,
-    })
-
-    C:AddSlider(stance, {
         label = LO["X Position"],
         desc = LO["Horizontal position of stance bar from screen center. Negative values move left, positive values move right."],
         dbPath = "additional.stance.x_position",
