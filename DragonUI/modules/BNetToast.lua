@@ -387,6 +387,7 @@ local function PersistToastPosition()
 end
 
 local function ApplyToastAnchorPosition()
+    if InCombatLockdown() then return end
     if not toastAnchor then return end
     local cfg = addon.db and addon.db.profile and addon.db.profile.widgets and addon.db.profile.widgets.bnToast
     if not cfg or not cfg.custom_position then return end
@@ -411,6 +412,10 @@ local function HookToastPosition()
     BNetToastModule.hooks.toastSetPoint = origSetPoint
 
     BNToastFrame.SetPoint = function(self, ...)
+        if InCombatLockdown() then
+            return origSetPoint(self, ...)
+        end
+
         if toastAnchor and toastAnchor:IsShown() then
             -- Editor mode active: anchor toast to mover
             return origSetPoint(self, "CENTER", toastAnchor, "CENTER", 0, 0)
@@ -432,6 +437,29 @@ local function UnhookToastPosition()
     if BNetToastModule.hooks.toastSetPoint then
         BNToastFrame.SetPoint = BNetToastModule.hooks.toastSetPoint
         BNetToastModule.hooks.toastSetPoint = nil
+    end
+end
+
+-- =============================================================================
+-- WIDGET POSITION SYNC (guide pattern)
+-- =============================================================================
+
+local function ApplyWidgetPosition()
+    if InCombatLockdown() then return end
+    if addon.EditorMode and addon.EditorMode:IsActive() then return end
+
+    local cfg = addon.db and addon.db.profile and addon.db.profile.widgets and addon.db.profile.widgets.bnToast
+    if not cfg then return end
+
+    if toastAnchor then
+        toastAnchor:ClearAllPoints()
+        toastAnchor:SetPoint(cfg.anchor or "CENTER", UIParent, cfg.anchor or "CENTER",
+            cfg.posX or 0, cfg.posY or 200)
+    end
+
+    if BNToastFrame then
+        BNToastFrame:ClearAllPoints()
+        BNToastFrame:SetPoint("CENTER", toastAnchor, "CENTER", 0, 0)
     end
 end
 
@@ -471,6 +499,7 @@ function SetupToastEditorAnchor()
                 toastAnchor.DragonUI_WasAdjustedByEditor = nil
             end
             toastAnchor:Hide()
+            ApplyWidgetPosition()
         end,
         module = BNetToastModule,
     })
