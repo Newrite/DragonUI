@@ -218,34 +218,6 @@ local function ShowProfileExportFrame(exportString)
     f.editBox:HighlightText()
 end
 
-local function ShowProfileImportFrame()
-    local f = GetProfileIEFrame()
-    f.title:SetText(LO["Import Profile"] or "Import Profile")
-    f.editBox:SetText("")
-    f.editBox:SetScript("OnTextChanged", nil) -- allow editing
-    f.btn1Text:SetText(LO["Import"] or "Import")
-    f.btn1:SetScript("OnClick", function()
-        local text = strtrim(f.editBox:GetText())
-        if text == "" then return end
-        local data, errType = ImportProfileFromString(text)
-        if not data then
-            local msg = LO["Invalid profile string."] or "Invalid profile string."
-            if errType == "header" then
-                msg = LO["Not a valid DragonUI profile string."] or "Not a valid DragonUI profile string."
-            end
-            print("|cFFFF4444[DragonUI]|r " .. msg)
-            return
-        end
-        f:Hide()
-        -- Ask for a profile name
-        ShowProfileImportNameFrame(data)
-    end)
-    f.btn2Text:SetText(LO["Cancel"] or "Cancel")
-    f.btn2:SetScript("OnClick", function() f:Hide() end)
-    f:Show()
-    f.editBox:SetFocus()
-end
-
 -- ============================================================================
 -- CUSTOM FRAME: Import profile name (dark theme, same as GetProfileIEFrame)
 -- ============================================================================
@@ -429,6 +401,34 @@ end
 
 -- Expose for profilesync.lua (core module) to use when Options is loaded
 DragonUI._showProfileImportFrame = ShowProfileImportNameFrame
+
+local function ShowProfileImportFrame()
+    local f = GetProfileIEFrame()
+    f.title:SetText(LO["Import Profile"] or "Import Profile")
+    f.editBox:SetText("")
+    f.editBox:SetScript("OnTextChanged", nil) -- allow editing
+    f.btn1Text:SetText(LO["Import"] or "Import")
+    f.btn1:SetScript("OnClick", function()
+        local text = strtrim(f.editBox:GetText())
+        if text == "" then return end
+        local data, errType = ImportProfileFromString(text)
+        if not data then
+            local msg = LO["Invalid profile string."] or "Invalid profile string."
+            if errType == "header" then
+                msg = LO["Not a valid DragonUI profile string."] or "Not a valid DragonUI profile string."
+            end
+            print("|cFFFF4444[DragonUI]|r " .. msg)
+            return
+        end
+        f:Hide()
+        -- Ask for a profile name
+        ShowProfileImportNameFrame(data)
+    end)
+    f.btn2Text:SetText(LO["Cancel"] or "Cancel")
+    f.btn2:SetScript("OnClick", function() f:Hide() end)
+    f:Show()
+    f.editBox:SetFocus()
+end
 
 -- ============================================================================
 -- PROFILES TAB BUILDER
