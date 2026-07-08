@@ -10,6 +10,9 @@
     <Script file="auracooldowns.lua"/>
     <Script file="mainbars.lua"/>
 
+    <!-- Attack Bar (swing timer for main/off hand, ranged, and enemy) -->
+    <Script file="Attackbar.lua"/>
+
     <!-- Action Bar Sub-modules (stance, vehicle, petbar, multicast) -->
     <Include file="actionbars\actionbars.xml"/>
 

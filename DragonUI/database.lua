@@ -168,7 +168,22 @@ local defaults = {
                 posY = 144,
                 relativePoint = "CENTER",
                 custom_position = false
-            }
+            },
+            attackbarPlayer = {
+                anchor = "BOTTOM",
+                posX = 0,
+                posY = 255,
+            },
+            attackbarOffhand = {
+                anchor = "BOTTOM",
+                posX = 0,
+                posY = 275,
+            },
+            attackbarEnemy = {
+                anchor = "BOTTOM",
+                posX = 0,
+                posY = 295,
+            },
         },
         -- Quest Tracker
         questtracker = {
@@ -273,7 +288,7 @@ local defaults = {
             left_show_on_hover = false,
             left_show_in_combat = false,
             left_visibility_logic = "and",
-            
+
 
             -- Micro menu and bag bar visibility
             micro_show_on_hover = false,
@@ -324,7 +339,7 @@ local defaults = {
                 icon_spacing = 15 -- Gap between icons
             },
 
-            -- Normal colored icons configuration  
+            -- Normal colored icons configuration
             normal = {
                 scale_menu = 0.9,
                 x_position = -113,
@@ -575,7 +590,7 @@ local defaults = {
                 show_rest_glow = true, -- Show golden glow when resting (inn/city)
                 combat_flash_enabled = true, -- Enable combat flash pulse animation
                 combat_flash_opacity = 1.0, -- Opacity multiplier for combat flash (0.0 - 1.0)
-                fat_healthbar = false, -- Full-width health bar 
+                fat_healthbar = false, -- Full-width health bar
                 fat_manabar_width = 200,
                 fat_manabar_height = 8,
                 fat_manabar_hidden = false,
@@ -913,8 +928,8 @@ local defaults = {
                 show_toast = true, -- Show the BNToastFrame popup when friends come online/go offline
                 show_chat = true, -- Show a chat notification for friend online/offline events
                 scale = 1.0, -- Scale of the BNet toast frame
-                x_position = 0, -- Horizontal position from screen center
-                y_offset = 200, -- Vertical offset
+                x_position = -270, -- Horizontal position from screen center
+                y_offset = 270, -- Vertical offset
             },
             combuctor = {
                 enabled = false -- All-in-one bag replacement with filtering and search
@@ -953,7 +968,18 @@ local defaults = {
             },
             levelupenhance = {
                 enabled = true, -- Enhanced level-up notification with animated frame
-            }
+            },
+            attackbar = {
+                enabled = false, -- Attack bar swing timer (opt-in module)
+                showMainHand = true,
+                showOffHand = true,
+                showRanged = true,
+                showEnemy = true,
+                showTimer = true,
+                showInfo = true,
+                borderStyle = "standard", -- "standard", "thin", "none"
+                scale = 1.0,
+            },
         },
 
         -- LAYOUT PRESETS (user-saved UI snapshots within this profile)

@@ -1516,3 +1516,31 @@ L["Transmog Collector"] = true
 L["Enable Transmog Collector"] = true
 L["Automatically collect transmog appearances when looting new items. Works with Ascension's Ctrl+Alt+Click appearance system."] = true
 L["On loot, auto-collects appearances for items you haven't learned yet."] = true
+
+-- Attack Bar Tab
+L["Attack Bar"] = true
+L["Shows swing timers for your main hand, off hand, ranged attacks, and enemy target melee swings."] = true
+L["Enable Attack Bar"] = true
+L["Show swing timer bars for melee and ranged attacks."] = true
+L["Main Hand Bar"] = true
+L["Show the main hand melee swing timer."] = true
+L["Off Hand Bar"] = true
+L["Show the off hand melee swing timer (dual-wield)."] = true
+L["Ranged Bar"] = true
+L["Show the ranged attack timer (Hunter shots, Throw, Aimed Shot)."] = true
+L["Enemy Bar"] = true
+L["Show the enemy target melee swing timer."] = true
+L["Show Timer"] = true
+L["Show the countdown timer text on bars."] = true
+L["Show Info"] = true
+L["Show spell name, damage range, and time remaining text."] = true
+L["Scale"] = true
+L["Border Style"] = true
+L["Choose the border style for the swing timer bars."] = true
+L["Standard"] = true
+L["Thin"] = true
+L["Scale of the swing timer bars."] = true
+
+-- Attack Bar Module Registration (from module file)
+L["Swing Timer Module"] = true
+L["Shows main hand, off hand, ranged, and enemy target swing timers."] = true
