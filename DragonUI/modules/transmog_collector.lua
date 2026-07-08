@@ -33,6 +33,31 @@ local function IsModuleEnabled()
 end
 
 -- =============================================================================
+-- SELF-INITIALIZATION
+-- =============================================================================
+
+local initFrame = CreateFrame("Frame")
+initFrame:RegisterEvent("ADDON_LOADED")
+initFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+initFrame:SetScript("OnEvent", function(self, event, arg1)
+    if event == "ADDON_LOADED" and arg1 == "DragonUI" then
+        if not IsModuleEnabled() then return end
+
+        addon:After(0.5, function()
+            if addon.db and addon.db.RegisterCallback then
+                addon.db.RegisterCallback(addon, "OnProfileChanged", function()
+                    addon.RefreshTransmogCollectorSystem()
+                end)
+            end
+        end)
+
+    elseif event == "PLAYER_ENTERING_WORLD" then
+        if not IsModuleEnabled() then return end
+        addon.ApplyTransmogCollectorSystem()
+    end
+end)
+
+-- =============================================================================
 -- INTERNAL STATE
 -- =============================================================================
 
