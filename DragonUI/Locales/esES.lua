@@ -201,6 +201,7 @@ L["Buff"] = "Beneficio"
 L["Debuffs"] = "Perjuicio"
 L["WeaponEnchants"] = "Encantamientos"
 L["Loot Roll"] = "Botín"
+L["LevelUpFrame"] = "Subir de Nivel"
 L["Quest Tracker"] = "Misiones"
 
 -- Mover tooltip strings

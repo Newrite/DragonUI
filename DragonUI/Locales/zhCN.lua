@@ -199,6 +199,7 @@ L["Buff"] = "增益"
 L["Debuffs"] = "减益"
 L["WeaponEnchants"] = "武器附魔"
 L["Loot Roll"] = "拾取掷骰"
+L["LevelUpFrame"] = "升级"
 L["Quest Tracker"] = "任务追踪"
 
 L["Drag to move"] = "拖动以移动"

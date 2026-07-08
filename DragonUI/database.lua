@@ -190,6 +190,11 @@ local defaults = {
                 posX = 0,
                 posY = 295,
             },
+            levelupenhance = {
+                anchor = "TOP",
+                posX = 0,
+                posY = -128,
+            },
         },
         -- Quest Tracker
         questtracker = {

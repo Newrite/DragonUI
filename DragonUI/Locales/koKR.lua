@@ -201,7 +201,8 @@ L["Buff"] = "버프"
 L["Debuffs"] = "디버프"
 L["WeaponEnchants"] = "ë¬´ê¸° ê°•í™” íš¨ê³¼"
 L["Loot Roll"] = "ì£¼ì‚¬ìœ„ êµ´ë¦¼"
-L["Quest Tracker"] = "í€˜ìŠ¤íŠ¸ ì¶”ì ê¸°"
+L["LevelUpFrame"] = "레벨 업"
+L["Quest Tracker"] = "í€˜ìŠ¤íŠ¸ ì¶"ì "ê¸°"
 
 -- Mover tooltip strings
 L["Drag to move"] = "ë“œëž˜ê·¸ ì´ë™"

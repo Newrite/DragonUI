@@ -201,6 +201,7 @@ L["Buff"] = "Баф"
 L["Debuffs"] = "Дебаф"
 L["WeaponEnchants"] = "Зачарования оружия"
 L["Loot Roll"] = "Розыгрыш добычи"
+L["LevelUpFrame"] = "Уровень"
 L["Quest Tracker"] = "Трекер заданий"
 
 -- Mover tooltip strings

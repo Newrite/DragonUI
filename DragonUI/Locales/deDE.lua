@@ -201,6 +201,7 @@ L["Buff"] = "Verstärkung"
 L["Debuffs"] = "Schwächung"
 L["WeaponEnchants"] = "Waffenverzauberungen"
 L["Loot Roll"] = "Beute würfeln"
+L["LevelUpFrame"] = "Stufenaufstieg"
 L["Quest Tracker"] = "Questverfolgung"
 
 -- Mover tooltip strings

@@ -37,6 +37,30 @@ local function GetModuleConfig()
 end
 
 -- =============================================================================
+-- EDITOR MODE
+-- =============================================================================
+
+local anchor
+local DEFAULT_ANCHOR, DEFAULT_X, DEFAULT_Y = "TOP", 0, -128
+
+local function ApplyWidgetPosition()
+    if InCombatLockdown() then return end
+    if addon.EditorMode and addon.EditorMode:IsActive() then return end
+
+    local cfg = addon.db.profile.widgets.levelupenhance
+    if not cfg then return end
+
+    anchor:ClearAllPoints()
+    anchor:SetPoint(cfg.anchor or DEFAULT_ANCHOR, UIParent,
+        cfg.anchor or DEFAULT_ANCHOR, cfg.posX or DEFAULT_X, cfg.posY or DEFAULT_Y)
+
+    if newLevelFrame then
+        newLevelFrame:ClearAllPoints()
+        newLevelFrame:SetPoint("TOP", anchor, "TOP", 0, 0)
+    end
+end
+
+-- =============================================================================
 -- INTERNAL STATE
 -- =============================================================================
 
@@ -74,7 +98,6 @@ function addon.ApplyLevelUpEnhanceSystem()
     newLevelFrame:SetFrameStrata("BACKGROUND")
     newLevelFrame:SetWidth(400)
     newLevelFrame:SetHeight(200)
-    newLevelFrame:SetPoint("TOP", 0, -128)
 
     local texture = newLevelFrame:CreateTexture(nil, "BACKGROUND")
     texture:SetTexture("Interface\\AddOns\\DragonUI\\Textures\\newlevel_frame")
@@ -92,10 +115,41 @@ function addon.ApplyLevelUpEnhanceSystem()
 
     newLevelFrame:Hide()
 
+    if not anchor then
+        anchor = addon.CreateUIFrame(400, 200, "LevelUpFrame")
+
+        addon:RegisterEditableFrame({
+            name = "levelupenhance",
+            frame = anchor,
+            blizzardFrame = newLevelFrame,
+            configPath = {"widgets", "levelupenhance"},
+            editorVisible = function()
+                return IsModuleEnabled()
+            end,
+            showTest = function()
+                anchor:Show()
+                newLevelFrame.footer:SetText(L and L["Level %d"] or "Level %d", UnitLevel("player") + 1)
+                newLevelFrame:Show()
+                newLevelFrame:SetAlpha(1)
+            end,
+            hideTest = function()
+                newLevelFrame:Hide()
+            end,
+            onHide = function()
+                newLevelFrame:Hide()
+                ApplyWidgetPosition()
+            end,
+            module = LevelUpEnhance,
+        })
+    end
+
+    ApplyWidgetPosition()
+
     local eventFrame = CreateFrame("Frame")
     eventFrame:RegisterEvent("PLAYER_LEVEL_UP")
     eventFrame:SetScript("OnEvent", function(self, event, ...)
         if not IsModuleEnabled() then return end
+        if addon.EditorMode and addon.EditorMode:IsActive() then return end
         newLevelFrame.footer:SetText("")
         ShowNewLevelFrame(select(1, ...))
     end)
@@ -117,6 +171,10 @@ function addon.RestoreLevelUpEnhanceSystem()
     if LevelUpEnhance.newLevelFrame then
         LevelUpEnhance.newLevelFrame:Hide()
         LevelUpEnhance.newLevelFrame:SetScript("OnUpdate", nil)
+    end
+
+    if anchor then
+        anchor:Hide()
     end
 
     LevelUpEnhance.eventFrame = nil

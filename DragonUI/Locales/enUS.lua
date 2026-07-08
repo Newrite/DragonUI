@@ -204,6 +204,7 @@ L["Buff"] = true
 L["Debuffs"] = "Debuff"
 L["WeaponEnchants"] = "Weapon Enchants"
 L["Loot Roll"] = true
+L["LevelUpFrame"] = "Level Up"
 L["Quest Tracker"] = true
 
 -- Mover tooltip strings
