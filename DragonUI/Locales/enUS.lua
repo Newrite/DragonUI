@@ -202,6 +202,7 @@ L["AttackbarEnemy"] = "Enemy Swing Timer"
 L["TooltipWidget"] = "Tooltip"
 L["Buff"] = true
 L["Debuffs"] = "Debuff"
+L["Auras"] = true
 L["WeaponEnchants"] = "Weapon Enchants"
 L["Loot Roll"] = true
 L["LevelUpFrame"] = "Level Up"

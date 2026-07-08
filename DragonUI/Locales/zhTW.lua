@@ -151,3 +151,6 @@ L["Level %d"] = "Level %d"
 L["Version Check"] = "版本檢查"
 L["Broadcast and detect addon version updates across group members"] = "檢測隊伍成員間插件版本更新，通過廣播和接收版本資訊"
 
+-- Aura labels
+L["Auras"] = "光環"
+

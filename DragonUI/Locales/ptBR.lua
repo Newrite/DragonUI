@@ -151,3 +151,6 @@ L["Level %d"] = "Level %d"
 L["Version Check"] = "Verificação de versão"
 L["Broadcast and detect addon version updates across group members"] = "Detecta atualizações de versão do addon entre membros do grupo transmitindo e recebendo a versão"
 
+-- Aura labels
+L["Auras"] = "Auras"
+

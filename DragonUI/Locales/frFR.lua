@@ -152,3 +152,6 @@ L["Broadcast and detect addon version updates across group members"] = "Détecte
 L["Version Check"] = "Vérification de version"
 L["Broadcast and detect addon version updates across group members"] = "Détecte les mises à jour de l'addon entre les membres du groupe en envoyant et recevant la version"
 
+
+-- Aura labels
+L["Auras"] = "Auras"

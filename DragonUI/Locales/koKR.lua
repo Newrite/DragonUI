@@ -199,10 +199,11 @@ L["PlayerCastbar"] = "ì‹œì „ë°”"
 L["TooltipWidget"] = "íˆ´íŒ"
 L["Buff"] = "버프"
 L["Debuffs"] = "디버프"
+L["Auras"] = "버프/디버프"
 L["WeaponEnchants"] = "ë¬´ê¸° ê°•í™” íš¨ê³¼"
 L["Loot Roll"] = "ì£¼ì‚¬ìœ„ êµ´ë¦¼"
 L["LevelUpFrame"] = "레벨 업"
-L["Quest Tracker"] = "í€˜ìŠ¤íŠ¸ ì¶"ì "ê¸°"
+L["Quest Tracker"] = "퀘스트 추적"
 
 -- Mover tooltip strings
 L["Drag to move"] = "ë“œëž˜ê·¸ ì´ë™"
