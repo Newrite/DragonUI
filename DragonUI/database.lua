@@ -195,6 +195,12 @@ local defaults = {
                 posX = 0,
                 posY = -128,
             },
+            bnToast = {
+                anchor = "CENTER",
+                posX = 0,
+                posY = 200,
+                custom_position = false,
+            },
         },
         -- Quest Tracker
         questtracker = {
