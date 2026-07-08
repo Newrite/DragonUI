@@ -907,6 +907,7 @@ do
     -- Event handlers
     local eventFrame = CreateFrame("Frame")
     eventFrame:SetScript("OnEvent", function(self, event, ...)
+        if not CombuctorModule.applied then return end
         if event == "PLAYER_LOGIN" then
             forEachBag(updateBag)
         elseif event == "BAG_UPDATE" then
@@ -968,6 +969,7 @@ do
     end)
 
     bankWatcher:SetScript("OnEvent", function(self, event)
+        if not CombuctorModule.applied then return end
         if event == "BANKFRAME_OPENED" then
             self:Show()
         else

@@ -250,6 +250,35 @@ function addon.RefreshHpLowAlertSystem()
 end
 
 -- -----------------------------------------------
+-- Self-initialization (required by Guia_NewModules)
+-- -----------------------------------------------
+local initFrame = CreateFrame("Frame")
+initFrame:RegisterEvent("ADDON_LOADED")
+initFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+initFrame:SetScript("OnEvent", function(self, event, arg1)
+    if event == "ADDON_LOADED" and arg1 == "DragonUI" then
+        if not EnsureConfig() then return end
+        addon:After(0.5, function()
+            if addon.db and addon.db.RegisterCallback then
+                addon.db.RegisterCallback(addon, "OnProfileChanged", function()
+                    addon.RefreshHpLowAlertSystem()
+                end)
+                addon.db.RegisterCallback(addon, "OnProfileCopied", function()
+                    addon.RefreshHpLowAlertSystem()
+                end)
+                addon.db.RegisterCallback(addon, "OnProfileReset", function()
+                    addon.RefreshHpLowAlertSystem()
+                end)
+            end
+        end)
+
+    elseif event == "PLAYER_ENTERING_WORLD" then
+        if not EnsureConfig() then return end
+        addon.RefreshHpLowAlertSystem()
+    end
+end)
+
+-- -----------------------------------------------
 -- Slash command  /lhp → DragonUI config
 -- -----------------------------------------------
 SLASH_LOWHPALERT1 = "/lhp"

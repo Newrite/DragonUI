@@ -20,6 +20,14 @@ local BagSkinModule = {
     originalStates = {},
 }
 
+-- ============================================================================
+-- CONFIGURATION ACCESSORS
+-- ============================================================================
+
+local function IsModuleEnabled()
+    return addon:IsModuleEnabled("bags_skin")
+end
+
 -- Register with ModuleRegistry
 if addon.RegisterModule then
     addon:RegisterModule("bags_skin", BagSkinModule,
@@ -518,7 +526,7 @@ end
 -- ============================================================================
 
 local function OnProfileChanged()
-    if addon.IsModuleEnabled and addon:IsModuleEnabled('bags_skin') then
+    if IsModuleEnabled() then
         if not BagSkinModule.applied then
             ApplyBagSkin()
         end
@@ -540,7 +548,7 @@ initFrame:RegisterEvent('PLAYER_ENTERING_WORLD')
 
 initFrame:SetScript('OnEvent', function(self, event, arg1)
     if event == 'ADDON_LOADED' and arg1 == 'DragonUI' then
-        if not addon.IsModuleEnabled or not addon:IsModuleEnabled('bags_skin') then return end
+        if not IsModuleEnabled() then return end
 
         -- Register profile callbacks after AceDB is ready
         addon:After(0.5, function()
@@ -552,7 +560,7 @@ initFrame:SetScript('OnEvent', function(self, event, arg1)
         end)
 
     elseif event == 'PLAYER_ENTERING_WORLD' then
-        if not addon.IsModuleEnabled or not addon:IsModuleEnabled('bags_skin') then return end
+        if not IsModuleEnabled() then return end
         ApplyBagSkin()
     end
 end)
