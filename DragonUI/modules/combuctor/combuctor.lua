@@ -45,8 +45,8 @@ local BACKPACK_CONTAINER = BACKPACK_CONTAINER
 local BANK_CONTAINER = BANK_CONTAINER
 local NUM_BANKGENERIC_SLOTS = NUM_BANKGENERIC_SLOTS
 
-local TEXTURE_ITEM_QUEST_BORDER = TEXTURE_ITEM_QUEST_BORDER or [[Interface\ContainerFrame\UI-Icon-QuestBorder]]
-local TEXTURE_ITEM_QUEST_BANG = TEXTURE_ITEM_QUEST_BANG or [[Interface\ContainerFrame\UI-Icon-QuestBang]]
+local TEXTURE_ITEM_QUEST_BORDER = TEXTURE_ITEM_QUEST_BORDER or [[Interface\ContainerFrame\UI-ContainerQuestBorder]]
+local TEXTURE_ITEM_QUEST_BANG = TEXTURE_ITEM_QUEST_BANG or [[Interface\ContainerFrame\UI-ContainerQuestBorder]]
 
 local ItemSearch = LibStub("LibItemSearch-1.0")
 local playerName = UnitName("player")
@@ -1547,32 +1547,8 @@ do
 
         local itemID = self:GetNextItemSlotID()
         local item = self:Bind(CreateFrame("Button", format("DragonUI_CombuctorItem%d", itemID), nil, "ContainerFrameItemButtonTemplate"))
-        local itemName = item:GetName()
 
-        -- Move $parentIconTexture to OVERLAY so it renders above NormalTexture
-        local templateIcon = _G[itemName .. "IconTexture"]
-        if templateIcon then
-            templateIcon:SetDrawLayer("OVERLAY", 2)
-        end
-
-        -- Bring $parentCount above IconTexture so stack numbers are always visible
-        local templateCount = _G[itemName .. "Count"]
-        if templateCount then
-            templateCount:SetDrawLayer("OVERLAY", 5)
-        end
-
-        -- Kill PaperDoll overlays only (keep ContainerFrame textures intact)
-        for _, region in ipairs({ item:GetRegions() }) do
-            if region:GetObjectType() == 'Texture' then
-                local tex = region:GetTexture() or ''
-                if tex:find('PaperDoll') then
-                    region:SetTexture(nil)
-                    region:SetAlpha(0)
-                    region:Hide()
-                end
-            end
-        end
-
+        local name = item:GetName()
         item:SetID(itemID)
         item:SetScript("OnEnter", self.OnEnter)
         item:SetScript("OnLeave", self.OnLeave)
@@ -1582,9 +1558,35 @@ do
         item:RegisterForClicks("anyUp")
         item.UpdateTooltip = nil
 
+        -- Quality border (gold ring for uncommon+ items)
+        local border = item:CreateTexture(nil, "OVERLAY")
+        border:SetWidth(67)
+        border:SetHeight(67)
+        border:SetPoint("CENTER", item, "CENTER", 0, -1)
+        border:SetTexture([[Interface\Buttons\UI-ActionButton-Border]])
+        border:SetBlendMode("ADD")
+        border:SetDrawLayer("OVERLAY", 3)
+        border:Hide()
+        item.border = border
+
+        -- Kill template's built-in IconQuestTexture to avoid overlap
+        local templateQuest = _G[name .. "IconQuestTexture"]
+        if templateQuest then
+            templateQuest:SetTexture(nil)
+            templateQuest:Hide()
+        end
+
+        -- Quest item border (yellow overlay for quest items)
+        local questBorder = item:CreateTexture(nil, "OVERLAY")
+        questBorder:SetSize(item:GetWidth(), item:GetHeight())
+        questBorder:SetPoint("CENTER")
+        questBorder:SetTexture(TEXTURE_ITEM_QUEST_BORDER)
+        questBorder:SetDrawLayer("OVERLAY", 4)
+        questBorder:Hide()
+        item.questBorder = questBorder
+
         -- Cooldown
-        local itemName = item:GetName()
-        item.cooldown = _G[itemName .. "Cooldown"]
+        item.cooldown = _G[name .. "Cooldown"]
 
         return item
     end
@@ -1705,6 +1707,7 @@ do
         self:SetCount(count)
         self:SetLocked(locked)
         self:SetReadable(readable)
+        self:SetBorderQuality(quality)
         self:UpdateSlotColor()
         self:UpdateCooldown()
         if GameTooltip:IsOwned(self) and self.UpdateTooltip then
@@ -1764,6 +1767,45 @@ do
             CooldownFrame_SetTimer(self.cooldown, 0, 0, 0)
             SetItemButtonTextureVertexColor(self, 1, 1, 1)
         end
+    end
+
+    function ItemSlot:SetBorderQuality(quality)
+        local border = self.border
+        local qBorder = self.questBorder
+
+        -- Quest item check
+        local isQuestItem, isQuestStarter = self:IsQuestItem()
+        if isQuestItem then
+            qBorder:SetTexture(TEXTURE_ITEM_QUEST_BORDER)
+            qBorder:SetAlpha(0.5)
+            qBorder:Show()
+            border:Hide()
+            return
+        end
+        if isQuestStarter then
+            qBorder:SetTexture(TEXTURE_ITEM_QUEST_BANG)
+            qBorder:SetAlpha(0.5)
+            qBorder:Show()
+            border:Hide()
+            return
+        end
+
+        -- Quality border
+        if self:GetItem() and quality and quality > 1 then
+            local r, g, b = GetItemQualityColor(quality)
+            border:SetVertexColor(r, g, b, 0.5)
+            border:Show()
+            qBorder:Hide()
+            return
+        end
+
+        qBorder:Hide()
+        border:Hide()
+    end
+
+    function ItemSlot:UpdateBorder()
+        local _, _, _, quality = self:GetItemSlotInfo()
+        self:SetBorderQuality(quality)
     end
 
     -- UpdateTooltip is set to nil per-instance in Create() to prevent
@@ -2577,6 +2619,12 @@ do
         f:SetHeight(19)
         f:SetWidth(90)
         f:SetScript("OnShow", self.OnShow)
+        f:SetScript("OnEvent", function(self, event)
+            if event == "PLAYER_MONEY" then
+                self:Update()
+            end
+        end)
+        f:RegisterEvent("PLAYER_MONEY")
         f:SetFrameLevel(f:GetFrameLevel() + 4)
 
         -- Copper (ancla a la derecha)
@@ -3530,9 +3578,6 @@ local function CombuctorSkinItems(frame)
             for _, subchild in ipairs({ child:GetChildren() }) do
                 if subchild:GetObjectType() == 'Button' and subchild:GetName() then
                     if subchild:GetName():find('DragonUI_CombuctorItem') then
-                        -- Force re-apply by clearing both guards
-                        subchild._BagSkin_Applied = nil
-                        subchild._BagSkin_CombuctorCleaned = nil
                         helpers.RetailItemSlot(subchild)
                     end
                 end

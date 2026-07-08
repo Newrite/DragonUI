@@ -72,6 +72,10 @@ local T = {
     bag_mask          = assets .. 'bagmask',
 }
 
+-- Single sublayer for item icon — used by both RetailItemSlot and the
+-- SetItemButtonTexture hook so they never fight over layers.
+local ICON_OVERLAY_SUBLEVEL = 1
+
 -- ============================================================================
 -- HELPER: Apply nineslice to a frame (retail-style border)
 -- ============================================================================
@@ -186,8 +190,6 @@ local function RetailItemSlot(btn)
     btn._BagSkin_Applied = true
 
     -- NormalTexture → slot background (bagsitemslot2x at ARTWORK layer).
-    -- The icon texture ($parentIconTexture) is handled by the
-    -- SetItemButtonTexture hook in BlizzardApply(), which moves it to OVERLAY.
     local nt = btn:GetNormalTexture()
     if nt then
         nt:SetTexture(T.slot_bg)
@@ -196,6 +198,19 @@ local function RetailItemSlot(btn)
         nt:SetDrawLayer('ARTWORK', 0)
         nt:Show()
         nt:SetAlpha(1)
+    end
+
+    -- IconTexture → OVERLAY layer (above NormalTexture at ARTWORK).
+    -- Must be explicit here because the SetItemButtonTexture hook in
+    -- BlizzardApply() may not fire for all code paths, leaving the
+    -- icon hidden behind the NormalTexture background.
+    local name = btn:GetName()
+    if name then
+        local icon = _G[name .. 'IconTexture']
+        if icon then
+            icon:SetDrawLayer('OVERLAY', ICON_OVERLAY_SUBLEVEL)
+            icon:Show()
+        end
     end
 
     -- Bring Count above IconTexture so stack numbers are always visible.
@@ -436,6 +451,7 @@ local function BlizzardApply()
     -- above NormalTexture (which stays at ARTWORK). Without this, the icon
     -- ($parentIconTexture, also at ARTWORK) gets covered by NormalTexture
     -- because the template creates NormalTexture after iconTexture.
+    -- Uses ICON_OVERLAY_SUBLEVEL to match RetailItemSlot — no layer conflicts.
     local origSetItemButtonTexture = _G.SetItemButtonTexture
     _G.SetItemButtonTexture = function(button, texture)
         origSetItemButtonTexture(button, texture)
@@ -443,7 +459,7 @@ local function BlizzardApply()
         if name then
             local icon = _G[name .. 'IconTexture']
             if icon then
-                icon:SetDrawLayer('OVERLAY', 0)
+                icon:SetDrawLayer('OVERLAY', ICON_OVERLAY_SUBLEVEL)
                 icon:Show()
             end
             -- Keep Count above icon (same as RetailItemSlot does)
