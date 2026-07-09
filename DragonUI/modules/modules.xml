@@ -89,4 +89,7 @@
 
     <!-- Version Check module (cross-player version broadcast) -->
     <Script file="versioncheck.lua"/>
+
+    <!-- Talent Inspector module (CoA talent tree viewer in inspect) -->
+    <Script file="inspector.lua"/>
 </Ui>

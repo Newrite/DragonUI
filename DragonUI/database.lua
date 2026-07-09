@@ -966,6 +966,10 @@ local defaults = {
             versioncheck = {
                 enabled = true, -- Cross-player version broadcast and update detection
             },
+            inspector = {
+                enabled = true, -- CoA talent tree viewer in inspect frame
+                scale = 0.75, -- Scale of the inspector panel
+            },
             hp_low_alert = {
                 enabled = true, -- Screen flash and sound when HP drops below threshold
                 threshold = 30, -- HP percentage threshold to trigger warning
