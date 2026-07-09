@@ -326,46 +326,22 @@ local EdgeLines = {}
 
 function EdgeLines.Draw(content, edges, centers, thickness, linePool)
     thickness = thickness or 3
-    local half = thickness / 2
     local used = 0
+    local dotW = math.max(2, thickness + 1)
+    local glowW = thickness + 4
 
-    local function seg(x, y, w, h, known)
+    local function dot(x, y, w, r, g, b, a)
         used = used + 1
         local t = linePool[used]
         if not t then
             t = content:CreateTexture(nil, "BACKGROUND")
             linePool[used] = t
         end
-        if known then
-            t:SetTexture(0.25, 0.85, 0.80, 0.85)
-        else
-            t:SetTexture(0.30, 0.30, 0.36, 0.45)
-        end
+        t:SetTexture(r, g, b, a)
         t:ClearAllPoints()
-        t:SetPoint("TOPLEFT", content, "TOPLEFT", x, y)
+        t:SetPoint("CENTER", content, "TOPLEFT", x, y)
         t:SetWidth(w)
-        t:SetHeight(h)
-        t:Show()
-    end
-
-    -- glow layer (wider, under the main line)
-    local function glow_seg(x, y, w, h, known)
-        used = used + 1
-        local t = linePool[used]
-        if not t then
-            t = content:CreateTexture(nil, "BACKGROUND")
-            linePool[used] = t
-        end
-        if known then
-            t:SetTexture(0.15, 0.55, 0.55, 0.25)
-        else
-            t:Hide()
-            return
-        end
-        t:ClearAllPoints()
-        t:SetPoint("TOPLEFT", content, "TOPLEFT", x, y)
-        t:SetWidth(w)
-        t:SetHeight(h)
+        t:SetHeight(w)
         t:Show()
     end
 
@@ -373,19 +349,24 @@ function EdgeLines.Draw(content, edges, centers, thickness, linePool)
         local a, b = centers[e.from], centers[e.to]
         if a and b then
             local known = a.known and b.known
-            local glowW = thickness + 4
-            local glowHalf = glowW / 2
-            local yTop = math.max(a.y, b.y)
-            local vh = math.abs(a.y - b.y)
-            if vh > 0 then
-                glow_seg(a.x - glowHalf, yTop, glowW, vh, known)
-                seg(a.x - half, yTop, thickness, vh, known)
-            end
-            local xLeft = math.min(a.x, b.x)
-            local hw = math.abs(a.x - b.x)
-            if hw > 0 then
-                glow_seg(xLeft, b.y + glowHalf, hw, glowW, known)
-                seg(xLeft, b.y + half, hw, thickness, known)
+            local dx, dy = b.x - a.x, b.y - a.y
+            local dist = math.sqrt(dx * dx + dy * dy)
+            if dist >= 1 then
+                local nDot = math.max(2, math.floor(dist / 2))
+                local stepX, stepY = dx / nDot, dy / nDot
+
+                for i = 0, nDot do
+                    local px = a.x + i * stepX
+                    local py = a.y + i * stepY
+                    if known then
+                        dot(px, py, glowW, 0.15, 0.55, 0.55, 0.25)
+                    end
+                    if known then
+                        dot(px, py, dotW, 0.25, 0.85, 0.80, 0.85)
+                    else
+                        dot(px, py, dotW, 0.30, 0.30, 0.36, 0.45)
+                    end
+                end
             end
         end
     end
@@ -652,7 +633,7 @@ function TP.Get()
     frame.classIcon = classIcon
 
     local cmp = CreateFrame("Button", nil, frame)
-    cmp:SetWidth(84); cmp:SetHeight(20)
+    cmp:SetWidth(130); cmp:SetHeight(35)
     cmp:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -PAD, PAD + 2)
     cmp:SetNormalTexture(BTN_UP)
     cmp:SetPushedTexture(BTN_DOWN)
@@ -660,7 +641,7 @@ function TP.Get()
     local cmpNT = cmp:GetNormalTexture()
     if cmpNT then cmpNT:SetVertexColor(1, 1, 1) end
     cmp.txt = cmp:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    cmp.txt:SetAllPoints(cmp)
+    cmp.txt:SetPoint("CENTER", cmp, "CENTER", -15, 5)
     cmp.txt:SetText("Compare")
     cmp:Hide()
     frame.compareBtn = cmp
@@ -917,7 +898,7 @@ ComparePanel = CP
 function CP.Get()
     if cpFrame then return cpFrame end
     cpFrame = CreateFrame("Frame", "DragonUIInspectorCompare", UIParent)
-    cpFrame:SetWidth(320)
+    cpFrame:SetWidth(360)
     cpFrame:SetHeight(400)
     AddInspectorBorder(cpFrame)
     cpFrame:SetFrameStrata("HIGH")
