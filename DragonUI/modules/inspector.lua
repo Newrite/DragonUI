@@ -1222,14 +1222,10 @@ end
 
 function addon.RefreshInspectorSystem()
     if not EnsureConfig() then return end
-
-    if IsModuleEnabled() then
-        if not InspectorModule.applied then
-            addon.ApplyInspectorSystem()
-            return
-        end
-    else
+    if not IsModuleEnabled() then
         addon.RestoreInspectorSystem()
+    else
+        addon.ApplyInspectorSystem()
     end
 end
 
@@ -1516,19 +1512,22 @@ initFrame:RegisterEvent("ADDON_LOADED")
 initFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 initFrame:SetScript("OnEvent", function(self, event, arg1)
     if event == "ADDON_LOADED" and arg1 == "DragonUI" then
+        if not IsModuleEnabled() then return end
         if not EnsureConfig() then return end
 
-        if addon.db and addon.db.RegisterCallback then
-            addon.db.RegisterCallback(addon, "OnProfileChanged", function()
-                addon.RefreshInspectorSystem()
-            end)
-            addon.db.RegisterCallback(addon, "OnProfileCopied", function()
-                addon.RefreshInspectorSystem()
-            end)
-            addon.db.RegisterCallback(addon, "OnProfileReset", function()
-                addon.RefreshInspectorSystem()
-            end)
-        end
+        addon:After(0.5, function()
+            if addon.db and addon.db.RegisterCallback then
+                addon.db.RegisterCallback(addon, "OnProfileChanged", function()
+                    addon.RefreshInspectorSystem()
+                end)
+                addon.db.RegisterCallback(addon, "OnProfileCopied", function()
+                    addon.RefreshInspectorSystem()
+                end)
+                addon.db.RegisterCallback(addon, "OnProfileReset", function()
+                    addon.RefreshInspectorSystem()
+                end)
+            end
+        end)
 
     elseif event == "PLAYER_ENTERING_WORLD" then
         if not IsModuleEnabled() then return end
