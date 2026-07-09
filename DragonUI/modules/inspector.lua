@@ -339,8 +339,9 @@ function EdgeLines.Draw(content, edges, centers, thickness, linePool, nodeSize)
             used = used + 1
             local conn = linePool[used]
             if not conn then
-                conn = CreateFrame("Frame", nil, content, "CALineConnectionTemplate")
-                conn:SetFrameLevel(1)
+                conn = CreateFrame("Frame", nil, content.linesLayer, "CALineConnectionTemplate")
+                conn.Arrow:SetParent(content)
+                conn.Arrow:SetFrameLevel(20)
                 linePool[used] = conn
             end
 
@@ -687,6 +688,12 @@ function TP.Get()
     frame.buttons = {}
     frame.buttonsById = {}
     frame.linePool = {}
+
+    local linesLayer = CreateFrame("Frame", nil, content)
+    linesLayer:SetFrameLevel(0)
+    linesLayer:SetAllPoints(content)
+    content.linesLayer = linesLayer
+
     frame:Hide()
     return frame
 end
@@ -936,6 +943,11 @@ function CP.Get()
     cpFrame.linePool = {}
     cpFrame.buttons = {}
     cpFrame.buttonsById = {}
+
+    local cpLinesLayer = CreateFrame("Frame", nil, cpContent)
+    cpLinesLayer:SetFrameLevel(0)
+    cpLinesLayer:SetAllPoints(cpContent)
+    cpContent.linesLayer = cpLinesLayer
 
     cpFrame:Hide()
     return cpFrame
