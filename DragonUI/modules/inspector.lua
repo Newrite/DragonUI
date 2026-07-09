@@ -631,13 +631,13 @@ function TP.Get()
     frame:SetFrameStrata("HIGH")
 
     local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    title:SetPoint("TOP", frame, "TOP", 14, -6)
+    title:SetPoint("TOP", frame, "TOP", 0, -6)
     title:SetText("Talent Tree")
     frame.title = title
 
     local classIconFrame = CreateFrame("Frame", nil, frame)
     classIconFrame:SetSize(94, 94)
-    classIconFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", -25, 27)
+    classIconFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", -25, 35)
     local iconLevel = frame:GetFrameLevel()
     classIconFrame:SetFrameLevel(iconLevel + 10)
     local corner = classIconFrame:CreateTexture(nil, "OVERLAY")
@@ -796,10 +796,13 @@ local function RenderColumns(f, model, order, keyPrefix, headerPrefix, startX, c
     for _, tabName in ipairs(order) do
         local tabInfo = byName[tabName]
         if tabInfo then
+            local colW = (tabInfo.maxX - tabInfo.minX + 1) * cell
+
             headerIndex = headerIndex + 1
             local header = AcquireHeader(f, headerIndex)
             header:ClearAllPoints()
-            header:SetPoint("TOPLEFT", f.content, "TOPLEFT", xOffset, 0)
+            header:SetJustifyH("CENTER")
+            header:SetPoint("TOP", f.content, "TOPLEFT", xOffset + colW / 2, 0)
             local label = (tabName == CLASS and className) or tabName
             header:SetText(headerPrefix .. label)
 
@@ -819,7 +822,6 @@ local function RenderColumns(f, model, order, keyPrefix, headerPrefix, startX, c
                 end
             end
 
-            local colW = (tabInfo.maxX - tabInfo.minX + 1) * cell
             local colH = TAB_HEADER + (tabInfo.maxY - tabInfo.minY + 1) * cell
             if colH > maxColH then maxColH = colH end
             rects[#rects + 1] = { x = xOffset, w = colW }
@@ -1012,9 +1014,8 @@ local function RenderFor(unit, slot)
     if inspectFrame then TP.AttachTo(inspectFrame, current.compare) end
     local specs = {}
     for _, t in ipairs(model.tabs) do if t ~= "Class" then specs[#specs + 1] = t end end
-    local specName = specs[slot]
     local f = TP.Get()
-    f.title:SetText(current.className .. (specName and (" — " .. specName) or ""))
+    f.title:SetText(UnitName(unit))
 
     local _, classFile = UnitClass(unit)
     local CLASS_ICON_ROUND = "Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES-ROUND"
