@@ -280,7 +280,7 @@ function NodeButton.Style(button, node)
         button.glow:Hide()
         button.icon:SetDesaturated(true)
         button.icon:SetVertexColor(0.8, 0.8, 0.8)
-        button.icon:SetAlpha(0.35)
+        button.icon:SetAlpha(1)
         if button.icon.SetMask then
             pcall(button.icon.SetMask, button.icon, artSet.mask)
         end
@@ -327,7 +327,7 @@ local EdgeLines = {}
 function EdgeLines.Draw(content, edges, centers, thickness, linePool)
     thickness = thickness or 3
     local used = 0
-    local dotW = math.max(2, thickness + 1)
+    local dotW = thickness
     local glowW = thickness + 4
 
     local function dot(x, y, w, r, g, b, a)
@@ -352,7 +352,7 @@ function EdgeLines.Draw(content, edges, centers, thickness, linePool)
             local dx, dy = b.x - a.x, b.y - a.y
             local dist = math.sqrt(dx * dx + dy * dy)
             if dist >= 1 then
-                local nDot = math.max(2, math.floor(dist / 2))
+                local nDot = math.max(2, math.floor(dist))
                 local stepX, stepY = dx / nDot, dy / nDot
 
                 for i = 0, nDot do
