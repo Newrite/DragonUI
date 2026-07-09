@@ -343,6 +343,13 @@ local function BuildGeneralSubTab(scroll)
         callback = RefreshNameplates,
     })
 
+    C:AddToggle(opacity, {
+        label = LO["Party/Raid: Full Opacity"],
+        desc = LO["Always show party and raid member nameplates at full opacity, regardless of target or fade settings. Does not affect pets or NPCs."],
+        dbPath = DB .. ".opacityFullParty",
+        callback = RefreshNameplates,
+    })
+
 end
 
 local function BuildBehaviorSubTab(scroll)
@@ -987,6 +994,45 @@ local function BuildBarsSubTab(scroll)
         min = 3, max = 20, step = 1,
         width = 200,
         disabled = IsCastBarDisabled,
+        callback = RefreshNameplates,
+    })
+
+    C:AddToggle(castSection, {
+        label = LO["Show Spell Name"],
+        desc = LO["Show the spell name text on the cast bar."],
+        dbPath = DB .. ".showCastBarSpellName",
+        disabled = IsCastBarDisabled,
+        callback = RefreshAndRebuildNameplates,
+    })
+
+    local function IsSpellNameDisabled()
+        return IsCastBarDisabled() or not C:GetDBValue(DB .. ".showCastBarSpellName")
+    end
+
+    C:AddSlider(castSection, {
+        label = LO["Spell Name Font Size"],
+        dbPath = DB .. ".castBarSpellNameFontSize",
+        min = 6, max = 16, step = 1,
+        width = 200,
+        disabled = IsSpellNameDisabled,
+        callback = RefreshNameplates,
+    })
+
+    C:AddSlider(castSection, {
+        label = LO["Spell Name Offset X"],
+        dbPath = DB .. ".castBarSpellNameOffsetX",
+        min = -50, max = 50, step = 1,
+        width = 200,
+        disabled = IsSpellNameDisabled,
+        callback = RefreshNameplates,
+    })
+
+    C:AddSlider(castSection, {
+        label = LO["Spell Name Offset Y"],
+        dbPath = DB .. ".castBarSpellNameOffsetY",
+        min = -20, max = 20, step = 1,
+        width = 200,
+        disabled = IsSpellNameDisabled,
         callback = RefreshNameplates,
     })
 
