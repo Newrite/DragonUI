@@ -58,8 +58,19 @@ local function SafeCall(fn, ...)
     return ok, res
 end
 
+local VANILLA_CLASSES = {
+    WARRIOR = true, PALADIN = true, HUNTER = true, ROGUE = true,
+    PRIEST = true, DEATHKNIGHT = true, SHAMAN = true, MAGE = true,
+    WARLOCK = true, DRUID = true, HERO = true,
+}
+
 local function HasCoAAPI()
     return _G.C_CharacterAdvancement ~= nil
+end
+
+local function IsVanillaClass(unit)
+    local _, classFile = UnitClass(unit)
+    return classFile and VANILLA_CLASSES[classFile] or false
 end
 
 local assets = addon._dir
@@ -1023,6 +1034,7 @@ end
 
 local function RenderFor(unit, slot)
     if not IsModuleEnabled() then return end
+    if IsVanillaClass(unit) then TP.Hide(); return end
     if not GetInspectFrame() then TP.Hide(); return end
     local className = CAReader.GetClassName(unit)
     if not className then return end
@@ -1135,6 +1147,7 @@ local buildTabWatcher
 function addon.ApplyInspectorSystem()
     if InspectorModule.applied then return end
     if not HasCoAAPI() then return end
+    if IsVanillaClass("player") then return end
     if not EnsureConfig() then return end
 
     eventFrame = CreateFrame("Frame")
