@@ -209,6 +209,7 @@ local NodeButton = {}
 
 function NodeButton.Create(parent)
     local b = CreateFrame("Button", nil, parent)
+    b:SetFrameLevel(10)
     b:SetWidth(NODE_SIZE)
     b:SetHeight(NODE_SIZE)
 
@@ -324,50 +325,69 @@ end
 
 local EdgeLines = {}
 
-function EdgeLines.Draw(content, edges, centers, thickness, linePool)
-    thickness = thickness or 3
+function EdgeLines.Draw(content, edges, centers, thickness, linePool, nodeSize)
+    thickness = thickness or 2
+    nodeSize = nodeSize or 28
     local used = 0
-    local dotW = thickness
-    local glowW = thickness + 4
-
-    local function dot(x, y, w, r, g, b, a)
-        used = used + 1
-        local t = linePool[used]
-        if not t then
-            t = content:CreateTexture(nil, "BACKGROUND")
-            linePool[used] = t
-        end
-        t:SetTexture(r, g, b, a)
-        t:ClearAllPoints()
-        t:SetPoint("CENTER", content, "TOPLEFT", x, y)
-        t:SetWidth(w)
-        t:SetHeight(w)
-        t:Show()
-    end
+    local contentH = content:GetHeight()
+    if contentH == 0 then contentH = 1 end
 
     for _, e in ipairs(edges) do
         local a, b = centers[e.from], centers[e.to]
         if a and b then
             local known = a.known and b.known
-            local dx, dy = b.x - a.x, b.y - a.y
-            local dist = math.sqrt(dx * dx + dy * dy)
-            if dist >= 1 then
-                local nDot = math.max(2, math.floor(dist))
-                local stepX, stepY = dx / nDot, dy / nDot
-
-                for i = 0, nDot do
-                    local px = a.x + i * stepX
-                    local py = a.y + i * stepY
-                    if known then
-                        dot(px, py, glowW, 0.15, 0.55, 0.55, 0.25)
-                    end
-                    if known then
-                        dot(px, py, dotW, 0.25, 0.85, 0.80, 0.85)
-                    else
-                        dot(px, py, dotW, 0.30, 0.30, 0.36, 0.45)
-                    end
-                end
+            used = used + 1
+            local conn = linePool[used]
+            if not conn then
+                conn = CreateFrame("Frame", nil, content, "CALineConnectionTemplate")
+                conn:SetFrameLevel(1)
+                linePool[used] = conn
             end
+
+            local sx, sy = a.x, a.y + contentH
+            local ex, ey = b.x, b.y + contentH
+
+            local sizeX = math.abs(sx - ex)
+            local sizeY = math.abs(sy - ey)
+            conn:SetSize(math.max(sizeX, 4), math.max(sizeY, 4))
+
+            local left = math.min(sx, ex)
+            local bottom = math.min(sy, ey)
+            conn:SetPoint("BOTTOMLEFT", left, bottom)
+
+            local rpx = sx - left
+            local rpy = sy - bottom
+            local rqx = ex - left
+            local rqy = ey - bottom
+
+            conn.Line1:SetStartPoint(Vector2D(rpx, rpy))
+            conn.Line1:SetEndPoint(Vector2D(rqx, rqy))
+            conn.Line1:Draw()
+
+            conn.Line2:SetStartPoint(Vector2D(rpx, rpy))
+            conn.Line2:SetEndPoint(Vector2D(rqx, rqy))
+            conn.Line2:Draw()
+
+            if known then
+                conn.Line2:SetVertexColor(0.25, 0.85, 0.80, 0.85)
+                conn.Arrow.Texture:SetTexture("Interface\\TalentFrame\\talents-arrow-head-yellow")
+            else
+                conn.Line2:SetVertexColor(0.30, 0.30, 0.36, 0.45)
+                conn.Arrow.Texture:SetTexture("Interface\\TalentFrame\\talents-arrow-head-gray")
+            end
+
+            local dx, dy = ex - sx, ey - sy
+            local dist = math.sqrt(dx * dx + dy * dy)
+            if dist > 0 then
+                local deg = math.deg(math.atan2(dy, dx))
+                local radians = math.rad(deg - 90)
+                local ux, uy = math.cos(math.atan2(dy, dx)), math.sin(math.atan2(dy, dx))
+                local offset = nodeSize / 2 + 4
+                conn.Arrow:SetPoint("CENTER", conn, "BOTTOMLEFT", rpx + ux * offset, rpy + uy * offset)
+                conn.Arrow.Texture:SetRotation(radians)
+            end
+
+            conn:Show()
         end
     end
 
@@ -878,7 +898,7 @@ function TP.Render(model, slot, className, classFile)
     end
     local edges = {}
     for _, e in ipairs(model.edges) do edges[#edges + 1] = { from = "t" .. e.from, to = "t" .. e.to } end
-    EdgeLines.Draw(f.content, edges, centers, 2, f.linePool)
+    EdgeLines.Draw(f.content, edges, centers, 2, f.linePool, iconSize)
 
     DrawDividers(f, rects, maxColH)
 
@@ -954,7 +974,7 @@ function CP.Render(model, slot, className, classFile)
     end
     local edges = {}
     for _, e in ipairs(model.edges) do edges[#edges + 1] = { from = "m" .. e.from, to = "m" .. e.to } end
-    EdgeLines.Draw(f.content, edges, centers, 2, f.linePool)
+    EdgeLines.Draw(f.content, edges, centers, 2, f.linePool, iconSize)
     DrawDividers(f, rects, maxColH)
 
     local maxPanelInner = 600
