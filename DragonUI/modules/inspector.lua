@@ -785,7 +785,22 @@ local function ShownCols(model, order)
     return cols, tabs
 end
 
-local function RenderColumns(f, model, order, keyPrefix, headerPrefix, startX, cell, iconSize, btnIndex, headerIndex, rects, placed, className)
+local function SpecDisplayName(classFile, tabName)
+    if tabName == "Class" then return nil end
+    if not C_ClassInfo or not C_ClassInfo.GetAllSpecs then return tabName end
+    local ok, specs = pcall(C_ClassInfo.GetAllSpecs, classFile)
+    if not (ok and type(specs) == "table") then return tabName end
+    local upperTab = tabName:upper()
+    for _, s in ipairs(specs) do
+        if s == upperTab then
+            local ok2, info = pcall(C_ClassInfo.GetSpecInfo, classFile, s)
+            if ok2 and info and info.Name then return info.Name end
+        end
+    end
+    return tabName
+end
+
+local function RenderColumns(f, model, order, keyPrefix, headerPrefix, startX, cell, iconSize, btnIndex, headerIndex, rects, placed, className, classFile)
     local bounds = TreeModel.Bounds(model)
     local byName = {}
     for _, ti in ipairs(bounds.tabs) do byName[ti.name] = ti end
@@ -803,7 +818,7 @@ local function RenderColumns(f, model, order, keyPrefix, headerPrefix, startX, c
             header:ClearAllPoints()
             header:SetJustifyH("CENTER")
             header:SetPoint("TOP", f.content, "TOPLEFT", xOffset + colW / 2, 0)
-            local label = (tabName == CLASS and className) or tabName
+            local label = (tabName == CLASS and className) or SpecDisplayName(classFile, tabName)
             header:SetText(headerPrefix .. label)
 
             for id, node in pairs(model.nodes) do
@@ -852,7 +867,7 @@ local function DrawDividers(f, rects, height)
     end
 end
 
-function TP.Render(model, slot, className)
+function TP.Render(model, slot, className, classFile)
     local f = TP.Get()
     for i = 1, #f.buttons do f.buttons[i]:Hide() end
     if f.headers then for i = 1, #f.headers do f.headers[i]:Hide() end end
@@ -869,7 +884,7 @@ function TP.Render(model, slot, className)
     local iconSize = math.max(14, cell - 8)
 
     local rects, placed = {}, {}
-    local x, maxColH = RenderColumns(f, model, order, "t", "", 0, cell, iconSize, 0, 0, rects, placed, className)
+    local x, maxColH = RenderColumns(f, model, order, "t", "", 0, cell, iconSize, 0, 0, rects, placed, className, classFile)
 
     local contentW = math.max(1, x - TAB_COL_GAP)
     local contentH = math.max(1, maxColH + 10)
@@ -933,7 +948,7 @@ function CP.Hide()
     if cpFrame then cpFrame:Hide() end
 end
 
-function CP.Render(model, slot, className)
+function CP.Render(model, slot, className, classFile)
     local f = CP.Get()
     for i = 1, #f.buttons do f.buttons[i]:Hide() end
     if f.headers then for i = 1, #f.headers do f.headers[i]:Hide() end end
@@ -946,7 +961,7 @@ function CP.Render(model, slot, className)
     local iconSize = math.max(14, cell - 8)
 
     local rects, placed = {}, {}
-    local x, maxColH = RenderColumns(f, model, order, "m", "YOU · ", 0, cell, iconSize, 0, 0, rects, placed, className)
+    local x, maxColH = RenderColumns(f, model, order, "m", "YOU · ", 0, cell, iconSize, 0, 0, rects, placed, className, classFile)
     local contentW = math.max(1, x - TAB_COL_GAP)
     local contentH = math.max(1, maxColH + 10)
     cpContent:SetWidth(contentW)
@@ -1018,6 +1033,7 @@ local function RenderFor(unit, slot)
     f.title:SetText(UnitName(unit))
 
     local _, classFile = UnitClass(unit)
+
     local CLASS_ICON_ROUND = "Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES-ROUND"
     local roundCoords = CLASS_ICON_TCOORDS_ROUND and CLASS_ICON_TCOORDS_ROUND[classFile]
     if roundCoords then
@@ -1075,14 +1091,15 @@ local function RenderFor(unit, slot)
             if #myTree > 0 then
                 local myBuild = CAReader.GetPlayerBuild(mySlot, myTree)
                 local myModel = TreeModel.Build(myTree, myBuild)
-                CP.Render(myModel, mySlot, myClass)
+                local _, myClassFile = UnitClass("player")
+                CP.Render(myModel, mySlot, myClass, myClassFile)
             end
         end
     else
         CP.Hide()
     end
 
-    TP.Render(model, slot, current.className)
+    TP.Render(model, slot, current.className, classFile)
     TP.Show()
 end
 
