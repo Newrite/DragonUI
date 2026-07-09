@@ -655,7 +655,7 @@ function TP.Get()
 
     local cmp = CreateFrame("Button", nil, frame)
     cmp:SetWidth(130); cmp:SetHeight(35)
-    cmp:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -PAD, PAD + 2)
+    cmp:SetPoint("BOTTOM", frame, "BOTTOM", 0, PAD + 2)
     cmp:SetNormalTexture(BTN_UP)
     cmp:SetPushedTexture(BTN_DOWN)
     cmp:SetHighlightTexture(BTN_HIGHLIGHT)
@@ -669,7 +669,7 @@ function TP.Get()
 
     frame:SetScale(0.83)
     frame.specRow = CreateFrame("Frame", nil, frame)
-    frame.specRow:SetPoint("RIGHT", cmp, "LEFT", -4, 0)
+    frame.specRow:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -PAD, PAD)
     frame.specRow:SetHeight(SPEC_H)
     frame.specRow:SetWidth(240)
     frame.specButtons = {}
@@ -749,7 +749,7 @@ function TP.SetSpecs(specs, current, onClick)
     if not specs or #specs == 0 then return end
 
     local dd = CreateFrame("Frame", "DragonUIInspectorSpecDropDown", f.specRow, "UIDropDownMenuTemplate")
-    dd:SetPoint("LEFT", f.specRow, "LEFT", -16, 0)
+    dd:SetPoint("RIGHT", f.specRow, "RIGHT", 16, 0)
     f.specDropdown = dd
 
     local label = current and "Spec " .. tostring(current) or "Spec"
