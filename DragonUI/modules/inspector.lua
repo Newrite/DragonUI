@@ -714,7 +714,13 @@ end
 
 function TP.Show() TP.Get():Show() end
 function TP.Hide()
-    if frame then frame:Hide() end
+    if frame then
+        if frame.specDropdown then
+            frame.specDropdown:Hide()
+            frame.specDropdown = nil
+        end
+        frame:Hide()
+    end
     if ComparePanel then ComparePanel.Hide() end
 end
 
@@ -733,31 +739,40 @@ end
 function TP.SetSpecs(specs, current, onClick)
     local f = TP.Get()
     for i = 1, #f.specButtons do f.specButtons[i]:Hide() end
-    local x = 0
-    for i, slot in ipairs(specs or {}) do
-        local b = f.specButtons[i]
-        if not b then
-            b = CreateFrame("Button", nil, f.specRow)
-            b:SetWidth(28); b:SetHeight(20)
-            b:SetNormalTexture(TAB_INACTIVE)
-            b:SetPushedTexture(TAB_ACTIVE)
-            b:SetHighlightTexture(BTN_HIGHLIGHT)
-            b.txt = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            b.txt:SetAllPoints(b)
-            f.specButtons[i] = b
-        end
-        b:ClearAllPoints()
-        b:SetPoint("LEFT", f.specRow, "LEFT", x, 0)
-        b.txt:SetText(tostring(slot))
-        if slot == current then
-            b:SetNormalTexture(TAB_ACTIVE)
-        else
-            b:SetNormalTexture(TAB_INACTIVE)
-        end
-        b:SetScript("OnClick", function() if onClick then onClick(slot) end end)
-        b:Show()
-        x = x + 32
+
+    if f.specDropdown then
+        CloseDropDownMenus()
+        f.specDropdown:Hide()
+        f.specDropdown = nil
     end
+
+    if not specs or #specs == 0 then return end
+
+    local dd = CreateFrame("Frame", "DragonUIInspectorSpecDropDown", f.specRow, "UIDropDownMenuTemplate")
+    dd:SetPoint("LEFT", f.specRow, "LEFT", -16, 0)
+    f.specDropdown = dd
+
+    local label = current and "Spec " .. tostring(current) or "Spec"
+    UIDropDownMenu_SetText(dd, label)
+
+    local function buildMenu(frame, level)
+        level = level or 1
+        for _, slot in ipairs(specs) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = "Spec " .. tostring(slot)
+            info.value = slot
+            info.checked = (slot == current)
+            info.func = function(self, arg1, arg2, checked)
+                UIDropDownMenu_SetText(dd, self:GetText() or info.text)
+                CloseDropDownMenus()
+                if onClick then onClick(slot) end
+            end
+            UIDropDownMenu_AddButton(info, level)
+        end
+    end
+
+    UIDropDownMenu_Initialize(dd, buildMenu)
+    UIDropDownMenu_SetWidth(dd, 120)
 end
 
 local function AcquireButton(f, i)
@@ -1040,8 +1055,6 @@ local function RenderFor(unit, slot)
     local model = TreeModel.Build(current.tree, buildMap)
     local inspectFrame = GetInspectFrame()
     if inspectFrame then TP.AttachTo(inspectFrame, current.compare) end
-    local specs = {}
-    for _, t in ipairs(model.tabs) do if t ~= "Class" then specs[#specs + 1] = t end end
     local f = TP.Get()
     f.title:SetText(UnitName(unit))
 
