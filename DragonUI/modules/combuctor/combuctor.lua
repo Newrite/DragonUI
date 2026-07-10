@@ -29,7 +29,25 @@ local ContainerIDToInventoryID = ContainerIDToInventoryID
 local BankButtonIDToInvSlotID = BankButtonIDToInvSlotID
 local ContainerFrame_UpdateCooldown = ContainerFrame_UpdateCooldown
 local CooldownFrame_SetTimer = CooldownFrame_SetTimer
-local SetItemButtonTexture, SetItemButtonCount = SetItemButtonTexture, SetItemButtonCount
+local _OrigSetItemButtonTexture = SetItemButtonTexture
+local function SetItemButtonTexture(button, texture)
+    _OrigSetItemButtonTexture(button, texture)
+    -- Force icon to OVERLAY layer so it renders above the retail NormalTexture background.
+    -- Without this, the default ARTWORK/BORDER layer hides the icon behind the slot bg.
+    local name = button:GetName()
+    if name then
+        local icon = _G[name .. 'IconTexture']
+        if icon then
+            icon:SetDrawLayer('OVERLAY', 1)
+            icon:Show()
+        end
+        local count = _G[name .. 'Count']
+        if count then
+            count:SetDrawLayer('OVERLAY', 5)
+        end
+    end
+end
+local SetItemButtonCount = SetItemButtonCount
 local SetItemButtonDesaturated, SetItemButtonTextureVertexColor = SetItemButtonDesaturated, SetItemButtonTextureVertexColor
 local CursorHasItem, PickupContainerItem = CursorHasItem, PickupContainerItem
 local SetPortraitTexture = SetPortraitTexture
@@ -1816,11 +1834,15 @@ do
         border:Hide()
         item.border = border
 
-        -- Kill template's built-in IconQuestTexture to avoid overlap
+        -- Kill template's built-in IconQuestTexture and IconBorder to avoid overlap
         local templateQuest = _G[name .. "IconQuestTexture"]
         if templateQuest then
             templateQuest:SetTexture(nil)
             templateQuest:Hide()
+        end
+        local templateBorder = _G[name .. "IconBorder"]
+        if templateBorder then
+            templateBorder:Hide()
         end
 
         -- Quest item border (yellow overlay for quest items)
