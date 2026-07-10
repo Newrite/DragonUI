@@ -68,6 +68,253 @@ if addon.RegisterModule then
         (addon.L and addon.L["All-in-one bag replacement with filtering and search"]) or "All-in-one bag replacement with filtering and search")
 end
 
+
+-- ============================================================================
+-- COMBUCTOR SELF-CONTAINED RETAIL SKINNING
+-- Combuctor manages its own textures and skinning functions.
+-- Zero dependency on bags_skin module.
+-- ============================================================================
+
+local CombuctorAssets = addon._dir
+
+local CT = {
+    slot_bg           = CombuctorAssets .. 'bagsitemslot2x',
+    slot_depress      = CombuctorAssets .. 'ui-quickslot-depress',
+    slot_highlight    = CombuctorAssets .. 'buttonhilight-square',
+    frame_metal       = CombuctorAssets .. 'uiframemetal2x',
+    frame_metal_h     = CombuctorAssets .. 'uiframemetalhorizontal2x',
+    frame_metal_v     = CombuctorAssets .. 'uiframemetalvertical2x',
+    frame_bg          = CombuctorAssets .. 'ui-background-rock',
+    close_btn         = CombuctorAssets .. 'redbutton2x',
+    bigbag            = CombuctorAssets .. 'bigbag',
+    bigbag_highlight  = CombuctorAssets .. 'bigbagHighlight',
+    bagslot           = CombuctorAssets .. 'bagslots2x',
+    bagslot_cutout    = CombuctorAssets .. 'bagslotCutout',
+    bag_border        = CombuctorAssets .. 'bagborder2',
+}
+
+local CT_ICON_OVERLAY_SUBLEVEL = 1
+
+-- Retail-style nineslice border for Combuctor frames
+local function CombuctorAddNineSlice(frame)
+    if frame._BagSkin_NineSlice then return end
+
+    local ns = {}
+    frame._BagSkin_NineSlice = ns
+
+    ns.TopLeftCorner     = frame:CreateTexture(nil, 'ARTWORK')
+    ns.TopRightCorner    = frame:CreateTexture(nil, 'ARTWORK')
+    ns.BottomLeftCorner  = frame:CreateTexture(nil, 'ARTWORK')
+    ns.BottomRightCorner = frame:CreateTexture(nil, 'ARTWORK')
+    ns.TopEdge           = frame:CreateTexture(nil, 'ARTWORK')
+    ns.BottomEdge        = frame:CreateTexture(nil, 'ARTWORK')
+    ns.LeftEdge          = frame:CreateTexture(nil, 'ARTWORK')
+    ns.RightEdge         = frame:CreateTexture(nil, 'ARTWORK')
+
+    local bg = CreateFrame('Frame', nil, frame)
+    bg:SetPoint('TOPLEFT', frame, 'TOPLEFT', 3, -18)
+    bg:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -3, 3)
+    bg:SetFrameLevel(0)
+    ns.Bg = bg
+
+    local bgTex = bg:CreateTexture(nil, 'BACKGROUND')
+    bgTex:SetTexture(CT.frame_bg)
+    bgTex:SetAllPoints(bg)
+    bgTex:SetAlpha(0.85)
+    ns.BgTex = bgTex
+
+    local tlc = ns.TopLeftCorner
+    tlc:SetTexture(CT.frame_metal)
+    tlc:SetTexCoord(0.00195312, 0.294922, 0.00195312, 0.294922)
+    tlc:SetSize(75, 74)
+    tlc:SetPoint('TOPLEFT', -12, 16)
+
+    local trc = ns.TopRightCorner
+    trc:SetTexture(CT.frame_metal)
+    trc:SetTexCoord(0.298828, 0.591797, 0.00195312, 0.294922)
+    trc:SetSize(75, 74)
+    trc:SetPoint('TOPRIGHT', 4, 16)
+
+    local blc = ns.BottomLeftCorner
+    blc:SetTexture(CT.frame_metal)
+    blc:SetTexCoord(0.298828, 0.423828, 0.298828, 0.423828)
+    blc:SetSize(32, 32)
+    blc:SetPoint('BOTTOMLEFT', -12, -3)
+
+    local brc = ns.BottomRightCorner
+    brc:SetTexture(CT.frame_metal)
+    brc:SetTexCoord(0.427734, 0.552734, 0.298828, 0.423828)
+    brc:SetSize(32, 32)
+    brc:SetPoint('BOTTOMRIGHT', 4, -3)
+
+    local te = ns.TopEdge
+    te:SetTexture(CT.frame_metal_h)
+    te:SetTexCoord(0, 1, 0.00390625, 0.589844)
+    te:SetSize(32, 74)
+    te:SetPoint('TOPLEFT', tlc, 'TOPRIGHT', 0, 0)
+    te:SetPoint('TOPRIGHT', trc, 'TOPLEFT', 0, 0)
+
+    local be = ns.BottomEdge
+    be:SetTexture(CT.frame_metal_h)
+    be:SetTexCoord(0, 0.5, 0.597656, 0.847656)
+    be:SetSize(16, 32)
+    be:SetPoint('TOPLEFT', blc, 'TOPRIGHT', 0, 0)
+    be:SetPoint('TOPRIGHT', brc, 'TOPLEFT', 0, 0)
+
+    local le = ns.LeftEdge
+    le:SetTexture(CT.frame_metal_v)
+    le:SetTexCoord(0.00195312, 0.294922, 0, 1)
+    le:SetSize(75, 16)
+    le:SetPoint('TOPLEFT', tlc, 'BOTTOMLEFT', 0, 0)
+    le:SetPoint('BOTTOMLEFT', blc, 'TOPLEFT', 0, 0)
+
+    local re = ns.RightEdge
+    re:SetTexture(CT.frame_metal_v)
+    re:SetTexCoord(0.298828, 0.591797, 0, 1)
+    re:SetSize(75, 16)
+    re:SetPoint('TOPRIGHT', trc, 'BOTTOMRIGHT', 0, 0)
+    re:SetPoint('BOTTOMRIGHT', brc, 'TOPRIGHT', 0, 0)
+
+    local closeBtn = frame.ClosePanelButton or _G[frame:GetName() .. 'CloseButton']
+    if closeBtn then
+        closeBtn:SetSize(24, 24)
+        local nt = closeBtn:GetNormalTexture()
+        if nt then
+            nt:SetTexture(CT.close_btn)
+            nt:SetTexCoord(0.152344, 0.292969, 0.0078125, 0.304688)
+        end
+        local pt = closeBtn:GetPushedTexture()
+        if pt then
+            pt:SetTexture(CT.close_btn)
+            pt:SetTexCoord(0.152344, 0.292969, 0.320312, 0.617188)
+        end
+    end
+end
+
+-- Retail-style item slot restyle for Combuctor item buttons
+local function CombuctorRetailItemSlot(btn)
+    if btn._BagSkin_Applied then return end
+    btn._BagSkin_Applied = true
+
+    local nt = btn:GetNormalTexture()
+    if nt then
+        nt:SetTexture(CT.slot_bg)
+        nt:SetSize(37, 37)
+        nt:SetPoint('CENTER', 0, 0)
+        nt:SetDrawLayer('ARTWORK', 0)
+        nt:Show()
+        nt:SetAlpha(1)
+    end
+
+    local name = btn:GetName()
+    if name then
+        local icon = _G[name .. 'IconTexture']
+        if icon then
+            icon:SetDrawLayer('OVERLAY', CT_ICON_OVERLAY_SUBLEVEL)
+            icon:Show()
+        end
+    end
+
+    local count = btn:GetName() and _G[btn:GetName() .. 'Count']
+    if count then
+        count:SetDrawLayer('OVERLAY', 5)
+    end
+
+    local pt = btn:GetPushedTexture()
+    if pt then
+        pt:SetTexture(CT.slot_depress)
+        pt:SetSize(37, 37)
+        pt:SetPoint('CENTER', 0, 0)
+    end
+
+    local ht = btn:GetHighlightTexture()
+    if ht then
+        ht:SetTexture(CT.slot_highlight)
+        ht:SetSize(37, 37)
+        ht:SetPoint('CENTER', 0, 0)
+    end
+end
+
+-- Retail-style bag slot restyle for Combuctor bag toggle buttons
+local function CombuctorRetailBagSlot(btn)
+    if btn._BagSkin_Applied then return end
+    btn._BagSkin_Applied = true
+
+    for _, region in ipairs({ btn:GetRegions() }) do
+        if region:GetObjectType() == 'Texture' then
+            local tex = region:GetTexture() or ''
+            local rname = (region.GetName and region:GetName()) or ''
+            if not rname:find('IconTexture') then
+                if tex:find('UI%-Quickslot') or tex:find('ButtonHilight') then
+                    region:SetTexture(nil)
+                    region:SetAlpha(0)
+                    region:Hide()
+                end
+            end
+        end
+    end
+
+    local size = 30.5
+
+    local nt = btn:GetNormalTexture()
+    if nt then
+        nt:SetTexture(CT.bagslot)
+        nt:SetTexCoord(0.576172, 0.695312, 0.5, 0.976562)
+        nt:SetSize(size, size)
+        nt:ClearAllPoints()
+        nt:SetPoint('CENTER', 2, -1)
+        nt:SetDrawLayer('BORDER', 0)
+        nt:SetAlpha(1)
+        nt:Show()
+    end
+
+    local ht = btn:GetHighlightTexture()
+    if ht then
+        ht:SetTexture(CT.bagslot)
+        ht:SetTexCoord(0.699219, 0.818359, 0.0078125, 0.484375)
+        ht:SetSize(size, size)
+        ht:ClearAllPoints()
+        ht:SetPoint('CENTER', 2, -1)
+        ht:SetAlpha(1)
+        ht:Show()
+    end
+
+    local pt = btn:GetPushedTexture()
+    if pt then
+        pt:SetTexture(CT.bagslot)
+        pt:SetTexCoord(0.699219, 0.818359, 0.0078125, 0.484375)
+        pt:SetSize(size, size)
+        pt:ClearAllPoints()
+        pt:SetPoint('CENTER', 2, -1)
+        pt:SetAlpha(1)
+        pt:Show()
+    end
+end
+
+-- Retail-style backpack button restyle
+local function CombuctorRetailBackpackButton()
+    local btn = MainMenuBarBackpackButton
+    if not btn or btn._BagSkin_Backpack then return end
+    btn._BagSkin_Backpack = true
+
+    SetItemButtonTexture(btn, CT.bigbag)
+    btn:SetHighlightTexture(CT.bigbag_highlight)
+    btn:SetPushedTexture(CT.bigbag_highlight)
+    btn:SetCheckedTexture(CT.bigbag_highlight)
+
+    if MainMenuBarBackpackButtonNormalTexture then
+        MainMenuBarBackpackButtonNormalTexture:Hide()
+        MainMenuBarBackpackButtonNormalTexture:SetTexture()
+    end
+
+    if not btn._BagSkin_Border then
+        local border = btn:CreateTexture(nil, 'OVERLAY')
+        border:SetTexture(CT.bagslot_cutout)
+        border:SetPoint('TOPLEFT', btn, 'TOPLEFT', 0, 0)
+        border:SetPoint('BOTTOMRIGHT', btn, 'BOTTOMRIGHT', 0, 0)
+        btn._BagSkin_Border = border
+    end
+end
 -- ============================================================================
 -- XML TEMPLATE EQUIVALENTS (replaces combuctor.xml entirely)
 -- Builds frames with all properties previously defined in XML virtual templates.
@@ -1607,8 +1854,8 @@ do
         -- The _BagSkin_Applied guard prevents duplicate work.
         -- This is necessary because ItemSlots are created dynamically
         -- and CombuctorSkinItems() may run before the slot exists.
-        if not self._BagSkin_Applied and addon.BagSkinHelpers then
-            addon.BagSkinHelpers.RetailItemSlot(self)
+        if not self._BagSkin_Applied then
+            CombuctorRetailItemSlot(self)
         end
     end
 
@@ -3485,20 +3732,11 @@ do
     end
 end
 
--- ============================================================================
--- COMBUCTOR RETAIL SKINNING
--- Uses addon.BagSkinHelpers (exported by bags_skin.lua). Functions reference
--- the helpers at runtime and gracefully no-op when unavailable.
--- ============================================================================
-
 local function CombuctorSkinFrame(frame)
     if not frame or frame._BagSkin_Combuctor then return end
     frame._BagSkin_Combuctor = true
 
-    local helpers = addon.BagSkinHelpers
-    if not helpers then return end
-
-    helpers.AddNineSlice(frame)
+    CombuctorAddNineSlice(frame)
 
     -- Adjust NineSlice so it doesn't cover the header
     if frame._BagSkin_NineSlice then
@@ -3535,7 +3773,7 @@ local function CombuctorSkinFrame(frame)
         borderFrame:SetFrameLevel(iconLevel + 10)
 
         local pp = borderFrame:CreateTexture(nil, 'OVERLAY')
-        pp:SetTexture(helpers.tex_bag_border)
+        pp:SetTexture(CT.bag_border)
         pp:SetAllPoints(borderFrame)
         pp:SetDrawLayer('OVERLAY', 7)
 
@@ -3570,15 +3808,12 @@ local function CombuctorSkinFrame(frame)
 end
 
 local function CombuctorSkinItems(frame)
-    local helpers = addon.BagSkinHelpers
-    if not helpers then return end
-
     for _, child in ipairs({ frame:GetChildren() }) do
         if child:GetObjectType() == 'Frame' then
             for _, subchild in ipairs({ child:GetChildren() }) do
                 if subchild:GetObjectType() == 'Button' and subchild:GetName() then
                     if subchild:GetName():find('DragonUI_CombuctorItem') then
-                        helpers.RetailItemSlot(subchild)
+                        CombuctorRetailItemSlot(subchild)
                     end
                 end
             end
@@ -3587,16 +3822,13 @@ local function CombuctorSkinItems(frame)
 end
 
 local function CombuctorSkinBagSlots(frame)
-    local helpers = addon.BagSkinHelpers
-    if not helpers then return end
-
     for _, child in ipairs({ frame:GetChildren() }) do
         if child:GetObjectType() == 'Frame' then
             for _, subchild in ipairs({ child:GetChildren() }) do
                 if subchild:GetObjectType() == 'Button' and subchild:GetName() then
                     local name = subchild:GetName()
                     if name:find('DragonUI_CombuctorBag') then
-                        helpers.RetailBagSlot(subchild)
+                        CombuctorRetailBagSlot(subchild)
                     end
                 end
             end
@@ -3605,9 +3837,6 @@ local function CombuctorSkinBagSlots(frame)
 end
 
 local function CombuctorApplySkin()
-    local helpers = addon.BagSkinHelpers
-    if not helpers then return end
-
     -- Skin all existing Combuctor frames
     for i = 1, 2 do
         local frame = _G['DragonUI_CombuctorFrame' .. i]
@@ -3619,13 +3848,13 @@ local function CombuctorApplySkin()
     end
 
     -- Backpack button on main bar
-    helpers.RetailBackpackButton()
+    CombuctorRetailBackpackButton()
 
     -- Character bag slots on action bar
     for i = 0, 3 do
         local slot = _G['CharacterBag' .. i .. 'Slot']
         if slot then
-            helpers.RetailBagSlot(slot)
+            CombuctorRetailBagSlot(slot)
         end
     end
 end

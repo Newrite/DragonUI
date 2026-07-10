@@ -332,24 +332,6 @@ local function RetailBackpackButton()
 end
 
 -- ============================================================================
--- EXPORT SHARED HELPERS (for Combuctor module)
--- bags_skin always loads these so they're available to combuctor.lua
--- even when the bags_skin module is disabled.
--- ============================================================================
-
-local BagSkinHelpers = {
-    AddNineSlice          = AddNineSlice,
-    RetailItemSlot        = RetailItemSlot,
-    RetailBagSlot         = RetailBagSlot,
-    RetailBackpackButton  = RetailBackpackButton,
-    -- Texture paths used by Combuctor skinning
-    tex_bigbag            = T.bigbag,
-    tex_bag_border        = T.bag_border,
-    tex_slot_bg           = T.slot_bg,
-}
-addon.BagSkinHelpers = BagSkinHelpers
-
--- ============================================================================
 -- BLIZZARD BAGS: Restyle ContainerFrames (when Combuctor is OFF)
 -- ============================================================================
 
