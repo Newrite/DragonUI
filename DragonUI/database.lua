@@ -212,6 +212,7 @@ local defaults = {
             height = 600,        -- Default quest tracker height (max visible lines)
             show_on_hover = false,
             show_in_combat = false,
+            hide_in_combat = false,
             visibility_logic = "and",
         },
         -- Loot Roll
@@ -270,6 +271,60 @@ local defaults = {
             bottom_right_enabled = true,
             right_enabled = true,
             left_enabled = true,
+
+            -- Hover fade behavior (Bartender4-style)
+            visibility_shown_alpha = 1,
+            visibility_hidden_alpha = 0,
+            visibility_fade_in_duration = 0.15,
+            visibility_fade_out_duration = 0.2,
+            visibility_fade_out_delay = 0.2,
+
+            -- Micro menu visibility fade behavior
+            micro_visibility_shown_alpha = 1,
+            micro_visibility_hidden_alpha = 0,
+            micro_visibility_fade_in_duration = 0.15,
+            micro_visibility_fade_out_duration = 0.2,
+            micro_visibility_fade_out_delay = 0.2,
+
+            -- Bag bar visibility fade behavior
+            bag_visibility_shown_alpha = 1,
+            bag_visibility_hidden_alpha = 0,
+            bag_visibility_fade_in_duration = 0.15,
+            bag_visibility_fade_out_duration = 0.2,
+            bag_visibility_fade_out_delay = 0.2,
+
+            -- Hover/combat visibility per bar
+            main_show_on_hover = false,
+            main_show_in_combat = false,
+            main_hide_in_combat = false,
+            main_visibility_logic = "and",
+            bottom_left_show_on_hover = false,
+            bottom_left_show_in_combat = false,
+            bottom_left_hide_in_combat = false,
+            bottom_left_visibility_logic = "and",
+            bottom_right_show_on_hover = false,
+            bottom_right_show_in_combat = false,
+            bottom_right_hide_in_combat = false,
+            bottom_right_visibility_logic = "and",
+            right_show_on_hover = false,
+            right_show_in_combat = false,
+            right_hide_in_combat = false,
+            right_visibility_logic = "and",
+            left_show_on_hover = false,
+            left_show_in_combat = false,
+            left_hide_in_combat = false,
+            left_visibility_logic = "and",
+
+
+            -- Micro menu and bag bar visibility
+            micro_show_on_hover = false,
+            micro_show_in_combat = false,
+            micro_hide_in_combat = false,
+            micro_visibility_logic = "and",
+            bag_show_on_hover = false,
+            bag_show_in_combat = false,
+            bag_hide_in_combat = false,
+            bag_visibility_logic = "and"
         },
 
         micromenu = {
@@ -329,6 +384,7 @@ local defaults = {
             -- Hover/combat visibility (shared by both bars, see core/visibility_fade.lua)
             show_on_hover = false,
             show_in_combat = false,
+            hide_in_combat = false,
             visibility_logic = "and",
         },
 
