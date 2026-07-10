@@ -878,7 +878,6 @@ local function PositionBossFrames()
             bf:ClearAllPoints()
             bf:SetPoint("TOPLEFT", wrapper, "TOPLEFT", 0, 0)
         end
-        end
     end
 end
 
