@@ -878,6 +878,7 @@ local function PositionBossFrames()
             bf:ClearAllPoints()
             bf:SetPoint("TOPLEFT", wrapper, "TOPLEFT", 0, 0)
         end
+        end
     end
 end
 
@@ -1037,6 +1038,13 @@ eventsFrame:SetScript("OnEvent", function(self, event, ...)
                 -- Apply layout
                 ApplyBossFrameLayout(bf)
                 ApplyBossFrameLayout(bf) -- twice for safety
+
+                if addon.VisibilityFade then
+                    addon.VisibilityFade.Register("boss" .. i, bf, {
+                        dbTable = function() return UF.GetConfig("boss") end,
+                        clickThrough = true,
+                    })
+                end
             end
         end
 
@@ -1054,6 +1062,9 @@ eventsFrame:SetScript("OnEvent", function(self, event, ...)
                     bf:SetPoint("TOPLEFT", w, "TOPLEFT", 0, 0)
                     bf:Show()
                     UpdateBossFrame(bf)
+                    if addon.VisibilityFade then
+                        addon.VisibilityFade.Update("boss" .. idx)
+                    end
                 else
                     bf:Hide()
                 end
@@ -1177,6 +1188,12 @@ function addon.RefreshBossFrames()
     end
 
     PositionBossFrames()
+
+    for i = 1, NUM_BOSS_FRAMES do
+        if addon.VisibilityFade then
+            addon.VisibilityFade.Update("boss" .. i)
+        end
+    end
 end
 
 -- Store reference

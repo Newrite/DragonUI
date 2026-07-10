@@ -210,6 +210,9 @@ local defaults = {
             show_header = true,
             font_size = 10,      -- Point size for quest tracker text (WoW default: 11)
             height = 600,        -- Default quest tracker height (max visible lines)
+            show_on_hover = false,
+            show_in_combat = false,
+            visibility_logic = "and",
         },
         -- Loot Roll
         lootroll = {
@@ -267,78 +270,6 @@ local defaults = {
             bottom_right_enabled = true,
             right_enabled = true,
             left_enabled = true,
-
-            -- Hover fade behavior (Bartender4-style)
-            visibility_shown_alpha = 1,
-            visibility_hidden_alpha = 0,
-            visibility_fade_in_duration = 0.15,
-            visibility_fade_out_duration = 0.2,
-            visibility_fade_out_delay = 0.2,
-
-            -- Micro menu visibility fade behavior
-            micro_visibility_shown_alpha = 1,
-            micro_visibility_hidden_alpha = 0,
-            micro_visibility_fade_in_duration = 0.15,
-            micro_visibility_fade_out_duration = 0.2,
-            micro_visibility_fade_out_delay = 0.2,
-
-            -- Bag bar visibility fade behavior
-            bag_visibility_shown_alpha = 1,
-            bag_visibility_hidden_alpha = 0,
-            bag_visibility_fade_in_duration = 0.15,
-            bag_visibility_fade_out_duration = 0.2,
-            bag_visibility_fade_out_delay = 0.2,
-
-            -- Hover/combat visibility per bar
-            main_show_on_hover = false,
-            main_show_in_combat = false,
-            main_visibility_logic = "and",
-            bottom_left_show_on_hover = false,
-            bottom_left_show_in_combat = false,
-            bottom_left_visibility_logic = "and",
-            bottom_right_show_on_hover = false,
-            bottom_right_show_in_combat = false,
-            bottom_right_visibility_logic = "and",
-            right_show_on_hover = false,
-            right_show_in_combat = false,
-            right_visibility_logic = "and",
-            left_show_on_hover = false,
-            left_show_in_combat = false,
-            left_visibility_logic = "and",
-
-
-            -- Micro menu and bag bar visibility
-            micro_show_on_hover = false,
-            micro_show_in_combat = false,
-            micro_visibility_logic = "and",
-            bag_show_on_hover = false,
-            bag_show_in_combat = false,
-            bag_visibility_logic = "and",
-
-            -- Pet bar visibility
-            pet_show_on_hover = false,
-            pet_show_in_combat = false,
-            pet_visibility_logic = "and",
-
-            -- Stance bar visibility
-            stance_show_on_hover = false,
-            stance_show_in_combat = false,
-            stance_visibility_logic = "and",
-
-            -- Totem bar visibility
-            totem_show_on_hover = false,
-            totem_show_in_combat = false,
-            totem_visibility_logic = "and",
-
-            -- XP bar visibility
-            xpbar_show_on_hover = false,
-            xpbar_show_in_combat = false,
-            xpbar_visibility_logic = "and",
-
-            -- Minimap visibility
-            minimap_show_on_hover = false,
-            minimap_show_in_combat = false,
-            minimap_visibility_logic = "and"
         },
 
         micromenu = {
@@ -395,6 +326,10 @@ local defaults = {
             always_show_text = false,
             show_xp_percent = false,
             show_rep_text_on_hover = true,
+            -- Hover/combat visibility (shared by both bars, see core/visibility_fade.lua)
+            show_on_hover = false,
+            show_in_combat = false,
+            visibility_logic = "and",
         },
 
         style = {
@@ -448,14 +383,20 @@ local defaults = {
                 y_offset = -58, -- Additional Y offset for fine-tuning position
                 button_size = 31, -- Size of stance buttons (native Blizzard size)
                 button_spacing = 6, -- Spacing between stance buttons
-                show_hotkey = false
+                show_hotkey = false,
+                show_on_hover = false,
+                show_in_combat = false,
+                visibility_logic = "and",
             },
             pet = {
                 scale = 1.0,
                 columns = 10,
                 buttons_shown = 10,
                 grid = false, -- Disable grid by default (matches original Dragonflight port)
-                show_hotkey = false
+                show_hotkey = false,
+                show_on_hover = false,
+                show_in_combat = false,
+                visibility_logic = "and",
             },
             vehicle = {
                 x_position = -40,
@@ -469,7 +410,10 @@ local defaults = {
                 button_size = 34, -- Size of totem buttons (native Blizzard size)
                 button_spacing = 4, -- Spacing between totem buttons
                 manual_position = false, -- When true, uses x_position/y_offset; when false, auto-anchors to action bars
-                show_hotkey = false
+                show_hotkey = false,
+                show_on_hover = false,
+                show_in_combat = false,
+                visibility_logic = "and",
             }
         },
 
@@ -497,7 +441,11 @@ local defaults = {
             animated_border_opacity = 1,
             animated_border_hide_dragonui_border = false,
             addon_button_skin = true,
-            addon_button_fade = false
+            addon_button_fade = false,
+            show_on_hover = false,
+            show_in_combat = false,
+            hide_in_combat = false,
+            visibility_logic = "and",
         },
 
         --  BUFFS SETTINGS (NEW)
@@ -621,6 +569,9 @@ local defaults = {
                     RUNES        = { r = 0.50, g = 0.50, b = 0.50 },
                     RUNIC_POWER  = { r = 0.00, g = 0.82, b = 1.00 },
                 },
+                show_on_hover = false,
+                show_in_combat = false,
+                visibility_logic = "and",
             },
             target = {
                 classcolor = false,
@@ -633,7 +584,11 @@ local defaults = {
                 enableNumericThreat = true,
                 enableThreatGlow = true,
                 show_name_background = true,
-                scale = 1.0
+                scale = 1.0,
+                -- Also fades Target of Target and the target cast bar (see target_style.lua)
+                show_on_hover = false,
+                show_in_combat = false,
+                visibility_logic = "and",
             },
             focus = {
                 classcolor = false,
@@ -645,7 +600,11 @@ local defaults = {
                 showManaTextAlways = false,
                 show_buff_debuff = true,
                 show_name_background = true,
-                scale = 0.9
+                scale = 0.9,
+                -- Also fades Target of Focus and the focus cast bar (see target_style.lua)
+                show_on_hover = false,
+                show_in_combat = false,
+                visibility_logic = "and",
             },
             pet = {
                 breakUpLargeNumbers = true,
@@ -656,7 +615,10 @@ local defaults = {
                 scale = 1.0,
                 override = false,
                 x = 18,
-                y = -80
+                y = -80,
+                show_on_hover = false,
+                show_in_combat = false,
+                visibility_logic = "and",
             },
             party = {
                 enabled = true,
@@ -673,7 +635,10 @@ local defaults = {
                 anchor = 'TOPLEFT',
                 anchorParent = 'TOPLEFT',
                 x = 10,
-                y = -200
+                y = -200,
+                show_on_hover = false,
+                show_in_combat = false,
+                visibility_logic = "and",
             },
             tot = {
                 classcolor = false,
@@ -715,7 +680,10 @@ local defaults = {
                 anchor = 'TOPRIGHT',
                 anchorParent = 'TOPRIGHT',
                 x = -85,
-                y = -350
+                y = -350,
+                show_on_hover = false,
+                show_in_combat = false,
+                visibility_logic = "and",
             }
         },
 

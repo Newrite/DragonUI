@@ -91,6 +91,16 @@ local function BuildAdditionalBarsTab(scroll)
         end,
     })
 
+    C:AddHeading(stance, LO["Visibility"])
+    C:AddVisibilityFadeToggles(stance, {
+        dbPrefix = "additional.stance",
+        hoverDesc = LO["Fade the stance bar until you hover over it."],
+        combatDesc = LO["Fade the stance bar until you enter combat."],
+        callback = function()
+            if addon.RefreshStance then addon.RefreshStance() end
+        end,
+    })
+
     -- ====================================================================
     -- PET BAR
     -- ====================================================================
@@ -114,12 +124,21 @@ local function BuildAdditionalBarsTab(scroll)
 
     -- ---- Pet Bar Layout (grid: columns/buttons) ----
     local petLayout = C:AddSection(scroll, LO["Pet Bar Layout"])
-
     C:AddSlider(petLayout, {
         dbPath = "additional.pet.columns",
         label = LO["Columns"],
         min = 1, max = 10, step = 1,
         width = 200,
+        callback = function()
+            if addon.RefreshPetbarFrame then addon.RefreshPetbarFrame() end
+        end,
+    })
+
+    C:AddHeading(pet, LO["Visibility"])
+    C:AddVisibilityFadeToggles(pet, {
+        dbPrefix = "additional.pet",
+        hoverDesc = LO["Fade the pet bar until you hover over it."],
+        combatDesc = LO["Fade the pet bar until you enter combat."],
         callback = function()
             if addon.RefreshPetbarFrame then addon.RefreshPetbarFrame() end
         end,
@@ -246,6 +265,16 @@ local function BuildAdditionalBarsTab(scroll)
         end,
         min = 0, max = 20, step = 1,
         width = 200,
+    })
+
+    C:AddHeading(totem, LO["Visibility"])
+    C:AddVisibilityFadeToggles(totem, {
+        dbPrefix = "additional.totem",
+        hoverDesc = LO["Fade the totem bar until you hover over it."],
+        combatDesc = LO["Fade the totem bar until you enter combat."],
+        callback = function()
+            if addon.RefreshMulticast then addon.RefreshMulticast(true) end
+        end,
     })
 end
 

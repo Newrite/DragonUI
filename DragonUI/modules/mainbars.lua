@@ -143,6 +143,7 @@ local mainBarPageByClass = {
   REAPER = '[stealth] 7; [nostealth] 1;',
   SPIRITMAGE = '[stealth] 7; [nostealth] 1;',
   HERO = '[bonusbar:1,nostealth] 7; [bonusbar:1,stealth] 8; [bonusbar:2] 8; [bonusbar:3] 9; [bonusbar:4] 10;',
+  SONOFARUGAL = '[bonusbar:1,nostealth] 7; [bonusbar:1,stealth] 8; [bonusbar:2] 8; [bonusbar:3] 9; [bonusbar:4] 10;',
   DEFAULT = '[bonusbar:5] 11; [bar:2] 2; [bar:3] 3; [bar:4] 4; [bar:5] 5; [bar:6] 6;'
 }
 
@@ -151,6 +152,7 @@ local mainBarPageByClass = {
 local noAutoFormPaging = {
     DEMONHUNTER = true,
     CULTIST = true,
+    WARLOCK = true,
 }
 
 local function GetMainBarPageCondition()
@@ -265,7 +267,7 @@ local function InitializeMainbars()
     if not IsModuleEnabled() then
         return -- DO NOTHING if disabled
     end
-    
+
     -- Check if already initialized
     if MainbarsModule.initialized then
         return
@@ -562,9 +564,9 @@ local function InitializeMainbars()
     end
 
     -- Apply SetThreeSlice only if the background is NOT hidden
-    local shouldHideBackground = addon.db and addon.db.profile and addon.db.profile.buttons and 
+    local shouldHideBackground = addon.db and addon.db.profile and addon.db.profile.buttons and
                                 addon.db.profile.buttons.hide_main_bar_background
-    
+
     -- Store divider textures for bar-size management
     addon.MainBarDividers = addon.MainBarDividers or {}
 
@@ -606,7 +608,7 @@ end
     function MainMenuBarMixin:actionbar_art_setup()
         -- setup art frames - FIXED
         MainMenuBarArtFrame:SetParent(pUiMainBarArt)  -- Goes to the art container
-        
+
         -- CRITICAL: Gryphons must go to pUiMainBarArt, NOT pUiMainBar
         for _, art in pairs({MainMenuBarLeftEndCap, MainMenuBarRightEndCap}) do
             art:SetParent(pUiMainBarArt)  -- To the correct art container
@@ -1828,6 +1830,29 @@ end
         end
     end
 
+    -- ========== HOVER/COMBAT VISIBILITY (core/visibility_fade.lua) ==========
+
+    -- Never hover-trigger on the containers: their higher frame level would steal OnEnter from
+    -- these already-mouse-enabled bar widgets, breaking the bars' own hover-to-show-text.
+    local function GetXpRepHoverFrames()
+        local frames = {}
+        if MainMenuExpBar then table.insert(frames, MainMenuExpBar) end
+        if ReputationWatchStatusBar then table.insert(frames, ReputationWatchStatusBar) end
+        if dfXpBar and dfXpBar.Bar then table.insert(frames, dfXpBar.Bar) end
+        if dfRepBar and dfRepBar.Bar then table.insert(frames, dfRepBar.Bar) end
+        return frames
+    end
+
+    local function RegisterXpRepVisibility()
+        if not (addon.VisibilityFade and addon.ActionBarFrames.xpbar and addon.ActionBarFrames.repbar) then return end
+        addon.VisibilityFade.Register("xprepbar", addon.ActionBarFrames.xpbar, {
+            frames = { addon.ActionBarFrames.repbar },
+            dbTable = GetXpRepConfig,
+            hoverFrames = GetXpRepHoverFrames(),
+            enableMouse = false,
+        })
+    end
+
     -- ========== EXPORTED REFRESH / CALLBACK FUNCTIONS ==========
     -- These are called from options.lua and tab_xprepbars.lua
 
@@ -1842,6 +1867,10 @@ end
             ApplyRetailUIExpRepBarStyling()
         end
         UpdateBarPositions()
+        RegisterXpRepVisibility()
+        if addon.VisibilityFade then
+            addon.VisibilityFade.Update("xprepbar")
+        end
     end
 
     -- Export functions for options callbacks
@@ -1894,7 +1923,7 @@ end
     local function RemoveBlizzardFrames()
         -- Disable MainMenuBarMaxLevelBar immediately
         DisableMaxLevelBar()
-        
+
         local blizzFrames = {MainMenuBarPerformanceBar, MainMenuBarTexture0, MainMenuBarTexture1, MainMenuBarTexture2,
                              MainMenuBarTexture3, MainMenuBarMaxLevelBar, ReputationXPBarTexture1,
                              ReputationXPBarTexture2, ReputationXPBarTexture3, ReputationWatchBarTexture1,
@@ -2400,7 +2429,7 @@ end
 
         -- Prevent click-only layer promotion on secondary bars.
         StabilizeSecondaryBarLayering()
-        
+
         -- Apply button positioning based on horizontal settings (RetailUI pattern)
         -- This ensures buttons are positioned correctly when horizontal mode is enabled on reload
         if addon.PositionActionBars then
@@ -2423,7 +2452,7 @@ end
                         maxLevel = math.max(maxLevel, bar:GetFrameLevel())
                     end
                 end
-                
+
                 -- Check container frame levels too
                 for _, frame in pairs(addon.ActionBarFrames) do
                     if frame and frame.GetFrameLevel then
@@ -2433,7 +2462,7 @@ end
 
                 -- Set gryphon art frame level significantly higher than all bars
                 pUiMainBarArt:SetFrameLevel(maxLevel + 15)
-                
+
                 -- Also ensure individual gryphons have high draw layers
                 if MainMenuBarLeftEndCap then
                     MainMenuBarLeftEndCap:SetDrawLayer('OVERLAY', 7)
@@ -2443,7 +2472,7 @@ end
                 end
             end
         end
-        
+
         -- Execute immediately to ensure gryphons are on top
         EnsureGryphonsOnTop()
 
@@ -2562,7 +2591,7 @@ end
                     if MainMenuBarExpText then MainMenuBarExpText:Hide() end
                     if ReputationWatchBarText then ReputationWatchBarText:Hide() end
                 end
-                
+
                 -- Ensure gryphons are on top after all setup is complete
                 if pUiMainBarArt then
                     local maxLevel = 1
@@ -2572,7 +2601,7 @@ end
                             maxLevel = math.max(maxLevel, bar:GetFrameLevel())
                         end
                     end
-                    
+
                     for _, frame in pairs(addon.ActionBarFrames) do
                         if frame and frame.GetFrameLevel then
                             maxLevel = math.max(maxLevel, frame:GetFrameLevel())
@@ -2617,7 +2646,7 @@ end
                         addon.RefreshMainbarsSystem()
                     end)
                     addon.db.RegisterCallback(addon, "OnProfileCopied", function()
-                        -- Execute immediately - no timer needed  
+                        -- Execute immediately - no timer needed
                         addon.RefreshMainbarsSystem()
                     end)
                     addon.db.RegisterCallback(addon, "OnProfileReset", function()
@@ -2868,11 +2897,6 @@ addon.visibilityStates = addon.visibilityStates or {
     left         = { hovered = false, inCombat = false },
     micro        = { hovered = false, inCombat = false },
     bag          = { hovered = false, inCombat = false },
-    pet          = { hovered = false, inCombat = false },
-    stance       = { hovered = false, inCombat = false },
-    totem        = { hovered = false, inCombat = false },
-    xpbar        = { hovered = false, inCombat = false },
-    minimap      = { hovered = false, inCombat = false },
 }
 
 local VISIBILITY_BAR_ORDER = {
@@ -2883,11 +2907,6 @@ local VISIBILITY_BAR_ORDER = {
     "left",
     "micro",
     "bag",
-    "pet",
-    "stance",
-    "totem",
-    "xpbar",
-    "minimap",
 }
 
 local MICROMENU_BUTTON_NAMES = {
@@ -2925,11 +2944,6 @@ local function GetVisibilityBarFrameMap()
         left         = MultiBarLeft,
         micro        = _G.pUiMicroMenu,
         bag          = _G.pUiBagsBar,
-        pet          = addon.GetPetBarVisibilityFrame and addon.GetPetBarVisibilityFrame() or PetActionBarFrame,
-        stance       = addon.GetStanceBarVisibilityFrame and addon.GetStanceBarVisibilityFrame() or ShapeshiftBarFrame,
-        totem        = addon.GetTotemBarVisibilityFrame and addon.GetTotemBarVisibilityFrame() or MultiCastActionBarFrame,
-        xpbar        = addon.ActionBarFrames and addon.ActionBarFrames.xpbar,
-        minimap      = addon.GetMinimapVisibilityFrame and addon.GetMinimapVisibilityFrame() or Minimap,
     }
 end
 
