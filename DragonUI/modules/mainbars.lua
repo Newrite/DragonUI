@@ -161,17 +161,11 @@ local function GetMainBarPageCondition()
     -- Fallback: auto-generate form-based paging for unknown CoA custom classes
     if not classCondition and not noAutoFormPaging[class] then
         local numForms = GetNumShapeshiftForms()
-        -- Skip auto-paging when in a form that doesn't set a bonus bar (e.g. travel forms).
-        -- GetShapeshiftForm() > 0 means we are shapeshifted; bonusBar == 0 means the form
-        -- has no action bar of its own. If we are NOT in a form (GetShapeshiftForm() == 0) or
-        -- we ARE in a form with a bonus bar, generate paging normally.
-        local inForm = GetShapeshiftForm() > 0
-        local noBonusBar = GetBonusBarOffset() == 0
-        if numForms and numForms > 0 and not (inForm and noBonusBar) then
+        if numForms and numForms > 0 then
             local parts = {}
             parts[1] = '[stealth] 7;'
-            for i = 1, numForms do
-                parts[i + 1] = string.format('[form:%d] %d;', i, 7 + i)
+            for i = 1, 10 do
+                parts[i + 1] = string.format('[bonusbar:%d] %d;', i, 7 + i)
             end
             classCondition = table.concat(parts, ' ')
         end
