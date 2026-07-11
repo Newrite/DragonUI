@@ -96,8 +96,9 @@ local function getbarpage()
         local numForms = GetNumShapeshiftForms()
         if numForms and numForms > 0 then
             local parts = {}
+            parts[1] = '[stealth] 7;'
             for i = 1, numForms do
-                parts[i] = string.format('[form:%d] %d;', i, 6 + i)
+                parts[i + 1] = string.format('[form:%d] %d;', i, 7 + i)
             end
             page = table.concat(parts, ' ')
         end
