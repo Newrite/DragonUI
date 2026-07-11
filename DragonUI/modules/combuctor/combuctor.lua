@@ -32,18 +32,16 @@ local CooldownFrame_SetTimer = CooldownFrame_SetTimer
 local _OrigSetItemButtonTexture = SetItemButtonTexture
 local function SetItemButtonTexture(button, texture)
     _OrigSetItemButtonTexture(button, texture)
-    -- Force icon to OVERLAY layer so it renders above the retail NormalTexture background.
-    -- Without this, the default ARTWORK/BORDER layer hides the icon behind the slot bg.
     local name = button:GetName()
     if name then
         local icon = _G[name .. 'IconTexture']
         if icon then
-            icon:SetDrawLayer('OVERLAY', 1)
+            icon:SetDrawLayer('BORDER')
             icon:Show()
         end
         local count = _G[name .. 'Count']
         if count then
-            count:SetDrawLayer('OVERLAY', 5)
+            count:SetDrawLayer('BORDER')
         end
     end
 end
@@ -113,7 +111,6 @@ local CT = {
     coinbox           = CombuctorAssets .. 'commoncoinbox',
 }
 
-local CT_ICON_OVERLAY_SUBLEVEL = 1
 
 -- Retail-style nineslice border for Combuctor frames
 local function CombuctorAddNineSlice(frame)
@@ -260,7 +257,7 @@ local function CombuctorRetailItemSlot(btn)
 
     local icon = _G[name .. 'IconTexture']
     if icon then
-        icon:SetDrawLayer('OVERLAY', CT_ICON_OVERLAY_SUBLEVEL)
+        icon:SetDrawLayer('BORDER')
         icon:SetTexCoord(0, 1, 0, 1)
         icon:ClearAllPoints()
         icon:SetAllPoints(btn)
@@ -269,7 +266,7 @@ local function CombuctorRetailItemSlot(btn)
 
     local count = _G[name .. 'Count']
     if count then
-        count:SetDrawLayer('OVERLAY', 5)
+        count:SetDrawLayer('BORDER')
     end
 
     local stock = _G[name .. 'Stock']
@@ -3825,7 +3822,13 @@ local function CombuctorSkinFrame(frame)
             icon.icon:SetSize(36, 36)
             icon.icon:SetDrawLayer('OVERLAY', 0)
         end
-        icon:EnableMouse(false)
+        icon:EnableMouse(true)
+        -- Kill old SetupIconButton resize handlers that blow icon to 56-62px
+        icon:SetScript('OnMouseDown', nil)
+        icon:SetScript('OnMouseUp', nil)
+        icon:SetScript('OnClick', function()
+            ToggleCharacter('PaperDollFrame')
+        end)
     end
 
     -- Bag border frame on top of icon
@@ -3857,12 +3860,12 @@ local function CombuctorSkinFrame(frame)
         close:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', 0, 0)
     end
 
-    -- Title: clear text (title button still used for drag)
+    -- Title: centered "Combuctor" label on the header border
     local title = _G[frame:GetName() .. 'Title']
     if title then
-        title:SetText('')
+        title:SetText('Combuctor')
         title:ClearAllPoints()
-        title:SetPoint('TOP', frame, 'TOP', 0, -10)
+        title:SetPoint('TOP', frame, 'TOP', 0, -5)
     end
 
     -- Bag toggle — reposition
@@ -3872,9 +3875,14 @@ local function CombuctorSkinFrame(frame)
         bagToggle:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', -14, -38)
     end
 
-    -- Disable portrait click
+    -- Portrait click opens CharacterFrame
     local portBtn = _G[frame:GetName() .. 'PortraitButton']
-    if portBtn then portBtn:EnableMouse(false) end
+    if portBtn then
+        portBtn:EnableMouse(true)
+        portBtn:SetScript('OnClick', function()
+            ToggleCharacter('PaperDollFrame')
+        end)
+    end
 end
 
 local function CombuctorSkinItems(frame)
