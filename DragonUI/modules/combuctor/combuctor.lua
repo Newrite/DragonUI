@@ -109,6 +109,10 @@ local CT = {
     bag_border        = CombuctorAssets .. 'bagborder2',
     slot_border       = CombuctorAssets .. 'ui-quickslot2',
     coinbox           = CombuctorAssets .. 'commoncoinbox',
+    currencybox       = CombuctorAssets .. 'commoncurrencybox',
+    coinGold          = CombuctorAssets .. 'coingold',
+    coinSilver        = CombuctorAssets .. 'coinsilver',
+    coinCopper        = CombuctorAssets .. 'coincopper',
 }
 
 
@@ -2935,9 +2939,13 @@ do
         f:RegisterEvent("PLAYER_MONEY")
         f:SetFrameLevel(f:GetFrameLevel() + 4)
 
+        -- Coin textures use DragonUI retail-style round icons (20x20 on 32x32 canvas)
+        local COIN_TEXCOORD = { 0.1875, 0.8125, 0.1875, 0.8125 }
+
         -- Copper (ancla a la derecha)
         f.iconCopper = f:CreateTexture(nil, "OVERLAY")
-        f.iconCopper:SetTexture("Interface\\MoneyFrame\\UI-CopperIcon")
+        f.iconCopper:SetTexture(CT.coinCopper)
+        f.iconCopper:SetTexCoord(unpack(COIN_TEXCOORD))
         f.iconCopper:SetSize(13, 13)
         f.iconCopper:SetPoint("RIGHT", f, "RIGHT", 0, 0)
         f.amtCopper = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -2945,7 +2953,8 @@ do
 
         -- Silver
         f.iconSilver = f:CreateTexture(nil, "OVERLAY")
-        f.iconSilver:SetTexture("Interface\\MoneyFrame\\UI-SilverIcon")
+        f.iconSilver:SetTexture(CT.coinSilver)
+        f.iconSilver:SetTexCoord(unpack(COIN_TEXCOORD))
         f.iconSilver:SetSize(13, 13)
         f.iconSilver:SetPoint("RIGHT", f.amtCopper, "LEFT", -4, 0)
         f.amtSilver = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -2953,7 +2962,8 @@ do
 
         -- Gold
         f.iconGold = f:CreateTexture(nil, "OVERLAY")
-        f.iconGold:SetTexture("Interface\\MoneyFrame\\UI-GoldIcon")
+        f.iconGold:SetTexture(CT.coinGold)
+        f.iconGold:SetTexCoord(unpack(COIN_TEXCOORD))
         f.iconGold:SetSize(13, 13)
         f.iconGold:SetPoint("RIGHT", f.amtSilver, "LEFT", -4, 0)
         f.amtGold = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -3017,6 +3027,181 @@ do
             self:Update()
         end
     end
+end
+
+-- ============================================================================
+-- TOKEN BAR (honor/emblem tracking — retail-style currency bar)
+-- ============================================================================
+
+do
+    local TokenBar = mod:NewClass("Frame")
+    local MAX_WATCHED_TOKENS = MAX_WATCHED_TOKENS or 20
+
+    local TOKENBAR_HEIGHT = 19
+    local TOKEN_ICON_SIZE = 14
+    local TOKEN_GAP = 6
+
+    -- Build the three-piece chrome pill background (same as bags_skin.lua ApplyPillChrome)
+    local function ApplyPillChrome(bar)
+        if bar._dragonuiPill then return end
+        bar._dragonuiPill = true
+
+        local left = bar:CreateTexture(nil, "BACKGROUND")
+        left:SetSize(8, TOKENBAR_HEIGHT)
+        left:SetPoint("LEFT", bar, "LEFT")
+        left:SetTexture(CT.currencybox)
+        left:SetTexCoord(0.03125, 0.53125, 0.289062, 0.554688)
+
+        local right = bar:CreateTexture(nil, "BACKGROUND")
+        right:SetSize(8, TOKENBAR_HEIGHT)
+        right:SetPoint("RIGHT", bar, "RIGHT")
+        right:SetTexture(CT.currencybox)
+        right:SetTexCoord(0.03125, 0.53125, 0.570312, 0.835938)
+
+        local middle = bar:CreateTexture(nil, "BACKGROUND")
+        middle:SetPoint("TOPLEFT", left, "TOPRIGHT")
+        middle:SetPoint("BOTTOMRIGHT", right, "BOTTOMLEFT")
+        middle:SetTexture(CT.currencybox)
+        middle:SetTexCoord(0, 0.5, 0.0078125, 0.273438)
+    end
+
+    function TokenBar:New(parent)
+        local bar = self:Bind(CreateFrame("Frame", nil, parent))
+        bar:SetHeight(TOKENBAR_HEIGHT)
+        bar.tokenButtons = {}
+        bar._tokenCount = 0
+
+        ApplyPillChrome(bar)
+
+        bar:SetScript("OnEvent", function(self, event)
+            if event == "CURRENCY_DISPLAY_UPDATE" then
+                self:Refresh()
+            end
+        end)
+        bar:RegisterEvent("CURRENCY_DISPLAY_UPDATE")
+
+        -- Also refresh when the frame is shown (e.g., after /reload or module toggle)
+        bar:SetScript("OnShow", function(self)
+            self:Refresh()
+        end)
+
+        return bar
+    end
+
+    function TokenBar:Refresh()
+        local numTokens = 0
+        for i = 1, MAX_WATCHED_TOKENS do
+            local name, count, extraCurrencyType, icon = GetBackpackCurrencyInfo(i)
+            if name then
+                numTokens = numTokens + 1
+                local btn = self.tokenButtons[i]
+                if not btn then
+                    btn = self:_CreateTokenButton(i)
+                    self.tokenButtons[i] = btn
+                end
+
+                -- Icon selection (matches Blizzard BackpackTokenFrame logic)
+                if extraCurrencyType == 1 then
+                    btn.icon:SetTexture("Interface\\PVPFrame\\PVP-ArenaPoints-Icon")
+                    btn.icon:SetTexCoord(0, 1, 0, 1)
+                elseif extraCurrencyType == 2 then
+                    local factionGroup = UnitFactionGroup("player")
+                    if factionGroup then
+                        btn.icon:SetTexture("Interface\\TargetingFrame\\UI-PVP-" .. factionGroup)
+                        btn.icon:SetTexCoord(0.03125, 0.59375, 0.03125, 0.59375)
+                    else
+                        btn.icon:SetTexCoord(0, 1, 0, 1)
+                    end
+                else
+                    btn.icon:SetTexture(icon)
+                    btn.icon:SetTexCoord(0, 1, 0, 1)
+                end
+
+                if count <= 99999 then
+                    btn.count:SetText(count)
+                else
+                    btn.count:SetText("*")
+                end
+                btn:Show()
+            else
+                local btn = self.tokenButtons[i]
+                if btn then
+                    btn:Hide()
+                end
+            end
+        end
+
+        -- Layout visible buttons right-to-left (bar is right-anchored)
+        local wasShown = self:IsShown()
+        if numTokens > 0 then
+            self._tokenCount = numTokens
+            local previous = nil
+            for i = 1, MAX_WATCHED_TOKENS do
+                local btn = self.tokenButtons[i]
+                if btn and btn:IsShown() then
+                    btn:ClearAllPoints()
+                    if previous then
+                        btn:SetPoint("RIGHT", previous, "LEFT", -TOKEN_GAP, 0)
+                    else
+                        btn:SetPoint("RIGHT", self, "RIGHT", -10, 1)
+                    end
+                    previous = btn
+                end
+            end
+            self:Show()
+        else
+            self._tokenCount = 0
+            self:Hide()
+        end
+        -- Notify parent to relayout if visibility changed
+        if wasShown ~= self:IsShown() then
+            local parent = self:GetParent()
+            if parent and parent.UpdateItemFrameSize then
+                parent:UpdateItemFrameSize()
+                parent:UpdateClampInsets()
+            end
+        end
+    end
+
+    function TokenBar:_CreateTokenButton(index)
+        local btn = CreateFrame("Button", nil, self)
+        btn:SetHeight(TOKENBAR_HEIGHT - 2)
+
+        -- Count text on the right
+        btn.count = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        btn.count:SetPoint("RIGHT", btn, "RIGHT", 0, 0)
+        btn.count:SetJustifyH("RIGHT")
+
+        -- Icon to the left of count
+        btn.icon = btn:CreateTexture(nil, "OVERLAY")
+        btn.icon:SetSize(TOKEN_ICON_SIZE, TOKEN_ICON_SIZE)
+        btn.icon:SetPoint("RIGHT", btn.count, "LEFT", -3, 0)
+
+        -- Set button width based on count text width
+        btn.count:SetText("99999")
+        btn:SetWidth(TOKEN_ICON_SIZE + 3 + btn.count:GetStringWidth() + 2)
+
+        -- Tooltip on enter (show currency name)
+        btn:SetScript("OnEnter", function(self)
+            local id = self._tokenIndex
+            if not id then return end
+            local name = GetBackpackCurrencyInfo(id)
+            if name then
+                GameTooltip:SetOwner(self, "ANCHOR_TOP")
+                GameTooltip:SetText(name, 1, 1, 1)
+                GameTooltip:Show()
+            end
+        end)
+        btn:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
+        btn._tokenIndex = index
+
+        return btn
+    end
+
+    -- Register with module
+    mod.TokenBar = TokenBar
 end
 
 -- ============================================================================
@@ -3451,19 +3636,27 @@ do
         f.itemFrame = mod.ItemFrame:New(f)
         f.itemFrame:SetPoint("TOPLEFT", 14, -70)
 
-        -- Coinbox frame (fixed to bottom-right, separate from money frame)
+        -- Token bar (honor/emblem tracking) — inventory only, at the very bottom
+        if not isBank then
+            f.tokenBar = mod.TokenBar:New(f)
+            f.tokenBar:SetSize(180, 19)
+            f.tokenBar:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -9, 10)
+        end
+
+        -- Coinbox frame (pill background for money, shifted up when token bar exists)
+        local coinY = not isBank and (10 + 19 + 3) or 10
         f.coinFrame = CreateFrame("Frame", nil, f)
-        f.coinFrame:SetSize(180, 17)
-        f.coinFrame:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -9, 10)
+        f.coinFrame:SetSize(180, 19)
+        f.coinFrame:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -9, coinY)
 
         local coinLeft = f.coinFrame:CreateTexture(nil, "BACKGROUND")
-        coinLeft:SetSize(8, 17)
+        coinLeft:SetSize(8, 19)
         coinLeft:SetPoint("LEFT", f.coinFrame, "LEFT")
         coinLeft:SetTexture(CT.coinbox)
         coinLeft:SetTexCoord(0.03125, 0.53125, 0.289062, 0.554688)
 
         local coinRight = f.coinFrame:CreateTexture(nil, "BACKGROUND")
-        coinRight:SetSize(8, 17)
+        coinRight:SetSize(8, 19)
         coinRight:SetPoint("RIGHT", f.coinFrame, "RIGHT")
         coinRight:SetTexture(CT.coinbox)
         coinRight:SetTexCoord(0.03125, 0.53125, 0.570312, 0.835938)
@@ -3475,7 +3668,7 @@ do
         coinMiddle:SetTexCoord(0, 0.5, 0.0078125, 0.273438)
 
         f.moneyFrame = mod.MoneyFrame:New(f)
-        f.moneyFrame:SetPoint("BOTTOMRIGHT", -12, 10)
+        f.moneyFrame:SetPoint("BOTTOMRIGHT", -12, coinY)
 
         f:UpdateTitleText()
         f:UpdateBagToggleHighlight()
@@ -3718,6 +3911,10 @@ do
             newW = newW - 36
         end
         local newH = self:GetHeight() + ITEM_FRAME_HEIGHT_OFFSET
+        -- Reserve bottom space for token bar (19px) + gap (3px) when inventory (not bank)
+        if not self.isBank and self.tokenBar then
+            newH = newH - 25
+        end
         if not (prevW == newW and prevH == newH) then
             self.itemFrame:SetWidth(newW)
             self.itemFrame:SetHeight(newH)
@@ -3727,11 +3924,13 @@ do
 
     function InventoryFrame:UpdateClampInsets()
         local l, r, t, b
-        if self.bottomFilter:IsShown() then
-            t, b = -15, 35
-        else
-            t, b = -15, 65
+        -- Base bottom: room for coinFrame (19px at y=10) + padding
+        local bottomBase = self.bottomFilter:IsShown() and 35 or 65
+        -- Reserve extra space for token bar when inventory (not bank)
+        if not self.isBank and self.tokenBar then
+            bottomBase = bottomBase + 25
         end
+        t, b = -15, bottomBase
         if self.sideFilter:IsShown() then
             if self.sideFilter:Reversed() then
                 l, r = -20, -35
