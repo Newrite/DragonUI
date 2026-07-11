@@ -1724,17 +1724,19 @@ local function AttachCombuctorButtons(frame, sortRef, clearRef, sellScrapRef, tr
         sellScrapBtn:SetPoint("TOPRIGHT", clearBtn, "TOPLEFT", -2, 0)
     end
 
-    -- resetBtn (32x32): right of searchBox, anchored so its TOP (Y=-38) matches bagToggle
-    if resetBtn then
-        resetBtn:ClearAllPoints()
-        resetBtn:SetPoint("TOPRIGHT", (sellScrapBtn or clearBtn or transmogBtn), "TOPLEFT", -42, 7)
-    end
-
-    -- searchBox (20px): TOPLEFT at (14, -44) so its centre (-54) aligns with button centres (-54)
+    -- searchBox (20px): from frame left to action buttons, leaving room for resetBtn
+    -- -28px gap = 20px resetBtn + 4px each side
     if searchBox then
         searchBox:ClearAllPoints()
         searchBox:SetPoint("TOPLEFT", frame, "TOPLEFT", 14, -44)
-        searchBox:SetPoint("TOPRIGHT", resetBtn, "TOPLEFT", 9, 0)
+        searchBox:SetPoint("TOPRIGHT", (sellScrapBtn or clearBtn or transmogBtn), "TOPLEFT", -100, 0)
+    end
+
+    -- resetBtn (20x20): anchored to searchBox right, NOT to action buttons
+    -- This decouples it — moving resetBtn won't stretch the search box
+    if resetBtn then
+        resetBtn:ClearAllPoints()
+        resetBtn:SetPoint("TOPLEFT", searchBox, "TOPRIGHT", 2, 0)
     end
 
     sortBtn:Show()

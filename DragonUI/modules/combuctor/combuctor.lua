@@ -119,14 +119,14 @@ local function CombuctorAddNineSlice(frame)
     local ns = {}
     frame._BagSkin_NineSlice = ns
 
-    ns.TopLeftCorner     = frame:CreateTexture(nil, 'ARTWORK')
-    ns.TopRightCorner    = frame:CreateTexture(nil, 'ARTWORK')
-    ns.BottomLeftCorner  = frame:CreateTexture(nil, 'ARTWORK')
-    ns.BottomRightCorner = frame:CreateTexture(nil, 'ARTWORK')
-    ns.TopEdge           = frame:CreateTexture(nil, 'ARTWORK')
-    ns.BottomEdge        = frame:CreateTexture(nil, 'ARTWORK')
-    ns.LeftEdge          = frame:CreateTexture(nil, 'ARTWORK')
-    ns.RightEdge         = frame:CreateTexture(nil, 'ARTWORK')
+    ns.TopLeftCorner     = frame:CreateTexture(nil, 'OVERLAY')
+    ns.TopRightCorner    = frame:CreateTexture(nil, 'OVERLAY')
+    ns.BottomLeftCorner  = frame:CreateTexture(nil, 'OVERLAY')
+    ns.BottomRightCorner = frame:CreateTexture(nil, 'OVERLAY')
+    ns.TopEdge           = frame:CreateTexture(nil, 'OVERLAY')
+    ns.BottomEdge        = frame:CreateTexture(nil, 'OVERLAY')
+    ns.LeftEdge          = frame:CreateTexture(nil, 'OVERLAY')
+    ns.RightEdge         = frame:CreateTexture(nil, 'OVERLAY')
 
     local bg = CreateFrame('Frame', nil, frame)
     bg:SetPoint('TOPLEFT', frame, 'TOPLEFT', 3, -18)
@@ -137,19 +137,19 @@ local function CombuctorAddNineSlice(frame)
     local bgTex = bg:CreateTexture(nil, 'BACKGROUND')
     bgTex:SetTexture(CT.frame_bg)
     bgTex:SetAllPoints(bg)
-    bgTex:SetAlpha(0.65)
+    bgTex:SetAlpha(0.8)
     ns.BgTex = bgTex
 
     local tlc = ns.TopLeftCorner
     tlc:SetTexture(CT.frame_metal)
     tlc:SetTexCoord(0.00195312, 0.294922, 0.00195312, 0.294922)
-    tlc:SetSize(75, 74)
+    tlc:SetSize(75, 75)
     tlc:SetPoint('TOPLEFT', -12, 16)
 
     local trc = ns.TopRightCorner
     trc:SetTexture(CT.frame_metal)
     trc:SetTexCoord(0.298828, 0.591797, 0.00195312, 0.294922)
-    trc:SetSize(75, 74)
+    trc:SetSize(75, 75)
     trc:SetPoint('TOPRIGHT', 4, 16)
 
     local blc = ns.BottomLeftCorner
@@ -533,12 +533,23 @@ end
 
 -- DragonUI_CombuctorResetButtonTemplate
 local function SetupResetButton(btn)
-    btn:SetSize(32, 32)
-    btn:SetNormalTexture("Interface\\Buttons\\CancelButton-Up")
-    btn:SetPushedTexture("Interface\\Buttons\\CancelButton-Down")
+    btn:SetSize(20, 20)
+    local icon = "Interface\\Icons\\INV_Pet_Broom"
+    local nt = btn:CreateTexture(nil, "ARTWORK")
+    nt:SetTexture(icon)
+    nt:SetTexCoord(0.06, 0.94, 0.06, 0.94)
+    nt:SetAllPoints(btn)
+    btn:SetNormalTexture(nt)
+    local pt = btn:CreateTexture(nil, "OVERLAY")
+    pt:SetTexture(icon)
+    pt:SetTexCoord(0.06, 0.94, 0.06, 0.94)
+    pt:SetAllPoints(btn)
+    pt:Hide()
+    btn:SetPushedTexture(pt)
     local ht = btn:CreateTexture(nil, "HIGHLIGHT")
-    ht:SetTexture("Interface\\Buttons\\CancelButton-Highlight")
+    ht:SetTexture("Interface\\Buttons\\ButtonHilight-Square")
     ht:SetBlendMode("ADD")
+    ht:SetAllPoints(btn)
     btn:SetHighlightTexture(ht)
 end
 
@@ -631,11 +642,17 @@ local function CreateInventoryFrame(name, parent)
         f:SetFilter('name', nil, true)
     end)
 
-    -- bagToggle (32x32) and resetBtn (32x32) share same baseline Y=-38
+    -- bagToggle (32x32) anchored top-right
     bagToggleBtn:SetPoint("TOPRIGHT", f, "TOPRIGHT", -14, -38)
-    resetBtn:SetPoint("TOPRIGHT", bagToggleBtn, "TOPLEFT", -2, 0)
 
-    -- searchBox (20px tall) stays at Y=-44 from frame (original position)
+    -- resetBtn (32x32): anchor to bag toggle, shift down 6px so visual
+    -- center aligns with the 20px search bar (search top=-44, height=20).
+    -- ClearAllPoints is REQUIRED — without it, SetPoint ADDS a second
+    -- anchor and the button appears stuck because two points fight.
+    resetBtn:ClearAllPoints()
+    resetBtn:SetPoint("TOPRIGHT", bagToggleBtn, "TOPLEFT", 3, -11)
+
+    -- searchBox (20px tall): TOPRIGHT Y=0 keeps it horizontal with resetBtn
     searchEb:SetPoint("TOPLEFT",  f, "TOPLEFT",  14, -44)
     searchEb:SetPoint("TOPRIGHT", resetBtn, "TOPLEFT", -4, 0)
 
@@ -2908,7 +2925,7 @@ do
     function MoneyFrame:New(parent)
         local f = self:Bind(CreateFrame("Frame", format("DragonUI_CombuctorMoney%d", moneyId), parent))
         f:SetHeight(19)
-        f:SetWidth(160)
+        f:SetWidth(120)
         f:SetScript("OnShow", self.OnShow)
         f:SetScript("OnEvent", function(self, event)
             if event == "PLAYER_MONEY" then
@@ -3284,10 +3301,13 @@ do
         f.buttons = setmetatable({}, { __index = function(t, k)
             local tab = BottomTab:New(f, k)
             if k > 1 then
-                tab:SetPoint("LEFT", f.buttons[k - 1], "RIGHT", -16, -0)
+                -- Horizontal chain only — Y comes from separate BOTTOM anchor
+                tab:SetPoint("LEFT", f.buttons[k - 1], "RIGHT", -16, 0)
             else
-                tab:SetPoint("CENTER", parent, "BOTTOMLEFT", 60, -10)
+                tab:SetPoint("LEFT", parent, "BOTTOMLEFT", 60, 0)
             end
+            -- Shared vertical baseline; active tab overrides in UpdateHighlight
+            tab:SetPoint("BOTTOM", parent, "BOTTOMLEFT", 0, -26)
             t[k] = tab
             return tab
         end })
@@ -3322,7 +3342,12 @@ do
     function BottomFilter:UpdateHighlight()
         local category = self:GetParent():GetSubCategory()
         for _, button in pairs(self.buttons) do
-            if button:IsShown() then button:UpdateHighlight(category) end
+            if button:IsShown() then
+                button:UpdateHighlight(category)
+                -- Only Y moves — LEFT/RIGHT chain is untouched
+                local isActive = (button.set and button.set.name == category)
+                button:SetPoint("BOTTOM", self:GetParent(), "BOTTOMLEFT", 0, isActive and -31 or -26)
+            end
         end
     end
 end
@@ -3428,7 +3453,7 @@ do
 
         -- Coinbox frame (fixed to bottom-right, separate from money frame)
         f.coinFrame = CreateFrame("Frame", nil, f)
-        f.coinFrame:SetSize(220, 17)
+        f.coinFrame:SetSize(180, 17)
         f.coinFrame:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -9, 10)
 
         local coinLeft = f.coinFrame:CreateTexture(nil, "BACKGROUND")
