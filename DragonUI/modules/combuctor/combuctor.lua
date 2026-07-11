@@ -167,9 +167,9 @@ local function CombuctorAddNineSlice(frame)
     local te = ns.TopEdge
     te:SetTexture(CT.frame_metal_h)
     te:SetTexCoord(0, 1, 0.00390625, 0.589844)
-    te:SetSize(32, 74)
-    te:SetPoint('TOPLEFT', tlc, 'TOPRIGHT', 0, 0)
-    te:SetPoint('TOPRIGHT', trc, 'TOPLEFT', 0, 0)
+    te:SetSize(32, 75)
+    te:SetPoint('TOPLEFT', tlc, 'TOPRIGHT', -4, 0)
+    te:SetPoint('TOPRIGHT', trc, 'TOPLEFT', 4, 0)
 
     local be = ns.BottomEdge
     be:SetTexture(CT.frame_metal_h)
