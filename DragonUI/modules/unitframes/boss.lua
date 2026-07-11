@@ -1,9 +1,9 @@
 --[[
   DragonUI - Boss Frames (boss.lua)
 
-  Custom DragonUI boss frames — NOT Blizzard's.
-  Built from scratch using CreateFrame (no SecureUnitButtonTemplate).
-  Uses Dragonflight-styled DragonUI textures.
+  Reskins Blizzard's native Boss1-4TargetFrame with Dragonflight visual styling.
+  Follows the RetailUI pattern: retexture existing Blizzard frames instead of
+  creating new ones from scratch.
 
   Architecture:
   - Config: addon.db.profile.unitframe.boss
@@ -38,28 +38,13 @@ end
 
 local NUM_BOSS_FRAMES = 4
 
--- Frame dimensions (match original boss frame native size)
-local FRAME_WIDTH = 200
-local FRAME_HEIGHT = 100
-
--- Portrait (circular, same as target_style)
-local PORTRAIT_SIZE = 45
-
--- Health bar (positioned relative to portrait like target_style)
-local HEALTH_BAR_WIDTH = 100
-local HEALTH_BAR_HEIGHT = 16
-
--- Mana bar
-local MANA_BAR_WIDTH = 106
-local MANA_BAR_HEIGHT = 7
-
 -- ============================================================================
 -- MODULE STATE
 -- ============================================================================
 
 local BossModule = UF.CreateModule("boss")
-BossModule.bossFrames = {}    -- Our custom boss frames, indexed 1-4
-BossModule.wrapperFrames = {} -- Positioning wrappers
+BossModule.wrapperFrames = {} -- editor wrapper frames indexed 1-4
+BossModule.secureAnchors = {}
 BossModule.configured = false
 
 if addon.RegisterModule then
@@ -171,366 +156,446 @@ local function EnforceFlashStyle(flashTex, parentFrame)
 end
 
 -- ============================================================================
--- CREATE CUSTOM BOSS FRAME
+-- POSITION ENFORCEMENT
 -- ============================================================================
+-- Hooks SetPoint on each boss frame to block ALL Blizzard repositioning.
+-- Without this, Blizzard re-positions boss frames through multiple codepaths
+-- (TargetFrame_Update, XML anchors, UIParent_ManageFramePositions) that we
+-- can't catch with just TargetFrame_Update hooks.
 
-local function CreateBossFrameWidget(name, index)
-    -- Main frame — normal frame, no secure template
-    local frame = CreateFrame("Frame", name, UIParent)
-    frame:SetSize(FRAME_WIDTH, FRAME_HEIGHT)
-    frame:SetFrameLevel(100)
-    frame:SetFrameStrata("MEDIUM")
-    frame:Hide() -- Hidden by default until boss appears
+local function CreateSecureBossAnchor(wrapper, bossFrame, bossIndex)
+    local anchor = CreateFrame("Frame", nil, wrapper, "SecureHandlerStateTemplate")
+    anchor:SetAllPoints(wrapper)
+    anchor:SetFrameRef("bossFrame", bossFrame)
+    anchor:SetAttribute("unit", "boss" .. bossIndex)
+    anchor:SetAttribute("_onstate-unitexists", [[
+        if newstate then
+            local bossFrame = self:GetFrameRef("bossFrame")
+            if bossFrame then
+                bossFrame:ClearAllPoints()
+                bossFrame:SetPoint("TOPLEFT", self, "TOPLEFT", 0, 0)
+            end
+            -- Clear the cache so later Blizzard reanchors are repaired on the next unit-watch pass.
+            self:SetAttribute("state-unitexists", nil)
+        end
+    ]])
+    RegisterUnitWatch(anchor, true)
+    BossModule.secureAnchors[bossIndex] = anchor
+    return anchor
+end
 
-    -- Store reference
-    frame.unit = "boss" .. index
-    frame.index = index
-
-    -- ---- Background (dark fill behind bars) ----
-    -- local bg = frame:CreateTexture(name .. "BG", "BACKGROUND")
-    -- bg:SetDrawLayer("BACKGROUND", -7)
-    -- bg:SetTexture(TEXTURES.BACKGROUND)
-    -- bg:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -8)
-    -- bg:SetSize(FRAME_WIDTH, FRAME_HEIGHT - 8)
-    -- frame.background = bg
-
-    -- ---- Border frame (on its own overlay frame above bars) ----
-    local borderFrame = CreateFrame("Frame", name .. "BorderFrame", frame)
-    borderFrame:SetAllPoints(frame)
-    borderFrame:EnableMouse(false)
-    borderFrame:SetFrameLevel(frame:GetFrameLevel() + 2)
-    frame.borderFrame = borderFrame
-
-    -- ---- Frame border texture (Dragonflight elite dragon border) ----
-    local border = borderFrame:CreateTexture(name .. "Border", "OVERLAY")
-
-    border:SetDrawLayer("OVERLAY", 5)
-    border:SetTexture(TEXTURES.BORDER)
-    border:SetPoint("TOPLEFT", frame, "TOPLEFT", 15, -7)
-    border:SetSize(FRAME_WIDTH, FRAME_HEIGHT)
-    frame.border = border
-
-    -- ---- Elite decoration (dragon on decoFrame, child of borderFrame) ----
-    local decoFrame = CreateFrame("Frame", name .. "DecoFrame", borderFrame)
-    decoFrame:SetAllPoints(portrait)
-    decoFrame:EnableMouse(false)
-    frame.decoFrame = decoFrame
-
-    local elite = decoFrame:CreateTexture(name .. "Elite", "OVERLAY")
-    elite:SetDrawLayer("OVERLAY", 6)
-    elite:SetTexture(TEXTURES.BOSS)
-    elite:Hide()
-    frame.eliteDecoration = elite
-
-    -- ---- Portrait ----
-    local portrait = CreateFrame("Frame", name .. "PortraitFrame", frame)
-    portrait:SetSize(PORTRAIT_SIZE, PORTRAIT_SIZE)
-    portrait:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -38, -12)
-    portrait:EnableMouse(false)
-
-    local portraitTex = portrait:CreateTexture(name .. "Portrait", "ARTWORK")
-    portraitTex:SetAllPoints(portrait)
-    portraitTex:SetTexCoord(0, 1, 0, 1)
-    portrait.tex = portraitTex
-    frame.portrait = portrait
-
-    -- ---- Portrait circular mask ----
-    -- local portraitMask = frame:CreateTexture(name .. "PortraitMask", "BACKGROUND")
-    -- portraitMask:SetDrawLayer("BACKGROUND", 1)
-    -- portraitMask:SetTexture(PORTRAIT_MASK)
-    -- portraitMask:SetVertexColor(0, 0, 0, 1)
-    -- portraitMask:SetPoint("CENTER", portrait, "CENTER", 0, 0)
-    -- portraitMask:SetSize(PORTRAIT_SIZE, PORTRAIT_SIZE)
-    -- frame.portraitMask = portraitMask
-
-    -- ---- Health bar ----
-    local healthBar = CreateFrame("StatusBar", name .. "HealthBar", frame)
-    healthBar:SetSize(HEALTH_BAR_WIDTH, HEALTH_BAR_HEIGHT)
-    healthBar:SetPoint("RIGHT", portrait, "LEFT", -1, 0)
-    healthBar:SetFrameLevel(frame:GetFrameLevel() + 1)
-    healthBar:SetStatusBarTexture(TEXTURES.BAR_PREFIX .. "Health")
-    healthBar:GetStatusBarTexture():SetDrawLayer("ARTWORK", 1)
-    healthBar:GetStatusBarTexture():SetVertexColor(1, 1, 1, 1)
-    frame.healthBar = healthBar
-
-    -- ---- Mana bar ----
-    local manaBar = CreateFrame("StatusBar", name .. "ManaBar", frame)
-    manaBar:SetSize(MANA_BAR_WIDTH, MANA_BAR_HEIGHT)
-    manaBar:SetPoint("RIGHT", portrait, "LEFT", 5, -13)
-    manaBar:SetFrameLevel(frame:GetFrameLevel() + 1)
-    manaBar:SetStatusBarTexture(TEXTURES.BAR_PREFIX .. "Mana")
-    manaBar:GetStatusBarTexture():SetDrawLayer("ARTWORK", 1)
-    manaBar:GetStatusBarTexture():SetVertexColor(1, 1, 1, 1)
-    frame.manaBar = manaBar
-
-    -- ---- Name background (rounded, target-style) ----
-    local nameBG = frame:CreateTexture(name .. "NameBG", "BORDER")
-    nameBG:SetDrawLayer("BORDER", 1)
-    nameBG:SetTexture("Interface\\AddOns\\DragonUI\\Textures\\UIUnitFrame2x_PTR")
-    nameBG:SetTexCoord(536 / 1024, 804 / 1024, 168 / 512, 199 / 512) -- red (hostile)
-    nameBG:SetVertexColor(1, 1, 1, 1)
-    nameBG:SetBlendMode("ADD")
-    frame.nameBackground = nameBG
-
-    -- ---- Name text ----
-    local nameText = frame:CreateFontString(name .. "NameText", "OVERLAY")
-    nameText:SetDrawLayer("OVERLAY", 2)
-    nameText:SetFont("Fonts/FRIZQT__.TTF", 9, "THICK")
-    nameText:SetTextColor(1, 0.96, 0.45)
-    frame.nameText = nameText
-
-    -- ---- Level text ----
-    local levelText = frame:CreateFontString(name .. "LevelText", "OVERLAY")
-    levelText:SetDrawLayer("OVERLAY", 2)
-    levelText:SetFont("Fonts/FRIZQT__.TTF", 9, "THICK")
-    levelText:SetTextColor(1, 0.82, 0)
-    frame.levelText = levelText
-
-    -- ---- Health text (left = percentage, right = current) ----
-    local healthPct = healthBar:CreateFontString(name .. "HealthPct", "OVERLAY")
-    healthPct:SetDrawLayer("OVERLAY")
-    healthPct:SetFont("Fonts/FRIZQT__.TTF", 10, "THICK")
-    healthPct:SetTextColor(1, 1, 1)
-    healthPct:SetJustifyH("LEFT")
-    frame.healthPct = healthPct
-
-    local healthText = healthBar:CreateFontString(name .. "HealthText", "OVERLAY")
-    healthText:SetDrawLayer("OVERLAY")
-    healthText:SetFont("Fonts/FRIZQT__.TTF", 10, "THICK")
-    healthText:SetTextColor(1, 1, 1)
-    healthText:SetJustifyH("RIGHT")
-    frame.healthText = healthText
-
-    -- ---- Power text (left = percentage, right = current) ----
-    local powerPct = manaBar:CreateFontString(name .. "PowerPct", "OVERLAY")
-    powerPct:SetDrawLayer("OVERLAY")
-    powerPct:SetFont("Fonts\\FRIZQT__.TTF", 8, "THICK")
-    powerPct:SetTextColor(1, 1, 1)
-    powerPct:SetJustifyH("LEFT")
-    frame.powerPct = powerPct
-
-    local powerText = manaBar:CreateFontString(name .. "PowerText", "OVERLAY")
-    powerText:SetDrawLayer("OVERLAY")
-    powerText:SetFont("Fonts\\FRIZQT__.TTF", 8, "THICK")
-    powerText:SetTextColor(1, 1, 1)
-    powerText:SetJustifyH("RIGHT")
-    frame.powerText = powerText
-
-    -- ---- Flash texture (threat glow) — custom, hidden initially ----
-    local flashTex = frame:CreateTexture(name .. "FlashMirror", "OVERLAY")
-    flashTex:SetDrawLayer("OVERLAY", 7)
-    flashTex:SetTexture(TEXTURES.THREAT)
-    flashTex:SetTexCoord(0, 376/512, 0, 134/256)
-    flashTex:SetVertexColor(1, 0, 0, 1)
-    flashTex:SetBlendMode("ADD")
-    flashTex:SetAlpha(0.7)
-    flashTex:SetSize(188, 67)
-    flashTex:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 3, 25)
-    flashTex:Hide()
-    frame.flashMirror = flashTex
-
-    return frame
+local function HookBossFrameSetPoint(bossFrame, bossIndex)
+    if bossFrame.__DragonUI_SetPointHooked then return end
+    hooksecurefunc(bossFrame, "SetPoint", function(self, ...)
+        if self._DragonUI_SettingPoint or InCombatLockdown() then return end
+        local anchor = BossModule.secureAnchors[bossIndex] or BossModule.wrapperFrames[bossIndex]
+        if not anchor then return end
+        self._DragonUI_SettingPoint = true
+        self:ClearAllPoints()
+        self:SetPoint("TOPLEFT", anchor, "TOPLEFT", 0, 0)
+        self._DragonUI_SettingPoint = nil
+    end)
+    bossFrame.__DragonUI_SetPointHooked = true
 end
 
 -- ============================================================================
--- APPLY LAYOUT — position all child elements relative to frame
+-- RESKIN BLIZZARD BOSS FRAME
 -- ============================================================================
 
-local function ApplyBossFrameLayout(frame)
-    if not frame or not frame.healthBar then return end
+local function ReskinBossFrame(wrapperFrame, bossFrame, bossIndex)
+    -- Anchor the Blizzard boss frame to our wrapper
+    local positionAnchor = BossModule.secureAnchors[bossIndex] or wrapperFrame
+    bossFrame._DragonUI_SettingPoint = true
+    bossFrame:ClearAllPoints()
+    bossFrame:SetPoint("TOPLEFT", positionAnchor, "TOPLEFT", 0, 0)
+    bossFrame:SetHitRectInsets(0, 0, 0, 0)
+    bossFrame._DragonUI_SettingPoint = nil
 
-    local portrait = frame.portrait
-    local healthBar = frame.healthBar
-    local manaBar = frame.manaBar
-    local nameBG = frame.nameBackground
-    local nameText = frame.nameText
-    local levelText = frame.levelText
-    local elite = frame.eliteDecoration
+    local frameName = bossFrame:GetName()
 
-    -- Portrait
-    portrait:ClearAllPoints()
-    portrait:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -38, -12)
+    -- Hide ALL Blizzard default textures
+    local blizzBorder = _G[frameName .. "TextureFrameTexture"]
+    if blizzBorder then blizzBorder:SetAlpha(0) end
+    local blizzBG = _G[frameName .. "Background"]
+    if blizzBG then blizzBG:SetAlpha(0) end
 
-    -- Health bar
-    healthBar:ClearAllPoints()
-    healthBar:SetPoint("RIGHT", portrait, "LEFT", -1, 0)
-    healthBar:SetFrameLevel(frame:GetFrameLevel() + 1)
-
-    -- Mana bar
-    manaBar:ClearAllPoints()
-    manaBar:SetPoint("RIGHT", portrait, "LEFT", 5, -13)
-    manaBar:SetFrameLevel(frame:GetFrameLevel() + 1)
-
-    -- Name background
-    nameBG:ClearAllPoints()
-    nameBG:SetPoint("BOTTOMLEFT", healthBar, "TOPLEFT", -0.5, 0.2)
-    nameBG:SetSize(135, 14)
-
-    -- Name text
-    nameText:ClearAllPoints()
-    nameText:SetPoint("BOTTOM", healthBar, "TOP", 10, 3)
-    nameText:SetWidth(90)
-
-    -- Level text
-    levelText:ClearAllPoints()
-    levelText:SetPoint("BOTTOMRIGHT", healthBar, "TOPLEFT", 18, 3)
-
-    -- Elite dragon (positioned relative to portrait)
-    local unit = frame.unit
-    local classification
-    if unit and UnitExists(unit) then
-        classification = UnitClassification(unit)
+    -- ---- Frame background (dark fill behind bars — same as target_style) ----
+    if not bossFrame.DragonUI_FrameBG then
+        bossFrame.DragonUI_FrameBG = bossFrame:CreateTexture(
+            nil, "BACKGROUND")
+        bossFrame.DragonUI_FrameBG:SetDrawLayer("BACKGROUND", -7)
+        bossFrame.DragonUI_FrameBG:SetTexture(TEXTURES.BACKGROUND)
+        bossFrame.DragonUI_FrameBG:ClearAllPoints()
+        bossFrame.DragonUI_FrameBG:SetPoint("TOPLEFT", bossFrame, "TOPLEFT", 0, -8)
     end
-    local coords
-    if classification == "worldboss" then
-        coords = BOSS_COORDS.rareelite
-    elseif classification == "elite" then
-        coords = BOSS_COORDS.elite
-    elseif classification == "rareelite" then
-        coords = BOSS_COORDS.rareelite
-    elseif classification == "rare" then
-        coords = BOSS_COORDS.rare
-    else
-        coords = BOSS_COORDS.rareelite
+
+    -- ---- Frame border (on its own overlay frame above bars) ----
+    if not bossFrame.DragonUI_BorderFrame then
+        local borderFrame = CreateFrame("Frame", nil, bossFrame)
+        borderFrame:SetAllPoints(bossFrame)
+        borderFrame:SetFrameLevel(bossFrame:GetFrameLevel() + 2)
+        borderFrame:EnableMouse(false)
+        bossFrame.DragonUI_BorderFrame = borderFrame
+
+        bossFrame.DragonUI_FrameBorder = borderFrame:CreateTexture(
+            nil, "OVERLAY")
+        bossFrame.DragonUI_FrameBorder:SetDrawLayer("OVERLAY", 5)
+        bossFrame.DragonUI_FrameBorder:SetTexture(TEXTURES.BORDER)
+        bossFrame.DragonUI_FrameBorder:ClearAllPoints()
+        bossFrame.DragonUI_FrameBorder:SetPoint(
+            "TOPLEFT", bossFrame.DragonUI_FrameBG, "TOPLEFT", 0, 0)
     end
-    if coords then
-        elite:SetTexCoord(coords[1], coords[2], coords[3], coords[4])
-        elite:SetSize(79, 67)
-        elite:ClearAllPoints()
-        elite:SetPoint("CENTER", portrait, "CENTER", 8, coords[8])
-        elite:Show()
+
+    -- ---- Raise Blizzard TextureFrame above border AND decoFrame ----
+    -- TextureFrame holds name, level, skull, raid target, pvp icon, etc.
+    -- borderFrame = N+2, decoFrame (child) = N+3, TextureFrame must be N+4.
+    local textureFrame = _G[frameName .. "TextureFrame"]
+    if textureFrame then
+        textureFrame:SetFrameLevel(bossFrame.DragonUI_BorderFrame:GetFrameLevel() + 2)
+    end
+
+    -- ---- Decoration frame (child of borderFrame — always renders above border) ----
+    -- In 3.3.5a, child frames render above parent textures regardless of
+    -- draw layer, solving the random elite/border layering race condition.
+    -- This is the same pattern target_style.lua uses with Blizzard's TextureFrame.
+    if not bossFrame.DragonUI_DecoFrame then
+        local decoFrame = CreateFrame("Frame", nil, bossFrame.DragonUI_BorderFrame)
+        decoFrame:SetAllPoints(bossFrame)
+        decoFrame:EnableMouse(false)
+        bossFrame.DragonUI_DecoFrame = decoFrame
+    end
+
+    -- ---- Portrait (same anchor as target: TOPRIGHT) ----
+    local portrait = _G[frameName .. "Portrait"]
+    if portrait then
+        portrait:ClearAllPoints()
+        portrait:SetSize(56, 56)
+        portrait:SetPoint("TOPRIGHT", bossFrame, "TOPRIGHT", -47, -15)
+        portrait:SetDrawLayer("ARTWORK", 1)
+        local unit = bossFrame.unit or bossFrame:GetAttribute("unit")
+        if unit and UnitExists(unit) then
+            SetPortraitTexture(portrait, unit)
+        end
+    end
+
+    -- ---- Portrait mask (circular dark background) ----
+    if portrait and not bossFrame.DragonUI_PortraitMask then
+        bossFrame.DragonUI_PortraitMask = bossFrame:CreateTexture(
+            nil, "BACKGROUND")
+        bossFrame.DragonUI_PortraitMask:SetDrawLayer("BACKGROUND", 1)
+        bossFrame.DragonUI_PortraitMask:SetTexture(PORTRAIT_MASK)
+        bossFrame.DragonUI_PortraitMask:SetVertexColor(0, 0, 0, 1)
+        bossFrame.DragonUI_PortraitMask:SetPoint(
+            "CENTER", portrait, "CENTER", 0, 0)
+        bossFrame.DragonUI_PortraitMask:SetSize(56, 56)
+    end
+
+    -- ---- Elite decoration (dragon) — on decoFrame (child of borderFrame) ----
+    local decoFrame = bossFrame.DragonUI_DecoFrame
+    if portrait and not bossFrame.DragonUI_Elite and decoFrame then
+        bossFrame.DragonUI_Elite = decoFrame:CreateTexture(
+            nil, "OVERLAY")
+        bossFrame.DragonUI_Elite:SetDrawLayer("OVERLAY", 6)
+        bossFrame.DragonUI_Elite:SetTexture(TEXTURES.BOSS)
+        bossFrame.DragonUI_Elite:Hide()
+    end
+    -- Apply classification decoration
+    if bossFrame.DragonUI_Elite and portrait then
+        local unit = bossFrame.unit or bossFrame:GetAttribute("unit")
+        local classification
+        if unit and UnitExists(unit) then
+            classification = UnitClassification(unit)
+        end
+        local coords
+        if classification == "worldboss" then
+            coords = BOSS_COORDS.rareelite
+        elseif classification == "elite" then
+            coords = BOSS_COORDS.elite
+        elseif classification == "rareelite" then
+            coords = BOSS_COORDS.rareelite
+        elseif classification == "rare" then
+            coords = BOSS_COORDS.rare
+        else
+            -- Boss frames default to winged dragon (rareelite)
+            coords = BOSS_COORDS.rareelite
+        end
+        if coords then
+            bossFrame.DragonUI_Elite:SetTexCoord(coords[1], coords[2], coords[3], coords[4])
+            bossFrame.DragonUI_Elite:SetSize(coords[5], coords[6])
+            bossFrame.DragonUI_Elite:ClearAllPoints()
+            bossFrame.DragonUI_Elite:SetPoint("CENTER", portrait, "CENTER", coords[7], coords[8])
+            bossFrame.DragonUI_Elite:Show()
+        end
+    end
+
+    -- ---- Health bar (anchored to portrait like target_style) ----
+    local healthBar = _G[frameName .. "HealthBar"]
+    if healthBar then
+        healthBar:ClearAllPoints()
+        healthBar:SetSize(125, 20)
+        healthBar:SetPoint("RIGHT", portrait, "LEFT", -1, 0)
+        healthBar:SetFrameLevel(bossFrame:GetFrameLevel() + 1)
+
+        local statusBarTex = healthBar:GetStatusBarTexture()
+        if statusBarTex then
+            statusBarTex:SetAllPoints(healthBar)
+            statusBarTex:SetTexture(TEXTURES.BAR_PREFIX .. "Health")
+            statusBarTex:SetDrawLayer("ARTWORK", 1)
+            statusBarTex:SetVertexColor(1, 1, 1, 1)
+        end
+
+        if not healthBar.DragonUI_ColorLocked then
+            hooksecurefunc(healthBar, "SetStatusBarColor", function(self)
+                local tex = self:GetStatusBarTexture()
+                if tex then tex:SetVertexColor(1, 1, 1, 1) end
+            end)
+            healthBar.DragonUI_ColorLocked = true
+        end
+
+        -- Dynamic texcoord cropping (same as target_style)
+        if not healthBar.DragonUI_TexCoordHooked then
+            hooksecurefunc(healthBar, "SetValue", function(self)
+                local texture = self:GetStatusBarTexture()
+                if not texture then return end
+                local _, max = self:GetMinMaxValues()
+                local cur = self:GetValue()
+                if max > 0 and cur then
+                    texture:SetTexCoord(0, cur / max, 0, 1)
+                end
+            end)
+            healthBar.DragonUI_TexCoordHooked = true
+        end
+    end
+
+    -- ---- Mana bar (anchored to portrait like target_style) ----
+    local manaBar = _G[frameName .. "ManaBar"]
+    if manaBar then
+        manaBar:ClearAllPoints()
+        manaBar:SetSize(132, 9)
+        manaBar:SetPoint("RIGHT", portrait, "LEFT", 6.5, -16.5)
+        manaBar:SetFrameLevel(bossFrame:GetFrameLevel() + 1)
+
+        local statusBarTex = manaBar:GetStatusBarTexture()
+        if statusBarTex then
+            statusBarTex:SetAllPoints(manaBar)
+            statusBarTex:SetTexture(TEXTURES.BAR_PREFIX .. "Mana")
+            statusBarTex:SetDrawLayer("ARTWORK", 1)
+            statusBarTex:SetVertexColor(1, 1, 1, 1)
+        end
+
+        if not manaBar.DragonUI_ColorLocked then
+            hooksecurefunc(manaBar, "SetStatusBarColor", function(self)
+                local tex = self:GetStatusBarTexture()
+                if tex then tex:SetVertexColor(1, 1, 1, 1) end
+            end)
+            manaBar:SetStatusBarColor(1, 1, 1, 1)
+            manaBar.DragonUI_ColorLocked = true
+        end
+
+        -- Dynamic texcoord cropping (same as target_style)
+        if not manaBar.DragonUI_TexCoordHooked then
+            hooksecurefunc(manaBar, "SetValue", function(self)
+                local texture = self:GetStatusBarTexture()
+                if not texture then return end
+                texture:SetVertexColor(1, 1, 1, 1)
+                local _, max = self:GetMinMaxValues()
+                local cur = self:GetValue()
+                if max > 0 and cur then
+                    texture:SetTexCoord(0, cur / max, 0, 1)
+                end
+            end)
+            manaBar.DragonUI_TexCoordHooked = true
+        end
+    end
+
+    -- ---- Name background (anchored to healthBar like target_style) ----
+    local nameBG = _G[frameName .. "NameBackground"]
+    if nameBG then
+        nameBG:ClearAllPoints()
+        nameBG:SetPoint("BOTTOMLEFT", healthBar, "TOPLEFT", -2, -5)
+        nameBG:SetSize(135, 18)
+        nameBG:SetTexture(TEXTURES.NAME_BACKGROUND)
+        nameBG:SetDrawLayer("BORDER", 1)
+        nameBG:SetBlendMode("ADD")
+    end
+
+    -- ---- Name text (anchored to healthBar like target_style) ----
+    local nameText = _G[frameName .. "TextureFrameName"]
+    if nameText then
+        nameText:ClearAllPoints()
+        nameText:SetPoint("BOTTOM", healthBar, "TOP", 4, 3)
+        nameText:SetDrawLayer("OVERLAY", 2)
+    end
+
+    -- ---- Level text ----
+    local levelText = _G[frameName .. "TextureFrameLevelText"]
+    if levelText then
+        levelText:ClearAllPoints()
+        levelText:SetPoint("BOTTOMRIGHT", healthBar, "TOPLEFT", 18, 3)
+        levelText:SetDrawLayer("OVERLAY", 2)
     end
 
     -- High level icon (skull)
-    local highLevelTex = _G[frame:GetName() .. "TextureFrameHighLevelTexture"]
+    local highLevelTex = _G[frameName .. "TextureFrameHighLevelTexture"]
     if highLevelTex and levelText then
         highLevelTex:ClearAllPoints()
         highLevelTex:SetPoint("CENTER", levelText, "CENTER", -9, 6)
         highLevelTex:set_atlas("TargetFrame-HighLevelIcon", true)
     end
 
-    -- Power text (left = pct, right = current)
-    if frame.powerPct then
-        frame.powerPct:ClearAllPoints()
-        frame.powerPct:SetPoint("LEFT", manaBar, "LEFT", 6, 0)
-    end
-    if frame.powerText then
-        frame.powerText:ClearAllPoints()
-        frame.powerText:SetPoint("RIGHT", manaBar, "RIGHT", -6, 0)
+    -- Health text
+    local healthText = _G[frameName .. "TextureFrameHealthBarText"]
+    if healthText and healthBar then
+        healthText:ClearAllPoints()
+        healthText:SetPoint("CENTER", healthBar, "CENTER", 0, 0)
+        healthText:SetDrawLayer("OVERLAY")
     end
 
-
-
-    -- Flash mirror positioning
-    frame.flashMirror:ClearAllPoints()
-    frame.flashMirror:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 3, 25)
-end
-
--- ============================================================================
--- NUMBER FORMATTING
--- ============================================================================
-
-local function AbbreviateNumber(val)
-    if val >= 1e9 then
-        return ("%.1fb"):format(val / 1e9)
-    elseif val >= 1e6 then
-        return ("%.1fm"):format(val / 1e6)
-    elseif val >= 1e4 then
-        return ("%.1fk"):format(val / 1e4)
-    elseif val >= 1e3 then
-        return ("%.0fk"):format(val / 1e3)
-    end
-    return tostring(val)
-end
-
--- ============================================================================
--- UPDATE BOSS FRAME — refresh all data from unit
--- ============================================================================
-
-local function UpdateBossFrame(frame)
-    if not frame or not frame.unit then return end
-
-    local unit = frame.unit
-
-    -- Portrait
-    if UnitExists(unit) then
-        SetPortraitTexture(frame.portrait.tex, unit)
-    else
-        frame.portrait.tex:SetTexture(nil)
+    -- Dead text
+    local deadText = _G[frameName .. "TextureFrameDeadText"]
+    if deadText and healthBar then
+        deadText:ClearAllPoints()
+        deadText:SetPoint("CENTER", healthBar, "CENTER", 0, 0)
+        deadText:SetDrawLayer("OVERLAY")
     end
 
-    -- Name
-    local name = UnitName(unit) or ""
-    frame.nameText:SetText(name)
-
-    -- Level
-    local level = UnitLevel(unit)
-    local levelColor
-    if GetDifficultyColor then
-        local r, g, b = GetDifficultyColor(level)
-        levelColor = {r = r or 1, g = g or 0.82, b = b or 0}
-    elseif GetQuestDifficultyColor then
-        local color = GetQuestDifficultyColor(level)
-        levelColor = {r = color.r, g = color.g, b = color.b}
-    else
-        levelColor = {r = 1, g = 0.82, b = 0}
-    end
-    frame.levelText:SetText(level)
-    frame.levelText:SetTextColor(levelColor.r, levelColor.g, levelColor.b)
-
-    -- Health
-    local curHP = UnitHealth(unit)
-    local maxHP = UnitHealthMax(unit)
-    frame.healthBar:SetMinMaxValues(0, maxHP)
-    frame.healthBar:SetValue(curHP)
-    if maxHP > 0 then
-        local pct = math.floor(curHP / maxHP * 100)
-        if frame.healthPct then frame.healthPct:SetText(pct .. "%") end
-        if frame.healthText then frame.healthText:SetText(AbbreviateNumber(curHP)) end
-    else
-        if frame.healthPct then frame.healthPct:SetText("") end
-        if frame.healthText then frame.healthText:SetText(curHP) end
+    -- Mana text
+    local manaText = _G[frameName .. "TextureFrameManaBarText"]
+    if manaText and manaBar then
+        manaText:ClearAllPoints()
+        manaText:SetPoint("CENTER", manaBar, "CENTER", 0, 0)
+        manaText:SetDrawLayer("OVERLAY")
     end
 
-    -- Mana / Power
-    local curMP = UnitMana(unit)
-    local maxMP = UnitManaMax(unit)
-    if maxMP > 0 then
-        frame.manaBar:SetMinMaxValues(0, maxMP)
-        frame.manaBar:SetValue(curMP)
-        frame.manaBar:Show()
-        frame.manaBar:SetStatusBarColor(0.02, 0.32, 0.71)
-        if frame.powerPct or frame.powerText then
-            local pct = math.floor(curMP / maxMP * 100)
-            if frame.powerPct then frame.powerPct:SetText(pct .. "%") end
-            if frame.powerText then
-                frame.powerText:SetText(AbbreviateNumber(curMP))
-                frame.powerText:Show()
-            end
+    -- PVP icon
+    local pvpIcon = _G[frameName .. "TextureFramePVPIcon"]
+    if pvpIcon then
+        pvpIcon:ClearAllPoints()
+        pvpIcon:SetPoint("CENTER", bossFrame, "BOTTOMRIGHT", 6, 14)
+        pvpIcon:SetDrawLayer("OVERLAY", 7)
+    end
+
+    -- Leader icon
+    local leaderIcon = _G[frameName .. "TextureFrameLeaderIcon"]
+    if leaderIcon then
+        leaderIcon:ClearAllPoints()
+        leaderIcon:SetPoint("BOTTOM", bossFrame, "TOP", 26, -3)
+    end
+
+    -- Raid target icon — use Blizzard original directly (like target_style.lua)
+    -- TextureFrame is raised above borderFrame+decoFrame so the icon renders on top.
+    local raidTargetIcon = _G[frameName .. "TextureFrameRaidTargetIcon"]
+    if raidTargetIcon and portrait then
+        raidTargetIcon:SetDrawLayer("OVERLAY", 7)
+        raidTargetIcon:SetSize(24, 24)
+        raidTargetIcon:ClearAllPoints()
+        raidTargetIcon:SetPoint("CENTER", portrait, "TOP", 0, 5)
+        -- Hook SetPoint to block Blizzard from resetting position after reload
+        if not raidTargetIcon.__DragonUI_SetPointHooked then
+            local iconPortrait = portrait
+            hooksecurefunc(raidTargetIcon, "SetPoint", function(self, ...)
+                if self._DragonUI_SettingPoint or InCombatLockdown() then return end
+                self._DragonUI_SettingPoint = true
+                self:ClearAllPoints()
+                self:SetPoint("CENTER", iconPortrait, "TOP", 0, 5)
+                self._DragonUI_SettingPoint = nil
+            end)
+            raidTargetIcon.__DragonUI_SetPointHooked = true
         end
-    else
-        frame.manaBar:Hide()
-        if frame.powerText then frame.powerText:Hide() end
-        if frame.powerPct then frame.powerPct:Hide() end
+        -- Hook Hide to prevent Blizzard from hiding the icon when raid target exists
+        if not raidTargetIcon.__DragonUI_HideHooked then
+            local iconBossFrame = bossFrame
+            hooksecurefunc(raidTargetIcon, "Hide", function(self)
+                local unit = iconBossFrame.unit or iconBossFrame:GetAttribute("unit")
+                if unit and UnitExists(unit) then
+                    local idx = GetRaidTargetIndex(unit)
+                    if idx then
+                        self:Show()
+                    end
+                end
+            end)
+            raidTargetIcon.__DragonUI_HideHooked = true
+        end
     end
 
+    -- Flash texture (threat / combat glow)
+    -- Same pattern as target.lua: custom THREAT texture with proper sizing.
+    local flashTex = _G[frameName .. "Flash"]
+    if flashTex then
+        EnforceFlashStyle(flashTex, bossFrame)
+    end
 
     -- Threat indicator
-    if frame.threatIndicator then
-        frame.threatIndicator:ClearAllPoints()
-        frame.threatIndicator:SetPoint("BOTTOMLEFT", 0, 0)
-        frame.threatIndicator:set_atlas("TargetFrame-Status", true)
+    if bossFrame.threatIndicator then
+        bossFrame.threatIndicator:ClearAllPoints()
+        bossFrame.threatIndicator:SetPoint("BOTTOMLEFT", 0, 0)
+        bossFrame.threatIndicator:set_atlas("TargetFrame-Status", true)
     end
 
-    -- Threat / combat glow — hide Blizzard's, use our custom
-    local threatIndicator = _G[frame:GetName() .. "ThreatIndicator"]
-    if threatIndicator then
-        threatIndicator:Hide()
+    -- Apply classification-based atlas border
+    UpdateBossFrameBorder(bossFrame)
+
+    -- ShowTest function for editor mode / testboss command
+    bossFrame.ShowTest = function(self)
+        local fn = self:GetName()
+        local p = _G[fn .. "Portrait"]
+        if p then
+            SetPortraitTexture(p, "player")
+        end
+
+        local bg = _G[fn .. "NameBackground"]
+        if bg then
+            bg:SetVertexColor(UnitSelectionColor("player"))
+        end
+
+        local dead = _G[fn .. "TextureFrameDeadText"]
+        if dead then dead:Hide() end
+
+        local highLevel = _G[fn .. "TextureFrameHighLevelTexture"]
+        if highLevel then highLevel:Hide() end
+
+        local name = _G[fn .. "TextureFrameName"]
+        if name then name:SetText(UnitName("player")) end
+
+        local level = _G[fn .. "TextureFrameLevelText"]
+        if level then
+            level:SetText(UnitLevel("player"))
+            level:Show()
+        end
+
+        local hpText = _G[fn .. "TextureFrameHealthBarText"]
+        local curHP = UnitHealth("player")
+        if hpText then hpText:SetText(curHP .. "/" .. curHP) end
+
+        local mpText = _G[fn .. "TextureFrameManaBarText"]
+        local curMP = UnitPower("player", 0) -- Mana
+        if mpText then mpText:SetText(curMP .. "/" .. curMP) end
+
+        local hp = _G[fn .. "HealthBar"]
+        if hp then
+            hp:SetMinMaxValues(0, curHP)
+            hp:SetStatusBarColor(0.29, 0.69, 0.07)
+            hp:SetValue(curHP)
+            hp:Show()
+        end
+
+        local mp = _G[fn .. "ManaBar"]
+        if mp then
+            mp:SetMinMaxValues(0, curMP)
+            mp:SetValue(curMP)
+            mp:SetStatusBarColor(0.02, 0.32, 0.71)
+            mp:Show()
+        end
+
+        self:Show()
+    end
+
+    bossFrame.HideTest = function(self)
+        self:Hide()
     end
 end
 
 -- ============================================================================
--- POSITION BOSS FRAMES
 -- HIDE BLIZZARD BACKGROUNDS
 -- ============================================================================
 
@@ -850,12 +915,11 @@ local function PositionBossFrames()
 
     for i = 1, NUM_BOSS_FRAMES do
         local wrapper = BossModule.wrapperFrames[i]
-        local bf = BossModule.bossFrames[i]
         if wrapper then
             wrapper:SetScale(scale)
 
             if i == 1 then
-                -- First frame: anchor to overlay or default position
+                -- Always anchor to overlay so editor drag moves everything
                 if BossModule.overlay then
                     wrapper:ClearAllPoints()
                     wrapper:SetPoint("TOP", BossModule.overlay, "TOP", 20, 0)
@@ -865,8 +929,8 @@ local function PositionBossFrames()
                         config.anchor or "TOPRIGHT",
                         UIParent,
                         config.anchorParent or "TOPRIGHT",
-                        config.x or -180,
-                        config.y or -370
+                        config.x or -100,
+                        config.y or -270
                     )
                 end
             else
@@ -875,13 +939,130 @@ local function PositionBossFrames()
                 wrapper:SetPoint("TOP", BossModule.wrapperFrames[i - 1], "BOTTOM", 0, 0)
             end
         end
+    end
+end
 
-        -- Position our custom boss frame to its wrapper
-        if bf and wrapper then
-            bf:ClearAllPoints()
-            bf:SetPoint("TOPLEFT", wrapper, "TOPLEFT", 0, 0)
+-- ============================================================================
+-- INITIALIZATION
+-- ============================================================================
+
+local function InitializeBossFrames()
+    if BossModule.configured then return end
+    if InCombatLockdown() then return end
+    if not IsEnabled() then return end
+
+    HideBlizzardBossBackgrounds()
+
+    for i = 1, NUM_BOSS_FRAMES do
+        local bossFrame = _G["Boss" .. i .. "TargetFrame"]
+        if bossFrame then
+            -- Create wrapper frame for positioning
+            local wrapper = addon.CreateUIFrame(200, 75, "Boss" .. i .. "Frame")
+            BossModule.wrapperFrames[i] = wrapper
+            CreateSecureBossAnchor(wrapper, bossFrame, i)
+
+            -- Ensure the unit attribute is set so RegisterUnitWatch knows
+            -- which unit token to track (INSTANCE_ENCOUNTER_ENGAGE_UNIT
+            -- does not exist in 3.3.5a — MCP Ch.25 / Roadmap note).
+            if not bossFrame:GetAttribute("unit") then
+                bossFrame:SetAttribute("unit", "boss" .. i)
+            end
+
+            -- RegisterUnitWatch: auto show/hide based on UnitExists("bossN").
+            -- This is the 3.3.5a replacement for INSTANCE_ENCOUNTER_ENGAGE_UNIT.
+            -- DragonflightUI Bossframe.mixin.lua uses the same pattern.
+            RegisterUnitWatch(bossFrame)
+
+            -- Alpha-only fade layered on top of RegisterUnitWatch's own Show/Hide.
+            if addon.VisibilityFade then
+                addon.VisibilityFade.Register("boss" .. i, bossFrame, {
+                    dbTable = function() return addon.UF.GetConfig("boss") end,
+                    clickThrough = true,
+                })
+            end
+
+            -- Hook SetPoint to block ALL Blizzard repositioning
+            HookBossFrameSetPoint(bossFrame, i)
+
+            -- Reskin the Blizzard boss frame
+            ReskinBossFrame(wrapper, bossFrame, i)
+
+            -- Hook OnShow to refresh visuals when boss appears
+            if not bossFrame.__DragonUI_OnShowHooked then
+                bossFrame:HookScript("OnShow", function(self)
+                    if addon.VisibilityFade then addon.VisibilityFade.Update("boss" .. i) end
+                    -- Re-hide Blizzard elements
+                    local fn = self:GetName()
+                    local bg = _G[fn .. "Background"]
+                    if bg then bg:SetAlpha(0) end
+                    local blizzBorder = _G[fn .. "TextureFrameTexture"]
+                    if blizzBorder then blizzBorder:SetAlpha(0) end
+                    if InCombatLockdown() then return end
+                    -- Update border textures
+                    UpdateBossFrameBorder(self)
+                    -- Refresh portrait
+                    local portrait = _G[fn .. "Portrait"]
+                    if portrait then
+                        local unit = self.unit or self:GetAttribute("unit")
+                        if unit and UnitExists(unit) then
+                            SetPortraitTexture(portrait, unit)
+                        end
+                    end
+                    -- Re-enforce flash on show
+                    local flashTex = _G[fn .. "Flash"]
+                    EnforceFlashStyle(flashTex, self)
+                    -- Re-enforce elite decoration on show
+                    if self.DragonUI_Elite and portrait then
+                        local unit = self.unit or self:GetAttribute("unit")
+                        local classification
+                        if unit and UnitExists(unit) then
+                            classification = UnitClassification(unit)
+                        end
+                        local coords
+                        if classification == "worldboss" then
+                            coords = BOSS_COORDS.rareelite
+                        elseif classification == "elite" then
+                            coords = BOSS_COORDS.elite
+                        elseif classification == "rareelite" then
+                            coords = BOSS_COORDS.rareelite
+                        elseif classification == "rare" then
+                            coords = BOSS_COORDS.rare
+                        else
+                            coords = BOSS_COORDS.rareelite
+                        end
+                        if coords then
+                            self.DragonUI_Elite:SetTexCoord(coords[1], coords[2], coords[3], coords[4])
+                            self.DragonUI_Elite:SetSize(coords[5], coords[6])
+                            self.DragonUI_Elite:ClearAllPoints()
+                            self.DragonUI_Elite:SetPoint("CENTER", portrait, "CENTER", coords[7], coords[8])
+                            self.DragonUI_Elite:SetDrawLayer("OVERLAY", 6)
+                            self.DragonUI_Elite:Show()
+                        end
+                    end
+                    -- Re-enforce raid target icon draw layer on show
+                    local raidTargetIcon = _G[fn .. "TextureFrameRaidTargetIcon"]
+                    if raidTargetIcon then
+                        raidTargetIcon:SetDrawLayer("OVERLAY", 7)
+                        raidTargetIcon:SetSize(24, 24)
+                        raidTargetIcon:ClearAllPoints()
+                        if portrait then
+                            raidTargetIcon:SetPoint("CENTER", portrait, "TOP", 0, 5)
+                        end
+                    end
+                end)
+                bossFrame.__DragonUI_OnShowHooked = true
+            end
         end
     end
+
+    HookClassification()
+    HookHealthBarColor()
+    HookTargetFrameUpdate()
+    PositionBossFrames()
+
+    BossModule.initialized = true
+    BossModule.applied = true
+    BossModule.configured = true
 end
 
 -- ============================================================================
@@ -897,10 +1078,10 @@ local function SetupEditorMode()
         BossModule.overlay.editorText:SetText((L and (L["boss"] or L["Boss Frames"])) or "Boss Frames")
     end
 
-    -- Initial position
+    -- Initial position will be set by ApplyBossFramePosition()
     BossModule.overlay:ClearAllPoints()
     BossModule.overlay:SetPoint(
-        "TOPRIGHT", UIParent, "TOPRIGHT", -180, -370
+        "TOPRIGHT", UIParent, "TOPRIGHT", -100, -270
     )
 
     BossModule.overlay:HookScript("OnDragStop", function(self)
@@ -918,30 +1099,25 @@ local function SetupEditorMode()
             if BossModule.overlay then
                 BossModule.overlay:Show()
             end
-            -- Show all boss frames in test mode
+            -- Show boss frames in test mode
             for i = 1, NUM_BOSS_FRAMES do
-                local bf = BossModule.bossFrames[i]
-                if bf then
-                    -- Use player as placeholder data
-                    SetPortraitTexture(bf.portrait.tex, "player")
-                    bf.nameText:SetText(UnitName("player"))
-                    bf.levelText:SetText(UnitLevel("player"))
-                    local curHP = UnitHealth("player")
-                    local maxHP = UnitHealthMax("player")
-                    bf.healthBar:SetMinMaxValues(0, maxHP)
-                    bf.healthBar:SetValue(curHP)
-                    bf.healthText:SetText(curHP .. "/" .. maxHP)
-                    bf.manaBar:SetMinMaxValues(0, UnitManaMax("player"))
-                    bf.manaBar:SetValue(UnitMana("player"))
-                    bf:Show()
+                local bossFrame = _G["Boss" .. i .. "TargetFrame"]
+                if bossFrame and not InCombatLockdown() then
+                    UnregisterUnitWatch(bossFrame)
+                    if bossFrame.ShowTest then
+                        bossFrame:ShowTest()
+                    end
                 end
             end
         end,
         hideTest = function()
             for i = 1, NUM_BOSS_FRAMES do
-                local bf = BossModule.bossFrames[i]
-                if bf then
-                    bf:Hide()
+                local bossFrame = _G["Boss" .. i .. "TargetFrame"]
+                if bossFrame and not InCombatLockdown() then
+                    RegisterUnitWatch(bossFrame)
+                    if bossFrame.HideTest and not UnitExists("boss" .. i) then
+                        bossFrame:HideTest()
+                    end
                 end
             end
         end,
@@ -977,19 +1153,55 @@ local function ApplyBossFramePosition()
             end
         end
     end
-    -- Default
+    -- Default: use config position
     if config then
         BossModule.overlay:ClearAllPoints()
         BossModule.overlay:SetPoint(
             config.anchor or "TOPRIGHT",
             UIParent,
             config.anchorParent or "TOPRIGHT",
-            config.x or -180,
-            config.y or -370
+            config.x or -100,
+            config.y or -270
         )
     else
         BossModule.overlay:ClearAllPoints()
-        BossModule.overlay:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -180, -370)
+        BossModule.overlay:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -100, -270)
+    end
+end
+
+-- ============================================================================
+-- RAID TARGET ICON REFRESH
+-- ============================================================================
+-- After /reload, RAID_TARGET_UPDATE doesn't fire — existing marks are already
+-- set. We must manually query GetRaidTargetIndex for each boss and apply the
+-- texture. Called after init and with a short delay to cover late unit loading.
+
+local function RefreshRaidTargetIcons()
+    for i = 1, NUM_BOSS_FRAMES do
+        local bf = _G["Boss" .. i .. "TargetFrame"]
+        if bf then
+            local fn = bf:GetName()
+            local icon = _G[fn .. "TextureFrameRaidTargetIcon"]
+            local portrait = _G[fn .. "Portrait"]
+            -- Re-raise TextureFrame above borderFrame+decoFrame
+            local textureFrame = _G[fn .. "TextureFrame"]
+            local borderFrame = bf.DragonUI_BorderFrame
+            if textureFrame and borderFrame then
+                textureFrame:SetFrameLevel(borderFrame:GetFrameLevel() + 2)
+            end
+            if icon and portrait then
+                icon:SetDrawLayer("OVERLAY", 7)
+                icon:SetSize(24, 24)
+                local unit = bf.unit or bf:GetAttribute("unit")
+                if unit and UnitExists(unit) then
+                    local idx = GetRaidTargetIndex(unit)
+                    if idx then
+                        SetRaidTargetIconTexture(icon, idx)
+                        icon:Show()
+                    end
+                end
+            end
+        end
     end
 end
 
@@ -1011,164 +1223,60 @@ eventsFrame:SetScript("OnEvent", function(self, event, ...)
         end
 
     elseif event == "PLAYER_ENTERING_WORLD" then
-        -- Move Blizzard default boss frames off-screen
-        for i = 1, NUM_BOSS_FRAMES do
-            local bf = _G["Boss" .. i .. "TargetFrame"]
-            if bf then
-                bf:ClearAllPoints()
-                bf:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 5000, 0)
-            end
-        end
-        -- Also hide the main container if it exists
-        local bossFrame = _G["BossFrame"]
-        if bossFrame then
-            bossFrame:ClearAllPoints()
-            bossFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 5000, 0)
-        end
-
-        -- Create our custom boss frames if not already created
-        if not BossModule.bossFrames[1] then
-            for i = 1, NUM_BOSS_FRAMES do
-                local name = "DragonUIBossFrame" .. i
-                local bf = CreateBossFrameWidget(name, i)
-                BossModule.bossFrames[i] = bf
-
-                -- Create wrapper for positioning
-                local wrapper = addon.CreateUIFrame(200, 75, "Boss" .. i .. "Frame")
-                BossModule.wrapperFrames[i] = wrapper
-
-                -- Apply layout
-                ApplyBossFrameLayout(bf)
-                ApplyBossFrameLayout(bf) -- twice for safety
-
-                if addon.VisibilityFade then
-                    addon.VisibilityFade.Register("boss" .. i, bf, {
-                        dbTable = function() return UF.GetConfig("boss") end,
-                        clickThrough = true,
-                    })
-                end
-            end
-        end
-
+        InitializeBossFrames()
         PositionBossFrames()
-
-    elseif event == "UNIT_HEALTH" then
-        local unit = ...
-        if unit and unit:match("^boss%d$") then
-            local idx = tonumber(unit:match("boss(%d)"))
-            local bf = BossModule.bossFrames[idx]
-            local w = BossModule.wrapperFrames[idx]
-            if bf and w then
-                if UnitExists(unit) and not UnitIsDeadOrGhost(unit) then
-                    bf:ClearAllPoints()
-                    bf:SetPoint("TOPLEFT", w, "TOPLEFT", 0, 0)
-                    bf:Show()
-                    UpdateBossFrame(bf)
-                    if addon.VisibilityFade then
-                        addon.VisibilityFade.Update("boss" .. idx)
+        HideBlizzardBossBackgrounds()
+        RefreshRaidTargetIcons()
+        -- Delayed refresh: boss units may not exist yet at PLAYER_ENTERING_WORLD
+        if not BossModule.raidIconRefreshFrame then
+            local f = CreateFrame("Frame")
+            f.elapsed = 0
+            f.ticks = 0
+            f:SetScript("OnUpdate", function(self, dt)
+                self.elapsed = self.elapsed + dt
+                if self.elapsed >= 0.5 then
+                    self.elapsed = 0
+                    self.ticks = self.ticks + 1
+                    RefreshRaidTargetIcons()
+                    if self.ticks >= 4 then
+                        self:SetScript("OnUpdate", nil)
                     end
-                else
-                    bf:Hide()
                 end
-            end
-        end
-
-    elseif event == "UNIT_PORTRAIT_UPDATE" then
-        local unit = ...
-        if unit and unit:match("^boss%d$") then
-            local idx = tonumber(unit:match("boss(%d)"))
-            local bf = BossModule.bossFrames[idx]
-            if bf and bf:IsShown() then
-                SetPortraitTexture(bf.portrait.tex, unit)
-            end
-        end
-
-    elseif event == "UNIT_NAME_UPDATE" then
-        local unit = ...
-        if unit and unit:match("^boss%d$") then
-            local idx = tonumber(unit:match("boss(%d)"))
-            local bf = BossModule.bossFrames[idx]
-            if bf and bf:IsShown() then
-                local name = UnitName(unit)
-                bf.nameText:SetText(name or "")
-            end
-        end
-
-    elseif event == "UNIT_LEVEL" then
-        local unit = ...
-        if unit and unit:match("^boss%d$") then
-            local idx = tonumber(unit:match("boss(%d)"))
-            local bf = BossModule.bossFrames[idx]
-            if bf and bf:IsShown() then
-                UpdateBossFrame(bf)
-            end
-        end
-
-    elseif event == "UNIT_MAXHP"
-        or event == "UNIT_MANA" or event == "UNIT_MAXMANA"
-        or event == "UNIT_ENERGY" or event == "UNIT_RAGE"
-        or event == "UNIT_FOCUS" or event == "UNIT_RUNIC_POWER"
-        or event == "UNIT_DISPLAYPOWER" or event == "UNIT_MAXPOWER"
-    then
-        local unit = ...
-        if unit and unit:match("^boss%d$") then
-            local idx = tonumber(unit:match("boss(%d)"))
-            local bf = BossModule.bossFrames[idx]
-            if bf and bf:IsShown() then
-                UpdateBossFrame(bf)
-            end
-        end
-
-    elseif event == "PLAYER_LEAVING_WORLD" or event == "ZONE_CHANGED_NEW_AREA" then
-        -- Hide all boss frames when leaving instance/zone
-        for i = 1, NUM_BOSS_FRAMES do
-            local bf = BossModule.bossFrames[i]
-            if bf then
-                bf:Hide()
-            end
+            end)
+            BossModule.raidIconRefreshFrame = f
+        else
+            -- Re-arm the delayed refresh
+            local f = BossModule.raidIconRefreshFrame
+            f.elapsed = 0
+            f.ticks = 0
+            f:SetScript("OnUpdate", function(self, dt)
+                self.elapsed = self.elapsed + dt
+                if self.elapsed >= 0.5 then
+                    self.elapsed = 0
+                    self.ticks = self.ticks + 1
+                    RefreshRaidTargetIcons()
+                    if self.ticks >= 4 then
+                        self:SetScript("OnUpdate", nil)
+                    end
+                end
+            end)
         end
 
     elseif event == "PLAYER_REGEN_ENABLED" then
+        if not BossModule.configured then
+            InitializeBossFrames()
+        end
         PositionBossFrames()
 
-
+    elseif event == "RAID_TARGET_UPDATE" then
+        RefreshRaidTargetIcons()
     end
 end)
 
 eventsFrame:RegisterEvent("ADDON_LOADED")
 eventsFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 eventsFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-eventsFrame:RegisterEvent("UNIT_HEALTH")
-eventsFrame:RegisterEvent("UNIT_MAXHP")
-eventsFrame:RegisterEvent("UNIT_PORTRAIT_UPDATE")
-eventsFrame:RegisterEvent("UNIT_NAME_UPDATE")
-eventsFrame:RegisterEvent("UNIT_LEVEL")
-eventsFrame:RegisterEvent("UNIT_MANA")
-eventsFrame:RegisterEvent("UNIT_MAXMANA")
-eventsFrame:RegisterEvent("UNIT_ENERGY")
-eventsFrame:RegisterEvent("UNIT_RAGE")
-eventsFrame:RegisterEvent("UNIT_FOCUS")
-eventsFrame:RegisterEvent("UNIT_RUNIC_POWER")
-eventsFrame:RegisterEvent("UNIT_DISPLAYPOWER")
-eventsFrame:RegisterEvent("UNIT_MAXPOWER")
-eventsFrame:RegisterEvent("PLAYER_LEAVING_WORLD")
-eventsFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-
--- Periodic cleanup — every 3 seconds, hide frames whose unit is gone
-local function BossCleanup_OnUpdate(self, elapsed)
-    self.elapsed = (self.elapsed or 0) + elapsed
-    if self.elapsed < 3 then return end
-    self.elapsed = 0
-    for i = 1, NUM_BOSS_FRAMES do
-        local bf = BossModule.bossFrames[i]
-        if bf and bf:IsShown() and bf.unit then
-            if not UnitExists(bf.unit) or UnitIsDeadOrGhost(bf.unit) then
-                bf:Hide()
-            end
-        end
-    end
-end
-eventsFrame:SetScript("OnUpdate", BossCleanup_OnUpdate)
+eventsFrame:RegisterEvent("RAID_TARGET_UPDATE")
 
 -- ============================================================================
 -- PUBLIC API
@@ -1182,23 +1290,20 @@ function addon.RefreshBossFrames()
         return
     end
 
+    HideBlizzardBossBackgrounds()
+
     for i = 1, NUM_BOSS_FRAMES do
-        local bf = BossModule.bossFrames[i]
-        if bf then
-            ApplyBossFrameLayout(bf)
+        local bossFrame = _G["Boss" .. i .. "TargetFrame"]
+        local wrapper = BossModule.wrapperFrames[i]
+        if bossFrame and wrapper then
+            ReskinBossFrame(wrapper, bossFrame, i)
         end
     end
 
     PositionBossFrames()
-
-    for i = 1, NUM_BOSS_FRAMES do
-        if addon.VisibilityFade then
-            addon.VisibilityFade.Update("boss" .. i)
-        end
-    end
 end
 
--- Store reference
+-- Store reference on addon for profile callbacks
 addon.BossModule = BossModule
 
 -- Profile change callbacks
@@ -1223,52 +1328,3 @@ profileFrame:SetScript("OnEvent", function(self, event)
     end
     self:UnregisterAllEvents()
 end)
-
--- ============================================================================
--- DEBUG / TEST COMMANDS
--- ============================================================================
-
-local function PrintBossDebug()
-    print("=== DragonUI Custom Boss Frames ===")
-    for i = 1, NUM_BOSS_FRAMES do
-        local bf = BossModule.bossFrames[i]
-        local w = BossModule.wrapperFrames[i]
-        print("Boss"..i.." exists:", bf ~= nil, "Shown:", bf and bf:IsShown() or false, "Wrapper:", w ~= nil)
-        if bf and w then
-            print("  Wrapper:", w:GetLeft(), w:GetTop())
-            print("  BossFrame:", bf:GetLeft(), bf:GetTop(), "Shown:", bf:IsShown())
-        end
-    end
-    print("================================")
-end
-
-SLASH_DRAGONUI_BOSSDEBUG1 = "/bossdebug"
-SlashCmdList["DRAGONUI_BOSSDEBUG"] = PrintBossDebug
-
-SLASH_DRAGONUI_BOSSTEST1 = "/bosstest"
-SlashCmdList["DRAGONUI_BOSSTEST"] = function(msg)
-    local bossIdx = tonumber(msg)
-    local startIdx = bossIdx or 1
-    local endIdx = bossIdx or NUM_BOSS_FRAMES
-    for i = startIdx, endIdx do
-        local bf = BossModule.bossFrames[i]
-        local w = BossModule.wrapperFrames[i]
-        if bf and w then
-            bf:ClearAllPoints()
-            bf:SetPoint("TOPLEFT", w, "TOPLEFT", 0, 0)
-            -- Use player as test data
-            SetPortraitTexture(bf.portrait.tex, "player")
-            bf.nameText:SetText(UnitName("player"))
-            bf.levelText:SetText(UnitLevel("player"))
-            local curHP = UnitHealth("player")
-            local maxHP = UnitHealthMax("player")
-            bf.healthBar:SetMinMaxValues(0, maxHP)
-            bf.healthBar:SetValue(curHP)
-            bf.healthText:SetText(curHP .. "/" .. maxHP)
-            bf.manaBar:SetMinMaxValues(0, UnitManaMax("player"))
-            bf.manaBar:SetValue(UnitMana("player"))
-            bf:Show()
-            print("Boss" .. i .. " shown (player data)")
-        end
-    end
-end

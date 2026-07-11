@@ -553,6 +553,7 @@ local function OnSelfSwing()
     if not db or not IsModuleEnabled() then return end
 
     local mhSpeed, ohSpeed = UnitAttackSpeed("player")
+    print("|cff66ff66[AB-SWING]|r Self: mh=" .. tostring(mhSpeed) .. " oh=" .. tostring(ohSpeed))
     local hd, ld, ohD, ohL = UnitDamage("player")
     hd = hd - math_fmod(hd, 1)
     ld = ld - math_fmod(ld, 1)
@@ -617,6 +618,7 @@ local function OnEnemySwing()
     if not db or not IsModuleEnabled() or not db.showEnemy then return end
 
     local eSpeed = UnitAttackSpeed("target")
+    print("|cffff6666[AB-ENEMY]|r Target speed=" .. tostring(eSpeed))
     if eSpeed then
         eSpeed = eSpeed - math_fmod(eSpeed, 0.01)
         SetMHBar(enemyMHBar, GetTime(), eSpeed,
@@ -632,8 +634,15 @@ end
 -- Called from UNIT_SPELLCAST_SENT (cast start) and CLEU (spell landed).
 
 local function OnRangedSpell(spellName, fromCLEU)
-    if not db or not IsModuleEnabled() or not db.showRanged then return end
-    if not spellName or spellName == "" then return end
+    if not db or not IsModuleEnabled() or not db.showRanged then
+        print("|cffcc66ff[AB-RANGED]|r BLOCKED: enabled=" .. tostring(db and db.enabled) .. " showRanged=" .. tostring(db and db.showRanged))
+        return
+    end
+    if not spellName or spellName == "" then
+        print("|cffcc66ff[AB-RANGED]|r empty spellName fromCLEU=" .. tostring(fromCLEU))
+        return
+    end
+    print("|cffcc66ff[AB-RANGED]|r ENTER spell='" .. spellName .. "' fromCLEU=" .. tostring(fromCLEU))
 
     local mhSpeed = UnitAttackSpeed("player")
     local rSpeed, rhd, rld = UnitRangedDamage("player")
@@ -679,15 +688,24 @@ local function OnRangedSpell(spellName, fromCLEU)
             rSpeed = rSpeed and (rSpeed - math_fmod(rSpeed, 0.01)) or 0.5
             label = "X-Bow[" .. rSpeed .. "s](" .. rhd .. "-" .. rld .. ")"
             SetMHBar(playerMHBar, GetTime(), 0.5, label, rhd, rld, false)
+        elseif spellName == "Auto Shot" then
+            rSpeed = rSpeed and (rSpeed - math_fmod(rSpeed, 0.01)) or 0.5
+            label = "Auto[" .. rSpeed .. "s](" .. rhd .. "-" .. rld .. ")"
+            SetMHBar(playerMHBar, GetTime(), rSpeed, label, rhd, rld, false)
         elseif spellName == "Aimed Shot" then
             SetMHBar(playerMHBar, GetTime(), 3, "Aiming[3s]", 0.1, 0.1, false)
+        else
+            print("|cffff4444[AB-MISS]|r CastStart unhandled: '" .. tostring(spellName) .. "'")
         end
     else
         -- Spell landed (CLEU) — update with actual ranged speed
-        if spellName == "Shoot" or spellName == "Throw" then
+        if spellName == "Shoot" or spellName == "Throw"
+        or spellName == "Auto Shot" then
             rSpeed = rSpeed and (rSpeed - math_fmod(rSpeed, 0.01)) or 0.5
             local label = spellName .. "[" .. rSpeed .. "s](" .. rhd .. "-" .. rld .. ")"
             SetMHBar(playerMHBar, GetTime(), rSpeed, label, rhd, rld, false)
+        else
+            print("|cffff4444[AB-MISS]|r CLEU unhandled: '" .. tostring(spellName) .. "'")
         end
     end
 end
@@ -703,14 +721,25 @@ local function OnCombatLogEvent(subevent, sourceGUID, destGUID,
     local myGUID = UnitGUID("player")
     local tgtGUID = UnitGUID("target")
 
+    -- DEBUG: log every CLEU event involving the player
+    if sourceGUID == myGUID or destGUID == myGUID then
+        local side = sourceGUID == myGUID and "SRC" or "DST"
+        print("|cff00ccff[AB-CLEU]|r " .. subevent
+              .. " " .. side
+              .. " extra1=" .. tostring(missType)
+              .. " extra2=" .. tostring(spellName))
+    end
+
     -- Self swing: source=player, dest=target
     if sourceGUID == myGUID and destGUID == tgtGUID then
         if subevent == "SWING_DAMAGE" or subevent == "SWING_MISSED" then
+            print("|cff00ccff[AB-CLEU]|r -> OnSelfSwing()")
             OnSelfSwing()
             return
         end
         if subevent == "RANGE_DAMAGE" or subevent == "RANGE_MISSED"
         or subevent == "SPELL_DAMAGE" or subevent == "SPELL_MISSED" then
+            print("|cff00ccff[AB-CLEU]|r -> OnRangedSpell('" .. tostring(spellName) .. "')")
             OnRangedSpell(spellName, true)
             return
         end
@@ -719,6 +748,7 @@ local function OnCombatLogEvent(subevent, sourceGUID, destGUID,
     -- Enemy swing: source=target, dest=target's target (should be player)
     if sourceGUID == tgtGUID and destGUID == myGUID then
         if subevent == "SWING_DAMAGE" or subevent == "SWING_MISSED" then
+            print("|cff00ccff[AB-CLEU]|r -> OnEnemySwing()")
             OnEnemySwing()
             return
         end
@@ -733,6 +763,7 @@ local function OnUnitSpellCastSent(...)
     if not db or not IsModuleEnabled() then return end
 
     local unit, spellName = ...
+    print("|cffcc66ff[AB-SENT]|r unit=" .. tostring(unit) .. " spell='" .. tostring(spellName) .. "'")
     if unit ~= "player" then return end
 
     OnRangedSpell(spellName, false)
@@ -752,6 +783,9 @@ local function OnUnitAttackSpeed(...)
     if unit ~= "player" then return end
 
     local mhSpeed, ohSpeed = UnitAttackSpeed("player")
+    print("|cff00ff88[AB-SPEED]|r mh=" .. tostring(mhSpeed) .. " oh=" .. tostring(ohSpeed)
+          .. " mhBar=" .. tostring(playerMHBar and playerMHBar:IsShown())
+          .. " ohBar=" .. tostring(playerOHBar and playerOHBar:IsShown()))
 
     -- Update main hand bar only if it's already active
     if mhSpeed and playerMHBar:IsShown() and playerMHBar.startTime then
@@ -893,6 +927,7 @@ function addon.ApplyAttackbarSystem()
     eventFrame:RegisterEvent("UNIT_ATTACK_SPEED")
     eventFrame:RegisterEvent("PLAYER_LEAVE_COMBAT")
 
+    print("|cffffcc00[AB-INIT]|r Events registered. enabled=" .. tostring(IsModuleEnabled()) .. " showRanged=" .. tostring(db.showRanged) .. " showMain=" .. tostring(db.showMainHand) .. " showOH=" .. tostring(db.showOffHand) .. " showEnemy=" .. tostring(db.showEnemy))
     AttackbarModule.applied = true
 end
 

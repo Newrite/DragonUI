@@ -109,6 +109,7 @@ local CT = {
     bagslot           = CombuctorAssets .. 'bagslots2x',
     bagslot_cutout    = CombuctorAssets .. 'bagslotCutout',
     bag_border        = CombuctorAssets .. 'bagborder2',
+    coinbox           = CombuctorAssets .. 'commoncoinbox',
 }
 
 local CT_ICON_OVERLAY_SUBLEVEL = 1
@@ -138,7 +139,7 @@ local function CombuctorAddNineSlice(frame)
     local bgTex = bg:CreateTexture(nil, 'BACKGROUND')
     bgTex:SetTexture(CT.frame_bg)
     bgTex:SetAllPoints(bg)
-    bgTex:SetAlpha(0.85)
+    bgTex:SetAlpha(0.65)
     ns.BgTex = bgTex
 
     local tlc = ns.TopLeftCorner
@@ -2886,7 +2887,7 @@ do
     function MoneyFrame:New(parent)
         local f = self:Bind(CreateFrame("Frame", format("DragonUI_CombuctorMoney%d", moneyId), parent))
         f:SetHeight(19)
-        f:SetWidth(90)
+        f:SetWidth(170)
         f:SetScript("OnShow", self.OnShow)
         f:SetScript("OnEvent", function(self, event)
             if event == "PLAYER_MONEY" then
@@ -3404,8 +3405,31 @@ do
         f.itemFrame = mod.ItemFrame:New(f)
         f.itemFrame:SetPoint("TOPLEFT", 14, -70)
 
+        -- Coinbox frame (fixed to bottom-right, separate from money frame)
+        f.coinFrame = CreateFrame("Frame", nil, f)
+        f.coinFrame:SetSize(220, 17)
+        f.coinFrame:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -9, 10)
+
+        local coinLeft = f.coinFrame:CreateTexture(nil, "BACKGROUND")
+        coinLeft:SetSize(8, 17)
+        coinLeft:SetPoint("LEFT", f.coinFrame, "LEFT")
+        coinLeft:SetTexture(CT.coinbox)
+        coinLeft:SetTexCoord(0.03125, 0.53125, 0.289062, 0.554688)
+
+        local coinRight = f.coinFrame:CreateTexture(nil, "BACKGROUND")
+        coinRight:SetSize(8, 17)
+        coinRight:SetPoint("RIGHT", f.coinFrame, "RIGHT")
+        coinRight:SetTexture(CT.coinbox)
+        coinRight:SetTexCoord(0.03125, 0.53125, 0.570312, 0.835938)
+
+        local coinMiddle = f.coinFrame:CreateTexture(nil, "BACKGROUND")
+        coinMiddle:SetPoint("TOPLEFT", coinLeft, "TOPRIGHT")
+        coinMiddle:SetPoint("BOTTOMRIGHT", coinRight, "BOTTOMLEFT")
+        coinMiddle:SetTexture(CT.coinbox)
+        coinMiddle:SetTexCoord(0, 0.5, 0.0078125, 0.273438)
+
         f.moneyFrame = mod.MoneyFrame:New(f)
-        f.moneyFrame:SetPoint("BOTTOMRIGHT", -10, 10)
+        f.moneyFrame:SetPoint("BOTTOMRIGHT", -12, 10)
 
         f:UpdateTitleText()
         f:UpdateBagToggleHighlight()
@@ -3775,7 +3799,7 @@ local function CombuctorSkinFrame(frame)
         icon:SetPoint('TOPLEFT', frame, 'TOPLEFT', -4, 4)
         if icon.icon then
             icon.icon:SetSize(36, 36)
-            icon.icon:SetDrawLayer('ARTWORK')
+            icon.icon:SetDrawLayer('OVERLAY', 0)
         end
         icon:EnableMouse(false)
     end
@@ -3809,7 +3833,7 @@ local function CombuctorSkinFrame(frame)
         close:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', 0, 0)
     end
 
-    -- Title: clear text
+    -- Title: clear text (title button still used for drag)
     local title = _G[frame:GetName() .. 'Title']
     if title then
         title:SetText('')
