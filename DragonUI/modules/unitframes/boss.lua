@@ -89,7 +89,7 @@ local DEFAULT_BOSS_ATLAS = "TargetFrame-TextureFrame-Elite"
 local function HookTextureFrameSetPoint(textureFrame, bossFrame)
     if textureFrame.__DragonUI_SetPointHooked then return end
     hooksecurefunc(textureFrame, "SetPoint", function(self, ...)
-        if self._DragonUI_SettingPoint then return end
+        if self._DragonUI_SettingPoint or InCombatLockdown() then return end
         self._DragonUI_SettingPoint = true
         self:ClearAllPoints()
         self:SetPoint("TOPLEFT", bossFrame, "TOPLEFT", 0, 0)
@@ -557,6 +557,7 @@ local function HookClassification()
         -- Only process boss frames
         local frameName = self:GetName()
         if not frameName or not frameName:match("^Boss%dTargetFrame$") then return end
+        if InCombatLockdown() then return end
 
         -- Hide Blizzard border (we use our own custom textures)
         local blizzBorder = _G[frameName .. "TextureFrameTexture"]
@@ -670,6 +671,7 @@ local function HookHealthBarColor()
         if not statusbar or statusbar.lockValues then return end
         if not unit or not unit:match("^boss%d$") then return end
         if unit ~= statusbar.unit then return end
+        if InCombatLockdown() then return end
 
         -- Re-enforce bar sizing — Blizzard can reset during combat
         statusbar:SetSize(125, 20)
@@ -700,14 +702,15 @@ local function HookTargetFrameUpdate()
 
         -- Find which wrapper this boss frame belongs to
         local bossIdx = tonumber(frameName:match("Boss(%d)TargetFrame"))
-        local wrapper = bossIdx and BossModule.wrapperFrames[bossIdx]
-        if wrapper then
+        local positionAnchor = bossIdx and
+            (BossModule.secureAnchors[bossIdx] or BossModule.wrapperFrames[bossIdx])
+        if positionAnchor then
             -- Re-anchor boss frame to our wrapper — Blizzard's TargetFrame_Update
             -- repositions frames to their default location during combat.
             -- (SetPoint hook also enforces this, but we double-check here.)
             self._DragonUI_SettingPoint = true
             self:ClearAllPoints()
-            self:SetPoint("TOPLEFT", wrapper, "TOPLEFT", 0, 0)
+            self:SetPoint("TOPLEFT", positionAnchor, "TOPLEFT", 0, 0)
             self:SetHitRectInsets(0, 0, 0, 0)
             self._DragonUI_SettingPoint = nil
         end

@@ -146,6 +146,8 @@ L["Level Up Enhance"] = "Level Up Enhance"
 L["Enhanced level-up notification with animated frame"] = "Enhanced level-up notification with animated frame"
 L["You've Reached"] = "You've Reached"
 L["Level %d"] = "Level %d"
+L["Bag Skin"] = "背包外觀"
+L["Retail-style skin for Blizzard bag windows"] = "暴雪背包視窗的正式服風格外觀"
 
 -- Version Check Module
 L["Version Check"] = "版本檢查"

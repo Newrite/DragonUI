@@ -1911,11 +1911,11 @@ local function CreateVanillaBagSortButton()
 		UIParent,
 		SortPlayerBags,
 		T("Sort Bags", "Sort Bags"),
-		0.45
+		0.63
 	)
-	vanillaBagClearBtn = CreateClearLocksButton("DragonUI_VanillaBagClearBtn", UIParent, 0.45)
-	vanillaBagSellScrapBtn = CreateSellScrapButton("DragonUI_VanillaBagSellScrapBtn", UIParent, 0.45)
-	vanillaBagTransmogBtn = CreateTransmogCollectButton("DragonUI_VanillaBagTransmogBtn", UIParent, 0.45)
+	vanillaBagClearBtn = CreateClearLocksButton("DragonUI_VanillaBagClearBtn", UIParent, 0.63)
+	vanillaBagSellScrapBtn = CreateSellScrapButton("DragonUI_VanillaBagSellScrapBtn", UIParent, 0.63)
+	vanillaBagTransmogBtn = CreateTransmogCollectButton("DragonUI_VanillaBagTransmogBtn", UIParent, 0.63)
     vanillaBagSortBtn:Hide()
     vanillaBagClearBtn:Hide()
     vanillaBagSellScrapBtn:Hide()
@@ -1938,29 +1938,41 @@ end
 
 local function UpdateVanillaBagSortButton()
     if not vanillaBagSortBtn or not vanillaBagClearBtn then return end
+
     local backpack = GetBackpackFrame()
     if backpack then
         vanillaBagSortBtn:SetParent(backpack)
         vanillaBagClearBtn:SetParent(backpack)
         vanillaBagSellScrapBtn:SetParent(backpack)
         vanillaBagTransmogBtn:SetParent(backpack)
+
         vanillaBagSortBtn:ClearAllPoints()
         vanillaBagClearBtn:ClearAllPoints()
         vanillaBagSellScrapBtn:ClearAllPoints()
         vanillaBagTransmogBtn:ClearAllPoints()
-        local titleText = _G[backpack:GetName() .. "Name"]
-        if titleText then
-            vanillaBagSortBtn:SetPoint("TOP", titleText, "BOTTOM", 70, -8)
+
+        local titleAnchor = _G[backpack:GetName() .. "Name"]
+        local skinChrome = backpack._dragonuiBagChrome
+        if addon:IsModuleEnabled("bags_skin")
+            and skinChrome and skinChrome.title and skinChrome.title:IsShown()
+        then
+            titleAnchor = skinChrome.title
+        end
+
+        if titleAnchor then
+            vanillaBagSortBtn:SetPoint("TOP", titleAnchor, "BOTTOM", 70, -8)
         else
             vanillaBagSortBtn:SetPoint("TOP", backpack, "TOP", 0, -28)
         end
         vanillaBagTransmogBtn:SetPoint("RIGHT", vanillaBagSortBtn, "LEFT", -2, 0)
         vanillaBagClearBtn:SetPoint("RIGHT", vanillaBagTransmogBtn, "LEFT", -2, 0)
         vanillaBagSellScrapBtn:SetPoint("RIGHT", vanillaBagClearBtn, "LEFT", -2, 0)
+
         vanillaBagSortBtn:SetFrameLevel(backpack:GetFrameLevel() + 10)
         vanillaBagClearBtn:SetFrameLevel(backpack:GetFrameLevel() + 10)
         vanillaBagSellScrapBtn:SetFrameLevel(backpack:GetFrameLevel() + 10)
         vanillaBagTransmogBtn:SetFrameLevel(backpack:GetFrameLevel() + 10)
+
         vanillaBagSortBtn:Show()
         vanillaBagClearBtn:Show()
         vanillaBagSellScrapBtn:Show()
