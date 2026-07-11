@@ -79,6 +79,7 @@ local TEX = {
     frame_metal_h = assets .. 'uiframemetalhorizontal2x',
     frame_metal_v = assets .. 'uiframemetalvertical2x',
     frame_bg      = assets .. 'ui-background-rock',
+    close_btn     = assets .. 'redbutton2x',
 }
 
 local SOLID = "Interface\\ChatFrame\\ChatFrameBackground"
@@ -648,6 +649,29 @@ function TP.Get()
     title:SetText("Talent Tree")
     frame.title = title
 
+    -- Close button (same texture/style as combuctor)
+    local closeBtn = CreateFrame("Button", "$parentCloseButton", frame)
+    closeBtn:SetSize(24, 24)
+    closeBtn:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
+    closeBtn:SetFrameLevel(frame:GetFrameLevel() + 20)
+    closeBtn:SetNormalTexture(TEX.close_btn)
+    closeBtn:GetNormalTexture():SetTexCoord(0.152344, 0.292969, 0.0078125, 0.304688)
+    closeBtn:SetPushedTexture(TEX.close_btn)
+    closeBtn:GetPushedTexture():SetTexCoord(0.152344, 0.292969, 0.632812, 0.929688)
+    closeBtn:SetHighlightTexture(TEX.close_btn)
+    closeBtn:GetHighlightTexture():SetTexCoord(0.449219, 0.589844, 0.0078125, 0.304688)
+    closeBtn:SetScript("OnClick", function()
+        -- Blizzard API: stops inspecting the current unit
+        ClearInspectPlayer()
+        -- Fallback: hide any known inspect frame
+        for _, name in ipairs({ "AscensionInspectFrame", "InspectFrame", "InspectPaperDollFrame" }) do
+            local f = _G[name]
+            if f and f:IsShown() then
+                HideUIPanel(f)
+            end
+        end
+    end)
+
     local classIconFrame = CreateFrame("Frame", nil, frame)
     classIconFrame:SetSize(94, 94)
     classIconFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", -25, 35)
@@ -673,7 +697,7 @@ function TP.Get()
     local cmpNT = cmp:GetNormalTexture()
     if cmpNT then cmpNT:SetVertexColor(1, 1, 1) end
     cmp.txt = cmp:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    cmp.txt:SetPoint("CENTER", cmp, "CENTER", -15, 5)
+    cmp.txt:SetPoint("CENTER", cmp, "CENTER", -19, 5)
     cmp.txt:SetText("Compare")
     cmp:Hide()
     frame.compareBtn = cmp
@@ -1024,7 +1048,7 @@ end
 local current = { unit = nil, className = nil, tree = nil, slot = nil }
 
 local function GetInspectFrame()
-    local names = { "InspectFrame", "InspectPaperDollFrame" }
+    local names = { "AscensionInspectFrame", "InspectFrame", "InspectPaperDollFrame" }
     for _, n in ipairs(names) do
         local f = _G[n]
         if f and f.IsVisible and f:IsVisible() then return f end
