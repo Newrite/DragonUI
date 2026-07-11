@@ -94,7 +94,10 @@ local function getbarpage()
     -- Fallback: auto-generate form-based paging for unknown CoA custom classes
     if not page then
         local numForms = GetNumShapeshiftForms()
-        if numForms and numForms > 0 then
+        -- Skip auto-paging when in a form that doesn't set a bonus bar (e.g. travel forms).
+        local inForm = GetShapeshiftForm() > 0
+        local noBonusBar = GetBonusBarOffset() == 0
+        if numForms and numForms > 0 and not (inForm and noBonusBar) then
             local parts = {}
             parts[1] = '[stealth] 7;'
             for i = 1, numForms do
