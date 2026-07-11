@@ -109,6 +109,7 @@ local CT = {
     bagslot           = CombuctorAssets .. 'bagslots2x',
     bagslot_cutout    = CombuctorAssets .. 'bagslotCutout',
     bag_border        = CombuctorAssets .. 'bagborder2',
+    slot_border       = CombuctorAssets .. 'ui-quickslot2',
     coinbox           = CombuctorAssets .. 'commoncoinbox',
 }
 
@@ -219,38 +220,61 @@ local function CombuctorRetailItemSlot(btn)
     if nt then
         nt:SetTexture(CT.slot_bg)
         nt:SetSize(37, 37)
-        nt:SetPoint('CENTER', 0, 0)
-        nt:SetDrawLayer('ARTWORK', 0)
+        nt:ClearAllPoints()
+        nt:SetPoint('CENTER', btn, 'CENTER')
+        nt:SetDrawLayer('BACKGROUND')
         nt:Show()
         nt:SetAlpha(1)
     end
 
-    local name = btn:GetName()
-    if name then
-        local icon = _G[name .. 'IconTexture']
-        if icon then
-            icon:SetDrawLayer('OVERLAY', CT_ICON_OVERLAY_SUBLEVEL)
-            icon:Show()
-        end
+    -- Slot border ring overlay (64x64), reused from cache if present
+    local border = btn._dragonuiSlotBorder
+    if not border then
+        border = btn:CreateTexture(nil, 'BORDER')
+        btn._dragonuiSlotBorder = border
     end
-
-    local count = btn:GetName() and _G[btn:GetName() .. 'Count']
-    if count then
-        count:SetDrawLayer('OVERLAY', 5)
-    end
+    border:SetTexture(CT.slot_border)
+    border:SetSize(64, 64)
+    border:ClearAllPoints()
+    border:SetPoint('CENTER', btn, 'CENTER', 0, -1)
+    border:Show()
 
     local pt = btn:GetPushedTexture()
     if pt then
         pt:SetTexture(CT.slot_depress)
         pt:SetSize(37, 37)
-        pt:SetPoint('CENTER', 0, 0)
+        pt:ClearAllPoints()
+        pt:SetPoint('CENTER', btn, 'CENTER')
     end
 
     local ht = btn:GetHighlightTexture()
     if ht then
         ht:SetTexture(CT.slot_highlight)
         ht:SetSize(37, 37)
-        ht:SetPoint('CENTER', 0, 0)
+        ht:ClearAllPoints()
+        ht:SetPoint('CENTER', btn, 'CENTER')
+    end
+
+    local name = btn:GetName()
+    if not name then return end
+
+    local icon = _G[name .. 'IconTexture']
+    if icon then
+        icon:SetDrawLayer('OVERLAY', CT_ICON_OVERLAY_SUBLEVEL)
+        icon:SetTexCoord(0, 1, 0, 1)
+        icon:ClearAllPoints()
+        icon:SetAllPoints(btn)
+        icon:Show()
+    end
+
+    local count = _G[name .. 'Count']
+    if count then
+        count:SetDrawLayer('OVERLAY', 5)
+    end
+
+    local stock = _G[name .. 'Stock']
+    if stock then
+        stock:SetDrawLayer('BORDER')
     end
 end
 
@@ -2887,7 +2911,7 @@ do
     function MoneyFrame:New(parent)
         local f = self:Bind(CreateFrame("Frame", format("DragonUI_CombuctorMoney%d", moneyId), parent))
         f:SetHeight(19)
-        f:SetWidth(170)
+        f:SetWidth(160)
         f:SetScript("OnShow", self.OnShow)
         f:SetScript("OnEvent", function(self, event)
             if event == "PLAYER_MONEY" then
