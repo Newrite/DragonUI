@@ -343,10 +343,6 @@ function UF.ApplyClassPortraitToTexture(unit, portraitTexture, useAlternative)
         return false
     end
 
-    if addon.CoA and addon.CoA.active and addon.CoA.ResolvePortraitClass then
-        classFileName = addon.CoA:ResolvePortraitClass(unit) or classFileName
-    end
-
     local applied = UF.ApplyClassPortraitIcon(portraitTexture, classFileName, useAlternative)
     if applied then
         portraitTexture:SetAlpha(1)

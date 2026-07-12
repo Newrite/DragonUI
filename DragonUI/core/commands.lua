@@ -384,19 +384,13 @@ local function SlashCommandHandler(input)
 
     elseif cmd == "classdebug" then
         local classFileName = select(2, UnitClass("player"))
-        local coa = addon.CoA
-        local isCoA = coa and coa.active
-        local resolved = classFileName
-        if coa and coa.ResolvePortraitClass then
-            resolved = coa:ResolvePortraitClass("player") or classFileName
-        end
         local UF = addon.UF
-        local hasAtlas = UF and UF.CLASSES_ALPHA_MAP[resolved] and "YES" or "NO"
-        local hasTCoords = CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[resolved] and "YES" or "NO"
-        local hasBLP = UF and UF.CLASSES_WITH_INDIVIDUAL_BLP[resolved] and "YES" or "NO"
+        local hasAtlas = UF and UF.CLASSES_ALPHA_MAP[classFileName] and "YES" or "NO"
+        local hasTCoords = CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[classFileName] and "YES" or "NO"
+        local hasBLP = UF and UF.CLASSES_WITH_INDIVIDUAL_BLP[classFileName] and "YES" or "NO"
         addon:Print(string.format(
-            "UnitClass(player) = %s | CoA active = %s | Resolved = %s | Atlas = %s | TCoords = %s | IndivBLP = %s",
-            tostring(classFileName), tostring(isCoA), resolved, hasAtlas, hasTCoords, hasBLP))
+            "UnitClass(player) = %s | Atlas = %s | TCoords = %s | IndivBLP = %s",
+            tostring(classFileName), hasAtlas, hasTCoords, hasBLP))
 
         if _G.CUSTOM_CLASS_COLORS then
             addon:Print("CUSTOM_CLASS_COLORS entries:")
