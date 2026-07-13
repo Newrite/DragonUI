@@ -682,3 +682,11 @@ L["XP Bar"] = "Barre d'XP"
 L["Gold Display"] = "Affichage Or"
 L["Text Only"] = "Texte seul"
 L["Gold Icons"] = "Icônes d'Or"
+-- Aura Borders: border style dropdown
+L["Border Style"] = "Style de bordure"
+L["Rounded"] = "Arrondi"
+L["Square"] = "Carré"
+
+-- Range Indicator colors
+L["Out of Range Color"] = "Couleur hors de portée"
+L["Not Enough Mana Color"] = "Couleur mana insuffisant"
