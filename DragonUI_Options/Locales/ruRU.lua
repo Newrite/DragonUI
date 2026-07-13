@@ -467,6 +467,11 @@ L["Hide Main Bar Background"] = "Скрыть фон основной панел
 L["Hide the background texture of the main action bar (makes it completely transparent)"] = "Скрыть фоновую текстуру основной панели действий (делает полностью прозрачной)"
 L["Hide the background texture of the main action bar."] = "Скрыть фоновую текстуру основной панели действий."
 
+-- Behavior section
+L["Behavior"] = "Поведение"
+L["Disable Form Page Switching"] = "Отключить смену страниц при смене формы"
+L["When enabled, the main action bar stays on the same page regardless of stance/form changes. Useful for druids, warriors, and CoA Classes who prefer manual page management."] = "При включении основная панель действий остается на одной странице независимо от смены стоек/форм. Полезно для друидов, воинов и классов CoA, предпочитающих ручное управление страницами."
+
 -- Text visibility
 L["Text Visibility"] = "Видимость текста"
 L["Count Text"] = "Текст количества"

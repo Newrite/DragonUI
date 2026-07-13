@@ -468,6 +468,11 @@ L["Hide Main Bar Background"] = "隱藏主動作條背景"
 L["Hide the background texture of the main action bar (makes it completely transparent)"] = "隱藏主動作條的背景紋理（使其完全透明）"
 L["Hide the background texture of the main action bar."] = "隱藏主動作條的背景紋理。"
 
+-- 行為
+L["Behavior"] = "行為"
+L["Disable Form Page Switching"] = "禁用形態頁面切換"
+L["When enabled, the main action bar stays on the same page regardless of stance/form changes. Useful for druids, warriors, and CoA Classes who prefer manual page management."] = "啟用後，主動作條將保持在當前頁面，不受姿態/形態變化影響。適合偏好手動管理頁面的德魯伊、戰士和CoA職業。"
+
 -- 文字可見性
 L["Text Visibility"] = "文字可見性"
 L["Count Text"] = "數量文字"

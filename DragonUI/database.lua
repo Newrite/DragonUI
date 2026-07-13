@@ -821,7 +821,8 @@ local defaults = {
                 enabled = true -- Apply DragonUI micro menu and bags system styling and positioning
             },
             mainbars = {
-                enabled = true -- Apply DragonUI main action bars, status bars (XP/Rep), scaling, and positioning system
+                enabled = true, -- Apply DragonUI main action bars, status bars (XP/Rep), scaling, and positioning system
+                disable_form_page_switching = false -- When true, the main action bar stays on the same page regardless of stance/form changes (druid shapeshift, warrior stance, CoA custom classes, etc.)
             },
             minimap = {
                 enabled = true -- Apply DragonUI minimap enhancements including custom styling, positioning, tracking icons, and calendar

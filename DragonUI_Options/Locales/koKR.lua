@@ -475,6 +475,11 @@ L["Hide Main Bar Background"] = "주 단축바 배경 숨기기"
 L["Hide the background texture of the main action bar (makes it completely transparent)"] = "주 단축바의 배경 텍스처를 숨깁니다 (완전 투명하게 만듦)"
 L["Hide the background texture of the main action bar."] = "주 단축바 배경 텍스처 숨기기"
 
+-- Behavior section
+L["Behavior"] = "동작"
+L["Disable Form Page Switching"] = "폼 페이지 전환 비활성화"
+L["When enabled, the main action bar stays on the same page regardless of stance/form changes. Useful for druids, warriors, and CoA Classes who prefer manual page management."] = "활성화하면 태세/폼 변경과 관계없이 주 동작 바로가 같은 페이지에 유지됩니다. 수동 페이지 관리를 선호하는 드루이드, 전사, CoA 클래스에게 유용합니다."
+
 -- Text visibility
 L["Text Visibility"] = "문자 표시 설정"
 L["Count Text"] = "수량 텍스트"

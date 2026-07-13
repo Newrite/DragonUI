@@ -514,6 +514,11 @@ L["Hide Main Bar Background"] = true
 L["Hide the background texture of the main action bar (makes it completely transparent)"] = true
 L["Hide the background texture of the main action bar."] = true
 
+-- Behavior section
+L["Behavior"] = true
+L["Disable Form Page Switching"] = true
+L["When enabled, the main action bar stays on the same page regardless of stance/form changes. Useful for druids, warriors, and CoA Classes who prefer manual page management."] = true
+
 -- Text visibility
 L["Text Visibility"] = true
 L["Count Text"] = true

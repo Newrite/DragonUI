@@ -467,6 +467,11 @@ L["Hide Main Bar Background"] = "隐藏主动作条背景"
 L["Hide the background texture of the main action bar (makes it completely transparent)"] = "隐藏主动作条的背景纹理（使其完全透明）"
 L["Hide the background texture of the main action bar."] = "隐藏主动作条的背景纹理。"
 
+-- 行为
+L["Behavior"] = "行为"
+L["Disable Form Page Switching"] = "禁用形态页面切换"
+L["When enabled, the main action bar stays on the same page regardless of stance/form changes. Useful for druids, warriors, and CoA Classes who prefer manual page management."] = "启用后，主动作条将保持在当前页面，不受姿态/形态变化影响。适合偏好手动管理页面的德鲁伊、战士和CoA职业。"
+
 -- 文本可见性
 L["Text Visibility"] = "文本可见性"
 L["Count Text"] = "数量文本"

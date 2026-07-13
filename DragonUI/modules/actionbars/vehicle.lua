@@ -89,6 +89,14 @@ local stance = {
 }
 
 local function getbarpage()
+    -- When the user opts out of form/stance-based page switching via the
+    -- mainbars module config, return only the default condition. This keeps
+    -- the vehicle bar page stable regardless of class or form changes.
+    local mainbarsConfig = addon.db and addon.db.profile and addon.db.profile.modules and addon.db.profile.modules.mainbars
+    if mainbarsConfig and mainbarsConfig.disable_form_page_switching then
+        return stance['DEFAULT'] .. ' 1'
+    end
+
     local condition = stance['DEFAULT']
     local page = stance[class]
     -- Fallback: auto-generate form-based paging for unknown CoA custom classes

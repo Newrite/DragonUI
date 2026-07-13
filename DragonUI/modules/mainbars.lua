@@ -306,6 +306,15 @@ local noAutoFormPaging = {
 }
 
 local function GetMainBarPageCondition()
+    -- When the user opts out of form/stance-based page switching, return
+    -- only the default condition (bonusbar:5, bars 2-6). The main action bar
+    -- will stay on the same page regardless of druid shapeshift, warrior
+    -- stance, rogue stealth, or any other form change.
+    local config = GetModuleConfig()
+    if config and config.disable_form_page_switching then
+        return mainBarPageByClass.DEFAULT .. ' 1'
+    end
+
     local condition = mainBarPageByClass.DEFAULT
     local classCondition = mainBarPageByClass[class]
     -- Fallback: auto-generate form-based paging for unknown CoA custom classes

@@ -478,6 +478,11 @@ L["Hide Main Bar Background"] = "Ocultar Fondo de Barra Principal"
 L["Hide the background texture of the main action bar (makes it completely transparent)"] = "Ocultar la textura de fondo de la barra de acción principal (la hace completamente transparente)"
 L["Hide the background texture of the main action bar."] = "Ocultar la textura de fondo de la barra de acción principal."
 
+-- Behavior section
+L["Behavior"] = "Comportamiento"
+L["Disable Form Page Switching"] = "Desactivar Cambio de Página por Forma"
+L["When enabled, the main action bar stays on the same page regardless of stance/form changes. Useful for druids, warriors, and CoA Classes who prefer manual page management."] = "Al activarlo, la barra de acción principal se mantiene en la misma página sin importar los cambios de postura/forma. Útil para druidas, guerreros y clases de CoA que prefieren gestionar las páginas manualmente."
+
 -- Text visibility
 L["Text Visibility"] = "Visibilidad de Texto"
 L["Count Text"] = "Texto de Cantidad"

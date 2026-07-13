@@ -193,6 +193,18 @@ local function BuildGeneralTab(scroll)
         callback = RefreshBars,
     })
 
+    -- ====================================================================
+    -- BEHAVIOR
+    -- ====================================================================
+    local behavior = C:AddSection(scroll, LO["Behavior"])
+
+    C:AddToggle(behavior, {
+        label = LO["Disable Form Page Switching"],
+        desc = LO["When enabled, the main action bar stays on the same page regardless of stance/form changes. Useful for druids, warriors, and rogues who prefer manual page management."],
+        dbPath = "modules.mainbars.disable_form_page_switching",
+        requiresReload = true,
+    })
+
     -- Text visibility sub-section
     local textVis = C:AddSection(scroll, LO["Text Visibility"])
 
