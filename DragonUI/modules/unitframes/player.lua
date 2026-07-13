@@ -326,6 +326,13 @@ local function ApplyFatManaBar()
     local width, height, hidden = GetFatManaConfig()
     if hidden then
         PlayerFrameManaBar:Hide()
+        -- Also hide the alternate mana bar (druid forms, CoA custom class resources)
+        -- so it doesn't appear over/under the health bar when the user chose to
+        -- hide the power bar in Fat Health Bar mode.
+        local alternateManaBar = _G.PlayerFrameAlternateManaBar
+        if alternateManaBar then
+            alternateManaBar:Hide()
+        end
         if Module.fatManaFrame then
             Module.fatManaFrame:SetSize(1, 1)
         end
