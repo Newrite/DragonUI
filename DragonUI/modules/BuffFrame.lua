@@ -596,8 +596,10 @@ function BuffFrameModule:Enable()
 
                 -- When enchants are separated, BuffButton1 would anchor to
                 -- TempEnchantFrame (which is now on its own frame). Re-anchor
-                -- the first non-consolidated buff to ConsolidatedBuffs so the
-                -- icon chain is correct.
+                -- the first non-consolidated buff to the correct place in the
+                -- chain: ConsolidatedBuffs → VanityBuffs → firstBuffButton.
+                -- Without this, VanityBuffs and the first buff both anchor to
+                -- the same ConsolidatedBuffs:TOPLEFT point and overlap.
                 local numVisible = 0
                 for i = 1, BUFF_ACTUAL_DISPLAY do
                     local btn = _G["BuffButton" .. i]
@@ -605,7 +607,11 @@ function BuffFrameModule:Enable()
                         numVisible = numVisible + 1
                         if numVisible == 1 then
                             btn:ClearAllPoints()
-                            if ConsolidatedBuffs and ConsolidatedBuffs:IsShown() then
+                            if VanityBuffs and VanityBuffs:IsShown() and VanityBuffs:IsVisible() then
+                                -- VanityBuffs is already anchored left of ConsolidatedBuffs.
+                                -- Anchor the first buff left of VanityBuffs to keep the chain.
+                                btn:SetPoint("TOPRIGHT", VanityBuffs, "TOPLEFT", -6, 0)
+                            elseif ConsolidatedBuffs and ConsolidatedBuffs:IsShown() then
                                 btn:SetPoint("TOPRIGHT", ConsolidatedBuffs, "TOPLEFT", -6, 0)
                             else
                                 btn:SetPoint("TOPRIGHT", dragonUIBuffFrame, "TOPRIGHT", 0, 0)
