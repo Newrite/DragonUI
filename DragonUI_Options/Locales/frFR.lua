@@ -231,6 +231,8 @@ L["Cooldown Timers"] = "Minuteurs de recharge"
 L["Show cooldown timers on action buttons."] = "Afficher les minuteurs de recharge sur les boutons d'action."
 L["Range Indicator"] = "Indicateur de portée"
 L["Show Hotkey Text"] = "Afficher le texte des raccourcis"
+L["Show Empty Slots"] = "Afficher les emplacements vides"
+L["Show the button frame on pet slots with no ability assigned."] = "Affiche le cadre du bouton sur les emplacements de familier sans capacité assignée."
 L["Tints action button icons based on range and usability: red = out of range, blue = not enough mana, gray = unusable."] = "Colore les icônes des boutons d'action selon la portée et l'utilisabilité : rouge = hors de portée, bleu = mana insuffisant, gris = inutilisable."
 L["Quest Tracker"] = "Suivi de quêtes"
 L["DragonUI quest tracker positioning and styling."] = "Positionnement et style du suivi de quêtes DragonUI."
@@ -643,6 +645,14 @@ L["Show Debuff Cooldown Text"] = "Afficher la durée des affaiblissements"
 L["Show remaining debuff time on each debuff icon."] = "Affiche la durée restante sur chaque icône d'affaiblissement."
 L["Size of debuff icons on nameplates."] = "Taille des icônes d'affaiblissement sur les barres de nom."
 L["Totem Icon Position"] = "Position de l'icône du totem"
+
+-- Layout
+L["Change Button Order"] = "Modifier l'ordre des boutons"
+L["Button Order"] = "Ordre des boutons"
+L["Top Left"] = "Haut gauche"
+L["Bottom Left"] = "Bas gauche"
+L["Top Right"] = "Haut droite"
+L["Bottom Right"] = "Bas droite"
 
 -- Key Press
 L["Key Press"] = "Appui de touche"

@@ -133,6 +133,15 @@ local function BuildAdditionalBarsTab(scroll)
             if addon.RefreshPetbarFrame then addon.RefreshPetbarFrame() end
         end,
     })
+    
+    C:AddToggle(pet, {
+        label = LO["Show Empty Slots"],
+        desc = LO["Show the button frame on pet slots with no ability assigned."],
+        dbPath = "additional.pet.grid",
+        callback = function()
+            if addon.RefreshPetbarGrid then addon.RefreshPetbarGrid() end
+        end,
+    })
 
     C:AddHeading(pet, LO["Visibility"])
     C:AddVisibilityFadeToggles(pet, {

@@ -273,14 +273,12 @@ local function petbutton_updatestate(self, event)
             else
                 AutoCastShine_AutoCastStop(petAutoCastShine)
             end
-            if name then
-                if not config.grid then
-                    petActionButton:SetAlpha(1)
-                end
+            -- Always set explicitly (not just when hiding) so toggling "grid" live re-shows
+            -- slots that a previous pass already faded to 0 — otherwise it needs a /reload.
+            if config.grid or name then
+                petActionButton:SetAlpha(1)
             else
-                if not config.grid then
-                    petActionButton:SetAlpha(0)
-                end
+                petActionButton:SetAlpha(0)
             end
             if texture then
                 if GetPetActionSlotUsable(index) then
@@ -300,8 +298,7 @@ local function petbutton_updatestate(self, event)
         end
     end
 
-    -- The SetAlpha(1) calls above reset individual buttons whenever pet data syncs (e.g. a
-    -- few seconds after login/reload) — reassert our own alpha right after so it can't flash.
+    -- Reasserts the bar's hover/combat alpha; anchor-only, so it can't undo the per-slot alpha above.
     if addon.VisibilityFade then
         addon.VisibilityFade.Update("petbar")
     end
@@ -381,8 +378,7 @@ local function petbutton_position()
         local hoverFrames = { petbar }
         for _, btn in ipairs(buttons) do table.insert(hoverFrames, btn) end
         addon.VisibilityFade.Register("petbar", petbar, {
-            -- Buttons are direct alpha targets too: petbutton_updatestate() resets their own alpha.
-            frames = buttons,
+            -- Buttons are reparented to petbar, whose alpha cascades to them — don't duplicate them here.
             dbTable = function() return addon.db and addon.db.profile and addon.db.profile.additional and addon.db.profile.additional.pet end,
             hoverFrames = hoverFrames,
             clickThrough = true,
@@ -680,6 +676,12 @@ function addon.RefreshPetbarSystem()
     elseif IsModuleEnabled() then
         ApplyPetbarSystem()
     end
+end
+
+-- Re-runs the per-slot alpha logic after the "Show Empty Slots" (grid) toggle changes.
+function addon.RefreshPetbarGrid()
+    if not IsModuleEnabled() then return end
+    petbutton_updatestate()
 end
 
 -- Refresh function for size and position updates
