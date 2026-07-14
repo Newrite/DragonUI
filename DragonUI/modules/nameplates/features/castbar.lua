@@ -380,6 +380,30 @@ function NP.castbar.ShowInterruptedState(bar, plateData, isPartyBar)
         bar.minaShield:Hide()
     end
 
+    local cfg = NP.config.GetCfg()
+    local displayDisabled = cfg.showCastBar == false
+        or (isPartyBar and cfg.showPartyRaidCastBars == false)
+        or (plateData and NP.gather and NP.gather.IsHeadlineActive(plateData))
+    if displayDisabled then
+        if plateData then
+            NP.castbar.HideNativeCastVisual(plateData)
+        end
+        bar._interrupted = nil
+        bar._interruptFadeActive = nil
+        bar._intFadeAt = nil
+        bar._intHideAt = nil
+        bar._notInterruptible = false
+        bar._nativeCastShield = nil
+        bar._intBg:Hide()
+        HideSuccessFlashVisual(bar)
+        if UIFrameFadeRemoveFrame then
+            UIFrameFadeRemoveFrame(bar)
+        end
+        bar:SetAlpha(1)
+        bar:Hide()
+        return
+    end
+
     ApplyInterruptedHoldVisual(bar)
     bar._interrupted = true
     bar._interruptFadeActive = true
@@ -2685,6 +2709,7 @@ function NP.castbar.SuppressNativeCastVisual(plateData)
 end
 
 function NP.castbar.HidePlateCastBar(plateData, force)
+    NP.castbar.HideNativeCastVisual(plateData)
     local bar = plateData.minaCast
     if not bar then
         NP.discovery.HideCastChrome(plateData)

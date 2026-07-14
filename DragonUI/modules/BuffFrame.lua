@@ -817,8 +817,10 @@ function BuffFrameModule:Enable()
             elseif event == "UNIT_AURA" then
                 if unit == 'vehicle' then
                     ShowToggleButtonIf(GetUnitBuffCount("vehicle", 16) > 0)
+                    ScheduleAuraAnchorRefresh()
                 elseif unit == 'player' then
                     ShowToggleButtonIf(GetUnitBuffCount("player", 16) > 0)
+                    ScheduleAuraAnchorRefresh()
                 end
             elseif event == "UNIT_ENTERED_VEHICLE" then
                 if unit == 'player' then
