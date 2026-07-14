@@ -40,9 +40,8 @@ function addon:tcount(tbl)
     return count
 end
 
--- Resolve class colors from the live client tables. Ascension extends
--- RAID_CLASS_COLORS with CoA's runtime class tokens, so keeping this lookup
--- dynamic avoids stale copies and keeps every DragonUI module on one palette.
+-- Resolve class colors from one shared source so every DragonUI module uses
+-- the same palette.
 local function IsValidClassColor(color)
     return type(color) == "table"
         and type(color.r) == "number"
@@ -50,11 +49,54 @@ local function IsValidClassColor(color)
         and type(color.b) == "number"
 end
 
+-- Canonical CoA palette from Ascension's class data. Several runtime tokens
+-- retain legacy internal names which do not match their displayed class name.
+local CANONICAL_CLASS_COLOR_OVERRIDES = {
+    BARBARIAN = { r = 0.78, g = 0.61, b = 0.43 },
+    CHRONOMANCER = { r = 1.00, g = 0.96, b = 0.41 },
+    CULTIST = { r = 0.53, g = 0.53, b = 0.93 },
+    DEMONHUNTER = { r = 0.64, g = 0.19, b = 0.79 },
+    FLESHWARDEN = { r = 0.77, g = 0.12, b = 0.23 }, -- Knight of Xoroth
+    GUARDIAN = { r = 0.50, g = 0.50, b = 0.50 },
+    MONK = { r = 0.96, g = 0.55, b = 0.73 }, -- Templar
+    NECROMANCER = { r = 0.67, g = 0.83, b = 0.45 },
+    PROPHET = { r = 0.67, g = 0.83, b = 0.45 }, -- Venomancer
+    PYROMANCER = { r = 1.00, g = 0.49, b = 0.04 },
+    RANGER = { r = 0.67, g = 0.83, b = 0.45 },
+    REAPER = { r = 0.00, g = 1.00, b = 0.59 },
+    SONOFARUGAL = { r = 0.77, g = 0.12, b = 0.23 }, -- Bloodmage
+    SPIRITMAGE = { r = 0.41, g = 0.80, b = 0.94 }, -- Runemaster
+    STARCALLER = { r = 0.41, g = 0.80, b = 0.94 },
+    STORMBRINGER = { r = 0.00, g = 0.44, b = 0.87 },
+    SUNCLERIC = { r = 1.00, g = 0.49, b = 0.04 },
+    TINKER = { r = 1.00, g = 0.96, b = 0.41 },
+    WILDWALKER = { r = 1.00, g = 0.49, b = 0.04 }, -- Primalist
+    WITCHDOCTOR = { r = 0.96, g = 0.55, b = 0.73 },
+    WITCHHUNTER = { r = 0.53, g = 0.53, b = 0.93 },
+}
+
+local function UseCanonicalCoAColors()
+    local realm = GetRealmName and GetRealmName()
+    if type(realm) == "string" and realm:find("Conquest of Azeroth", 1, true) then
+        return true
+    end
+
+    local raidColors = _G.RAID_CLASS_COLORS
+    return _G.PathToAscensionMicroButton ~= nil
+        and type(raidColors) == "table"
+        and raidColors.BARBARIAN ~= nil
+end
+
 function addon.GetClassColor(classToken)
     if not classToken then return nil end
 
+    local color = UseCanonicalCoAColors() and CANONICAL_CLASS_COLOR_OVERRIDES[classToken]
+    if color then
+        return color
+    end
+
     local raidColors = _G.RAID_CLASS_COLORS
-    local color = raidColors and raidColors[classToken]
+    color = raidColors and raidColors[classToken]
     if IsValidClassColor(color) then
         return color
     end
@@ -69,8 +111,7 @@ function addon.GetClassColor(classToken)
 end
 
 -- CoA exposes several legacy runtime tokens that differ from their display
--- names (for example SONOFARUGAL is Bloodmage). This is only an identity
--- fallback; RGB values always come from the live client tables above.
+-- names (for example SONOFARUGAL is Bloodmage).
 local ASCENSION_CLASS_TOKENS = {
     BARBARIAN = true,
     CHRONOMANCER = true,
@@ -149,6 +190,9 @@ function addon.FindClassByColor(r, g, b, maxDistance)
         end
     end
 
+    if UseCanonicalCoAColors() then
+        ConsiderColorTable(CANONICAL_CLASS_COLOR_OVERRIDES)
+    end
     ConsiderColorTable(_G.RAID_CLASS_COLORS)
     ConsiderColorTable(_G.CUSTOM_CLASS_COLORS)
     return bestToken
