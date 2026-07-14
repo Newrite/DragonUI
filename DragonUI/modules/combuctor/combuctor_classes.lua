@@ -2,7 +2,6 @@ local addon = select(2, ...)
 local mod = addon.CombuctorModule
 -- ============================================================================
 -- COMBUCTOR CLASSES MODULE
--- Extracted from combuctor.lua in PR #2 of combuctor-refactor.
 -- Contains all UI class definitions: ItemSlot, ItemFrame, Bag, MoneyFrame,
 -- TokenBar, FilterButton/QualityFilter, SideTab/SideFilter, BottomTab/BottomFilter.
 --

@@ -2,7 +2,6 @@ local addon = select(2, ...)
 local mod = addon.CombuctorModule
 -- ============================================================================
 -- COMBUCTOR SETS MODULE
--- Extracted from combuctor.lua in PR #2 of combuctor-refactor.
 -- Provides the item filtering / category set registry (CombuctorSet/Sets).
 --
 -- Load order: combuctor.lua → combuctor_data.lua → combuctor_sets.lua →

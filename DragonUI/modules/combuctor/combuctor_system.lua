@@ -2,7 +2,6 @@ local addon = select(2, ...)
 local mod = addon.CombuctorModule
 -- ============================================================================
 -- COMBUCTOR SYSTEM MODULE
--- Extracted from combuctor.lua in PR #2 of combuctor-refactor.
 -- Owns the apply/restore lifecycle, the profile-change handler, the
 -- ADDON_LOADED / PLAYER_ENTERING_WORLD init frame, the /cbt /combuctor
 -- slash commands, and the addon.* exports used by the rest of DragonUI.

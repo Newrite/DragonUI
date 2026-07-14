@@ -2,7 +2,6 @@ local addon = select(2, ...)
 local mod = addon.CombuctorModule
 -- ============================================================================
 -- COMBUCTOR DATA MODULE
--- Extracted from combuctor.lua in PR #2 of combuctor-refactor.
 -- Provides the event bus (Envoy), inventory event tracking (InventoryEvents),
 -- bank cache, player info, bag slot info, and item slot info modules.
 --

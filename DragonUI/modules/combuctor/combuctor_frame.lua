@@ -2,7 +2,6 @@ local addon = select(2, ...)
 local mod = addon.CombuctorModule
 -- ============================================================================
 -- COMBUCTOR FRAME MODULE
--- Extracted from combuctor.lua in PR #2 of combuctor-refactor.
 -- Contains the FrameEvents relay, InventoryFrame class, template helpers
 -- used by InventoryFrame (SetupIconButton, SetupDragFrame, SetupSearchBox,
 -- SetupResetButton, SetupBagToggle, CreateInventoryFrame), and the retail-style
