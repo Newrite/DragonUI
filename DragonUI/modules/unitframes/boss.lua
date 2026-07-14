@@ -175,8 +175,6 @@ local function CreateSecureBossAnchor(wrapper, bossFrame, bossIndex)
                 bossFrame:ClearAllPoints()
                 bossFrame:SetPoint("TOPLEFT", self, "TOPLEFT", 0, 0)
             end
-            -- Clear the cache so later Blizzard reanchors are repaired on the next unit-watch pass.
-            self:SetAttribute("state-unitexists", nil)
         end
     ]])
     RegisterUnitWatch(anchor, true)
