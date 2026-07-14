@@ -1146,6 +1146,18 @@ local function SortItems(bags)
 
     table.sort(sources, DefaultSorter)
 
+    -- When reverse_stack is enabled, items are placed at the end of each bag
+    -- instead of the front. This leaves empty slots at the top of Combuctor
+    -- so new loot is immediately visible without scrolling.
+    local cfg = GetModuleConfig()
+    if cfg and cfg.reverse_stack then
+        local reversed = {}
+        for i = #destinations, 1, -1 do
+            tinsert(reversed, destinations[i])
+        end
+        destinations = reversed
+    end
+
     local bag_locked = {}
     local another_pass = true
     while another_pass do

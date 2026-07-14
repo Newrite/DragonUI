@@ -339,6 +339,8 @@ L["Add sort buttons to bag and bank frames. Also enables /sort and /sortbank sla
 L["Sort bags and bank items with buttons"] = "Сортировка предметов в сумках и банке кнопками"
 L["Lock Icon Color"] = "Цвет значка блокировки"
 L["Color used to tint the padlock icon shown on locked bag/bank slots."] = "Цвет, используемый для окрашивания значка замка, отображаемого на заблокированных ячейках сумок/банка."
+L["Reverse Stack Order"] = "Обратный порядок"
+L["Stack sorted items from the end of each bag so empty slots stay at the top."] = "Укладывать отсортированные предметы с конца каждой сумки, чтобы пустые ячейки оставались сверху."
 
 L["Show 'All' Tab"] = "Показать вкладку «Все»"
 L["Show the 'All' category tab that displays all items without filtering."] = "Показать вкладку категории «Все», отображающую все предметы без фильтрации."

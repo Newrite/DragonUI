@@ -338,6 +338,8 @@ L["Add sort buttons to bag and bank frames. Also enables /sort and /sortbank sla
 L["Sort bags and bank items with buttons"] = "透過按鈕整理揹包和銀行物品"
 L["Lock Icon Color"] = "鎖定圖示顏色"
 L["Color used to tint the padlock icon shown on locked bag/bank slots."] = "用於為揹包/銀行鎖定格子上顯示的鎖頭圖示上色的顏色。"
+L["Reverse Stack Order"] = "反向堆疊"
+L["Stack sorted items from the end of each bag so empty slots stay at the top."] = "從每個背包的末尾堆疊已排序的物品，使空位保持在頂部。"
 
 L["Show 'All' Tab"] = "顯示“全部”標籤頁"
 L["Show the 'All' category tab that displays all items without filtering."] = "顯示不過濾、展示所有物品的“全部”分類標籤頁。"

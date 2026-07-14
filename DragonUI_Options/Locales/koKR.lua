@@ -345,6 +345,8 @@ L["Add sort buttons to bag and bank frames. Also enables /sort and /sortbank sla
 L["Sort bags and bank items with buttons"] = "가방 및 은행 아이템 일괄 정리"
 L["Lock Icon Color"] = "잠금 아이콘 색상"
 L["Color used to tint the padlock icon shown on locked bag/bank slots."] = "가방/은행의 잠긴 칸에 표시되는 자물쇠 아이콘의 색상입니다."
+L["Reverse Stack Order"] = "역순 정렬"
+L["Stack sorted items from the end of each bag so empty slots stay at the top."] = "정렬된 아이템을 가방 끝에서부터 쌓아 빈 칸이 위에 남도록 합니다."
 
 L["Show 'All' Tab"] = "'전체' 탭 표시"
 L["Show the 'All' category tab that displays all items without filtering."] = "필터링 없이 모든 아이템을 보여주는 '전체' 카테고리 탭 표시"

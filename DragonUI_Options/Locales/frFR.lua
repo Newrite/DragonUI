@@ -663,6 +663,8 @@ L["Fire abilities on key press instead of key release."] = "Active les sorts à 
 -- Bag Sort
 L["Lock Icon Color"] = "Couleur de l'icône de verrouillage"
 L["Color used to tint the padlock icon shown on locked bag/bank slots."] = "Couleur utilisée pour teinter l'icône de cadenas affichée sur les emplacements de sacs/banque verrouillés."
+L["Reverse Stack Order"] = "Inverser l'ordre d'empilement"
+L["Stack sorted items from the end of each bag so empty slots stay at the top."] = "Empile les objets triés depuis la fin de chaque sac pour que les emplacements vides restent en haut."
 
 -- Version Check
 L["Version Check"] = "Vérification de version"

@@ -424,6 +424,23 @@ local function BuildBagsTab(scroll)
     })
     C:AddDescription(sortSection, LO["Color used to tint the padlock icon shown on locked bag/bank slots."] or "Color used to tint the padlock icon shown on locked bag/bank slots.")
 
+    C:AddToggle(sortSection, {
+        label = LO["Reverse Stack Order"] or "Reverse Stack Order",
+        desc = LO["Stack sorted items from the end of each bag so empty slots stay at the top."] or "Stack sorted items from the end of each bag so empty slots stay at the top.",
+        getFunc = function()
+            local cfg = GetBagSortConfig(false)
+            return cfg and cfg.reverse_stack
+        end,
+        setFunc = function(val)
+            local cfg = GetBagSortConfig(true)
+            if cfg then cfg.reverse_stack = val end
+        end,
+        disabled = function()
+            local cfg = GetBagSortConfig(false)
+            return not (cfg and cfg.enabled)
+        end,
+    })
+
     -- ====================================================================
     -- INVENTORY CATEGORY TABS
     -- ====================================================================

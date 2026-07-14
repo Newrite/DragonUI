@@ -334,6 +334,8 @@ L["Add sort buttons to bag and bank frames. Also enables /sort and /sortbank sla
 L["Sort bags and bank items with buttons"] = "Taschen und Bank mit Buttons sortieren"
 L["Lock Icon Color"] = "Farbe des Schloss-Symbols"
 L["Color used to tint the padlock icon shown on locked bag/bank slots."] = "Farbe für das Schloss-Symbol, das auf gesperrten Taschen-/Bankfächern angezeigt wird."
+L["Reverse Stack Order"] = "Reihenfolge umkehren"
+L["Stack sorted items from the end of each bag so empty slots stay at the top."] = "Sortierte Gegenstände vom Ende jeder Tasche aus stapeln, sodass leere Plätze oben bleiben."
 
 L["Show 'All' Tab"] = "Registerkarte „Alle“ anzeigen"
 L["Show the 'All' category tab that displays all items without filtering."] = "Zeigt die Registerkarte „Alle“ an, auf der alle Elemente ohne Filterung angezeigt werden."

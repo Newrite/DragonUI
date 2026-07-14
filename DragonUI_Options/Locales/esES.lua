@@ -341,6 +341,8 @@ L["Choose the modifier + mouse button used to lock or unlock a bag slot while ho
 L["Use /sortlock to lock or unlock the currently hovered slot from chat."] = "Usa /sortlock para bloquear o desbloquear desde el chat la casilla sobre la que tengas el cursor."
 L["Lock Icon Color"] = "Color del icono de bloqueo"
 L["Color used to tint the padlock icon shown on locked bag/bank slots."] = "Color usado para teñir el icono del candado que aparece en las casillas bloqueadas de bolsas y banco."
+L["Reverse Stack Order"] = "Invertir orden de apilado"
+L["Stack sorted items from the end of each bag so empty slots stay at the top."] = "Apila los objetos ordenados desde el final de cada bolsa para que los espacios vacíos queden arriba."
 L["Alt + Left Click"] = "Alt + Clic izquierdo"
 L["Ctrl + Left Click"] = "Ctrl + Clic izquierdo"
 L["Shift + Left Click"] = "Shift + Clic izquierdo"

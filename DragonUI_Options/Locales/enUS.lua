@@ -373,6 +373,8 @@ L["Choose the modifier + mouse button used to lock or unlock a bag slot while ho
 L["Use /sortlock to lock or unlock the currently hovered slot from chat."] = true
 L["Lock Icon Color"] = true
 L["Color used to tint the padlock icon shown on locked bag/bank slots."] = true
+L["Reverse Stack Order"] = true
+L["Stack sorted items from the end of each bag so empty slots stay at the top."] = true
 L["Alt + Left Click"] = true
 L["Ctrl + Left Click"] = true
 L["Shift + Left Click"] = true
