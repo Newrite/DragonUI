@@ -383,7 +383,8 @@ function NP.castbar.ShowInterruptedState(bar, plateData, isPartyBar)
     local cfg = NP.config.GetCfg()
     local displayDisabled = cfg.showCastBar == false
         or (isPartyBar and cfg.showPartyRaidCastBars == false)
-        or (plateData and NP.gather and NP.gather.IsHeadlineActive(plateData))
+        or (plateData and NP.gather and NP.gather.IsHeadlineActive(plateData)
+            and cfg.headlineShowCastBar ~= true)
     if displayDisabled then
         if plateData then
             NP.castbar.HideNativeCastVisual(plateData)

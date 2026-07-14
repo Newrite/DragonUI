@@ -106,13 +106,15 @@ end
 
 function NP.gather.ComputeVisualState(plateData, snapshot, context, reason)
     local npCfg = NP.config.GetCfg()
-    -- Headline mode hides power and cast bars (health is hidden in SyncHealth).
+    -- Headline mode always hides power. Health text and cast bars have their
+    -- own explicit headline options; the health bar itself stays hidden.
     local nameOnly = NP.gather.IsHeadlineActive(plateData)
     return {
         reason = reason,
         showPower = (not nameOnly) and (npCfg.showPowerBar ~= false),
         showDebuffs = npCfg.showDebuffs ~= false,
-        showCastbar = (not nameOnly) and (npCfg.showCastBar ~= false),
+        showCastbar = (not nameOnly or npCfg.headlineShowCastBar == true)
+            and (npCfg.showCastBar ~= false),
         showTargetHighlight = NP.identity.IsTargetPlateVisual(plateData),
     }
 end
@@ -494,13 +496,46 @@ function NP.gather.SyncHealth(plateData, value)
     if NP.gather.IsTotemIconOnlyActive(plateData) then
         bar:Hide()
         if plateData.minaHpPct then plateData.minaHpPct:Hide() end
+        if plateData.minaHpNum then plateData.minaHpNum:Hide() end
+        if plateData.minaHpBarPct then plateData.minaHpBarPct:Hide() end
         return
     end
 
-    -- Headline mode: no health bar, only the name (see SyncName).
+    -- Headline health text is independent from the hidden health bar.
     if NP.gather.IsHeadlineActive(plateData) then
+        local _, maxVal = src:GetMinMaxValues()
+        local cur = tonumber(value or src:GetValue()) or 0
+        maxVal = tonumber(maxVal) or 0
+        local cfg = NP.config.GetCfg()
         bar:Hide()
         if plateData.minaHpPct then plateData.minaHpPct:Hide() end
+
+        if cfg.headlineShowHealthNumber == true and maxVal and maxVal > 0 then
+            if plateData.minaHpNum then
+                if plateData._lastHpNumValue ~= cur then
+                    plateData._lastHpNumValue = cur
+                    local abbr = addon.TextSystem and addon.TextSystem.AbbreviateLargeNumbers(cur)
+                        or tostring(math.floor(cur))
+                    plateData.minaHpNum:SetText(abbr)
+                end
+                plateData.minaHpNum:Show()
+            end
+        elseif plateData.minaHpNum then
+            plateData.minaHpNum:Hide()
+        end
+
+        if cfg.headlineShowHealthPercent == true and maxVal and maxVal > 0 then
+            if plateData.minaHpBarPct then
+                local pct = math.floor(cur / maxVal * 100 + 0.5)
+                if plateData._lastHpBarPct ~= pct then
+                    plateData._lastHpBarPct = pct
+                    plateData.minaHpBarPct:SetText(pct .. "%")
+                end
+                plateData.minaHpBarPct:Show()
+            end
+        elseif plateData.minaHpBarPct then
+            plateData.minaHpBarPct:Hide()
+        end
         return
     end
 
@@ -1015,15 +1050,14 @@ end
 
 function NP.gather.RefreshPlateCastbar(plateData, reason)
     local refreshReason = reason or "cast_update"
-    -- Headline mode hides the castbar regardless of the cast event path.
-    if NP.gather.IsHeadlineActive(plateData) then
+    local cfg = NP.config.GetCfg()
+    if NP.gather.IsHeadlineActive(plateData) and cfg.headlineShowCastBar ~= true then
         NP.castbar.HidePlateCastBar(plateData)
         return
     end
     local ownershipValid = NP.identity.ValidatePlateGUIDOwnership(plateData)
     NP.identity.UpdatePlateGroupTargetMatch(plateData, false)
     NP.identity.UpdatePlateUnitToken(plateData)
-    local cfg = NP.config.GetCfg()
     local showCastbar = cfg.showCastBar ~= false
     if plateData.minaCast or showCastbar then
         NP.layout.EnsureMinaStack(plateData)

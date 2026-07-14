@@ -709,6 +709,25 @@ local function BuildHealthSubTab(scroll)
             callback = RefreshNameplates,
         })
 
+        C:AddToggle(headline, {
+            label = LO["Show Health Number"],
+            dbPath = DB .. ".headlineShowHealthNumber",
+            callback = RefreshNameplates,
+        })
+        C:AddToggle(headline, {
+            label = LO["Show Health Percent"],
+            dbPath = DB .. ".headlineShowHealthPercent",
+            callback = RefreshNameplates,
+        })
+        C:AddToggle(headline, {
+            label = LO["Show Cast Bars"],
+            dbPath = DB .. ".headlineShowCastBar",
+            disabled = function()
+                return not C:GetDBValue(DB .. ".showCastBar")
+            end,
+            callback = RefreshAndRebuildNameplates,
+        })
+
         C:AddLabel(headline, LO["Friendly Players"])
         C:AddDescription(headline, LO["Class colors, title, guild and AFK read from the unit: party/raid show automatically; others fill in when you target or mouse over them, or instantly with awesome_wotlk."])
 
