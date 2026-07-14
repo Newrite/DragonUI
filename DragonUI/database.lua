@@ -964,6 +964,7 @@ local defaults = {
                 bghIconOffsetY = 0, -- y offset for BattleGroundHealers icon anchor
                 bghIconSize = 24, -- icon size override used by compatibility bridge
                 bghTestMode = false, -- enables manual mark-target testing for BattleGroundHealers compatibility
+                nameplateAlphaCompat = false, -- skip forcing native plate alpha to 1; keeps native target-alpha signal intact for external plate addons (PlateBuffs, Icicle, ...)
             },
             tooltip = {
                 enabled = true, -- Enhanced tooltip styling with class colors
@@ -1002,6 +1003,7 @@ local defaults = {
             },
             bagsort = {
                 enabled = true, -- Sort bags and bank items with buttons
+                bank_fill_from_bags = true, -- Sort bank: top off partial bank stacks from bags first
                 lockedSlots = {}, -- Slots excluded from sorting (key format: "bag:slot")
                 move_interval = 0.1, -- Delay between item move attempts while sorting
                 lock_hotkey = "ALT_LEFT", -- Modifier + mouse button used to lock or unlock a slot

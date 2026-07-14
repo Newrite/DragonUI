@@ -41,6 +41,14 @@ local function IsModuleEnabled()
     return addon:IsModuleEnabled("bagsort")
 end
 
+local function IsBankFillFromBagsEnabled()
+    local cfg = GetModuleConfig()
+    if not cfg or cfg.bank_fill_from_bags == nil then
+        return true
+    end
+    return cfg.bank_fill_from_bags
+end
+
 local function IsCombuctorEnabled()
     return addon:IsModuleEnabled("combuctor")
 end
@@ -1053,37 +1061,37 @@ local function AddMove(source, destination)
     tinsert(moves, 1, encode_move(source, destination))
 end
 
--- Compress partial stacks (BankStack's Stack with is_partial filter)
-local function CompressStacks(bags)
+-- BankStack Stack: fill partial target stacks from source_bags (reverse iteration).
+-- require_partial_source: same-bag compress skips full sources; cross-bag allows them.
+local function StackBags(source_bags, target_bags, require_partial_source)
     local target_items = {}
     local target_slots = {}
     local source_used = {}
 
-    -- Model the target bags: find partial stacks
-    for bag, slot, bagslot in IterateBags(bags) do
+    for bag, slot, bagslot in IterateBags(target_bags) do
         if not IsSlotLocked(bag, slot) then
-        local itemid = bag_ids[bagslot]
-        if itemid and bag_stacks[bagslot] and bag_maxstacks[bagslot] and (bag_stacks[bagslot] ~= bag_maxstacks[bagslot]) then
-            -- is_partial filter: (maxstack - count) > 0
-            if (bag_maxstacks[bagslot] - bag_stacks[bagslot]) > 0 then
+            local itemid = bag_ids[bagslot]
+            if itemid and bag_stacks[bagslot] and bag_maxstacks[bagslot] and (bag_stacks[bagslot] ~= bag_maxstacks[bagslot]) then
                 target_items[itemid] = (target_items[itemid] or 0) + 1
                 tinsert(target_slots, bagslot)
             end
         end
-        end
     end
 
-    -- Go through source bags in reverse (matching BankStack)
-    local all_slots = {}
-    for bag, slot, bagslot in IterateBags(bags) do
+    local source_slots = {}
+    for bag, slot, bagslot in IterateBags(source_bags) do
         if not IsSlotLocked(bag, slot) then
-            tinsert(all_slots, { bag = bag, slot = slot, bagslot = bagslot })
+            tinsert(source_slots, bagslot)
         end
     end
-    for si = #all_slots, 1, -1 do
-        local source_slot = all_slots[si].bagslot
+    for si = #source_slots, 1, -1 do
+        local source_slot = source_slots[si]
         local itemid = bag_ids[source_slot]
-        if itemid and target_items[itemid] and (bag_maxstacks[source_slot] - bag_stacks[source_slot]) > 0 then
+        local source_ok = itemid and target_items[itemid]
+        if require_partial_source then
+            source_ok = source_ok and (bag_maxstacks[source_slot] - bag_stacks[source_slot]) > 0
+        end
+        if source_ok then
             for ti = #target_slots, 1, -1 do
                 local target_slot = target_slots[ti]
                 if bag_ids[source_slot]
@@ -1106,6 +1114,14 @@ local function CompressStacks(bags)
             end
         end
     end
+end
+
+local function CompressStacks(bags)
+    StackBags(bags, bags, true)
+end
+
+local function StackBagsAcross(source_bags, target_bags)
+    StackBags(source_bags, target_bags, false)
 end
 
 -- Check if a move actually needs to happen (exact BankStack logic)
@@ -1337,6 +1353,9 @@ local function SortBankBags()
         end
     end
 
+    if IsBankFillFromBagsEnabled() then
+        StackBagsAcross(PLAYER_BAGS, BANK_BAGS)
+    end
     CompressStacks(BANK_BAGS)
     SortItems(BANK_BAGS)
 

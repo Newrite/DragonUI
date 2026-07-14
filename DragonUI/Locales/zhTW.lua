@@ -155,4 +155,8 @@ L["Broadcast and detect addon version updates across group members"] = "檢測�
 
 -- Aura labels
 L["Auras"] = "光環"
+-- Nameplate addon compatibility popup
+L["Reads native nameplate alpha to identify the target's plate; conflicts with DragonUI's default anti-dim behavior."] = "透過名牌的原生透明度來識別目標名牌，與 DragonUI 預設的防變暗行為衝突。"
+L["Detected |cFFFFFF00%s|r. Enable Nameplate Addon Compatibility so it works correctly?"] = "偵測到 |cFFFFFF00%s|r。是否啟用名牌外掛相容性以使其正常運作？"
+L["Enable"] = "啟用"
 
