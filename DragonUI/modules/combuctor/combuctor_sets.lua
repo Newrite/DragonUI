@@ -1,3 +1,5 @@
+local addon = select(2, ...)
+local mod = addon.CombuctorModule
 -- ============================================================================
 -- COMBUCTOR SETS MODULE
 -- Extracted from combuctor.lua in PR #2 of combuctor-refactor.
@@ -8,8 +10,6 @@
 -- ============================================================================
 
 local addon = select(2, ...)
-local mod = addon.CombuctorModule
-
 local tinsert = table.insert
 
 -- Set name constants (previously in core's DATABASE section; moved here

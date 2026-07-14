@@ -497,6 +497,7 @@ local function SetupDatabase()
     if mc.money_display == nil then mc.money_display = "icons" end
 
     DB = mc.db
+    mod.DB = DB
     if not DB.inventory then
         DB.inventory = {}
         for k, v in pairs(defaults.inventory) do
@@ -634,6 +635,7 @@ mod.CombuctorAddNineSlice = CombuctorAddNineSlice
 mod.CombuctorRetailItemSlot = CombuctorRetailItemSlot
 mod.CombuctorRetailBagSlot = CombuctorRetailBagSlot
 mod.CombuctorRetailBackpackButton = CombuctorRetailBackpackButton
+mod.GetSetDisplayName = GetSetDisplayName
 mod.TEXTURE_ITEM_QUEST_BORDER = TEXTURE_ITEM_QUEST_BORDER
 mod.TEXTURE_ITEM_QUEST_BANG = TEXTURE_ITEM_QUEST_BANG
 

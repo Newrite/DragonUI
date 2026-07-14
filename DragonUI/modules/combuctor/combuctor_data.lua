@@ -1,3 +1,5 @@
+local addon = select(2, ...)
+local mod = addon.CombuctorModule
 -- ============================================================================
 -- COMBUCTOR DATA MODULE
 -- Extracted from combuctor.lua in PR #2 of combuctor-refactor.
@@ -8,8 +10,6 @@
 --             combuctor_classes.lua → combuctor_frame.lua → combuctor_system.lua
 -- ============================================================================
 
-local addon = select(2, ...)
-local mod = addon.CombuctorModule
 
 -- ============================================================================
 -- ENVOY (EVENT BUS)

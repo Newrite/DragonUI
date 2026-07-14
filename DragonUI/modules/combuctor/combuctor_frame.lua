@@ -1,3 +1,5 @@
+local addon = select(2, ...)
+local mod = addon.CombuctorModule
 -- ============================================================================
 -- COMBUCTOR FRAME MODULE
 -- Extracted from combuctor.lua in PR #2 of combuctor-refactor.
@@ -8,8 +10,6 @@
 -- CombuctorSkinBagSlots, CombuctorApplySkin).
 --
 -- Load order: combuctor.lua -> combuctor_data.lua -> combuctor_sets.lua ->
---             combuctor_classes.lua -> combuctor_frame.lua -> combuctor_system.lua
--- ============================================================================
 
 local addon = select(2, ...)
 local mod = addon.CombuctorModule
@@ -393,6 +393,7 @@ do
             f.tokenBar = mod.TokenBar:New(f)
             f.tokenBar:SetSize(180, 19)
             f.tokenBar:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -9, 10)
+            f.tokenBar:Refresh()
         end
 
         -- Coinbox frame (pill background for money, shifted up when token bar exists)
@@ -726,6 +727,9 @@ do
         PlaySound("igBackPackOpen")
         FrameEvents:Register(self)
         self:UpdateSets(self:GetDefaultCategory())
+        if self.tokenBar then
+            self.tokenBar:Refresh()
+        end
     end
 
     function InventoryFrame:OnHide()
@@ -794,10 +798,15 @@ local function CombuctorSkinFrame(frame)
         icon:SetSize(36, 36)
         icon:ClearAllPoints()
         icon:SetPoint('TOPLEFT', frame, 'TOPLEFT', -4, 4)
-        if icon.icon then
-            icon.icon:SetSize(36, 36)
-            icon.icon:SetDrawLayer('OVERLAY', 0)
+        local origIcon = icon.icon
+        local portrait = icon:CreateTexture(nil, 'ARTWORK')
+        portrait:SetSize(36, 36)
+        portrait:SetPoint('CENTER', icon)
+        icon.icon = portrait
+        if origIcon then
+            origIcon:Hide()
         end
+
         icon:EnableMouse(true)
         -- Kill old SetupIconButton resize handlers that blow icon to 56-62px
         icon:SetScript('OnMouseDown', nil)

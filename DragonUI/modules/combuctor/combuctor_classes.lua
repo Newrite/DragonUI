@@ -1,3 +1,5 @@
+local addon = select(2, ...)
+local mod = addon.CombuctorModule
 -- ============================================================================
 -- COMBUCTOR CLASSES MODULE
 -- Extracted from combuctor.lua in PR #2 of combuctor-refactor.
@@ -8,8 +10,6 @@
 --             combuctor_classes.lua -> combuctor_frame.lua -> combuctor_system.lua
 -- ============================================================================
 
-local addon = select(2, ...)
-local mod = addon.CombuctorModule
 
 local format = string.format
 
@@ -342,14 +342,14 @@ do
         local isQuestItem, isQuestStarter = self:IsQuestItem()
         if isQuestItem then
             qBorder:SetTexture(mod.TEXTURE_ITEM_QUEST_BORDER)
-            qBorder:SetAlpha(0.5)
+            qBorder:SetAlpha(1)
             qBorder:Show()
             border:Hide()
             return
         end
         if isQuestStarter then
             qBorder:SetTexture(mod.TEXTURE_ITEM_QUEST_BANG)
-            qBorder:SetAlpha(0.5)
+            qBorder:SetAlpha(1)
             qBorder:Show()
             border:Hide()
             return
@@ -1525,7 +1525,7 @@ do
 
     function SideTab:Set(set)
         self.set = set
-        self.tooltip = GetSetDisplayName(set.name)
+        self.tooltip = mod.GetSetDisplayName(set.name)
         if set.icon then
             self:SetNormalTexture(set.icon)
             self:GetNormalTexture():SetTexCoord(0.06, 0.94, 0.06, 0.94)
@@ -1657,7 +1657,7 @@ do
 
     function BottomTab:Set(set)
         self.set = set
-        local displayName = GetSetDisplayName(set.name)
+        local displayName = mod.GetSetDisplayName(set.name)
         if set.icon then
             self:SetFormattedText("|T%s:%d|t %s", set.icon, 16, displayName)
         else
