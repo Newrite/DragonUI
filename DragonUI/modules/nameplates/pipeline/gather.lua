@@ -445,6 +445,37 @@ function NP.gather.GetHealthBarColor(plateData)
         return aggroR, aggroG, aggroB
     end
 
+    local resolvedToken = ResolvePlateToken(plateData)
+    if resolvedToken and UnitExists(resolvedToken) and UnitIsPlayer(resolvedToken) then
+        local isFriendly = UnitIsFriend("player", resolvedToken) and true or false
+        local useClassColor = (isFriendly and cfg.friendlyClassColors == true)
+            or (not isFriendly and cfg.enemyPlayerClassColors ~= false)
+        if useClassColor then
+            local _, class = UnitClass(resolvedToken)
+            if class then
+                plateData._resolvedHealthClass = class
+                plateData._resolvedHealthFriendly = isFriendly
+                plateData._resolvedHealthIdentityName = plateData.plateName
+            end
+            local cc = addon.GetClassColor(plateData._resolvedHealthClass)
+            if cc then
+                return cc.r, cc.g, cc.b
+            end
+        end
+    end
+
+    local cacheMatchesPlate = plateData._resolvedHealthIdentityName == plateData.plateName
+    local useCachedClass = cacheMatchesPlate and (
+        (plateData._resolvedHealthFriendly and cfg.friendlyClassColors == true)
+        or (plateData._resolvedHealthFriendly == false and cfg.enemyPlayerClassColors ~= false)
+    )
+    if useCachedClass then
+        local cc = addon.GetClassColor(plateData._resolvedHealthClass)
+        if cc then
+            return cc.r, cc.g, cc.b
+        end
+    end
+
     local reaction, unitType = NP.native_style.GetPlateReaction(plateData)
     if reaction == "FRIENDLY" and unitType == "PLAYER"
         and plateData.barB

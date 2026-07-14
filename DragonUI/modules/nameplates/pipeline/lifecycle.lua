@@ -62,6 +62,9 @@ function NP.lifecycle.PrepareNameplate(plateData)
     plateData._pvpTitleName = nil
     plateData._headlineClass = nil
     plateData._friendlyHealthClass = nil
+    plateData._resolvedHealthClass = nil
+    plateData._resolvedHealthFriendly = nil
+    plateData._resolvedHealthIdentityName = nil
     plateData._afkState = nil
     plateData.namePlateUnitToken = nil
     plateData.unitToken = nil
@@ -251,6 +254,9 @@ function NP.lifecycle.OnHideNameplate(plateData, _reason)
     plateData.namePlateUnitToken = nil
     plateData.unitToken = nil
     plateData._plateClassification = nil
+    plateData._resolvedHealthClass = nil
+    plateData._resolvedHealthFriendly = nil
+    plateData._resolvedHealthIdentityName = nil
     plateData._nativeAlpha = nil
     plateData._tokenNativeAlpha = nil
     plateData._lastAppliedVisualAlpha = nil
