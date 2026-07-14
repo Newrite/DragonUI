@@ -1100,7 +1100,7 @@ local function UpdatePlayerHealthBarColor()
 
         --  APPLY PLAYER CLASS COLOR
         local _, class = UnitClass("player")
-        local color = RAID_CLASS_COLORS[class]
+        local color = addon.GetClassColor(class)
         if color then
             PlayerFrameHealthBar:SetStatusBarColor(color.r, color.g, color.b, 1)
         else

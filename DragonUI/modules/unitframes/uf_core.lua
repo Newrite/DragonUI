@@ -397,7 +397,7 @@ function UF.SetupHealthBarHook(healthBar, statusTexture, useClassColor)
                 if unit and UnitExists(unit) and UnitIsPlayer(unit) then
                     local _, class = UnitClass(unit)
                     if class then
-                        local color = RAID_CLASS_COLORS[class]
+                        local color = addon.GetClassColor(class)
                         if color and statusTexture then
                             statusTexture:SetVertexColor(color.r, color.g, color.b)
                         end

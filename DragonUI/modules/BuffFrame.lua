@@ -30,6 +30,7 @@ local toggleButton = nil
 local dragonUIBuffFrame = nil
 local dragonUIWeaponBuffFrame = nil
 local dragonUIDebuffFrame = nil
+local auraAnchorRefreshFrame = nil
 local buffsHiddenByToggle = false
 local weaponEnchantsAreSeparated = false
 
@@ -83,6 +84,26 @@ local function IsWeaponEnchantAtDefaultPosition()
         return true
     end
     return not addon.db.profile.widgets.weapon_enchants.custom_position
+end
+
+-- PLAYER_ENTERING_WORLD handlers are not ordered. Blizzard can rebuild aura
+-- anchors after DragonUI's handler, so apply the saved detached position once
+-- more on the following frame, after the event dispatch has finished.
+local function ScheduleAuraAnchorRefresh()
+    if not auraAnchorRefreshFrame then
+        auraAnchorRefreshFrame = CreateFrame("Frame")
+        auraAnchorRefreshFrame:Hide()
+        auraAnchorRefreshFrame:SetScript("OnUpdate", function(self)
+            self:Hide()
+            if not buffFramePositionLocked or not dragonUIDebuffFrame then return end
+
+            BuffFrameModule:UpdatePosition()
+            if BuffFrame_UpdateAllBuffAnchors then
+                BuffFrame_UpdateAllBuffAnchors()
+            end
+        end)
+    end
+    auraAnchorRefreshFrame:Show()
 end
 
 
@@ -767,6 +788,7 @@ function BuffFrameModule:Enable()
                 CreateToggleButton(dragonUIBuffFrame)
                 ShowToggleButtonIf(GetUnitBuffCount("player", 16) > 0)
                 BuffFrameModule:UpdatePosition()
+                ScheduleAuraAnchorRefresh()
 
                 -- Restore buff toggle state from saved profile
                 if addon.db and addon.db.profile and addon.db.profile.buffs
@@ -816,6 +838,9 @@ function BuffFrameModule:Disable()
     -- Restore original BuffFrame positioning method
     buffFramePositionLocked = false
     BuffFrame.SetPoint = original_BuffFrame_SetPoint
+    if auraAnchorRefreshFrame then
+        auraAnchorRefreshFrame:Hide()
+    end
 
     -- Clean up weapon enchant separation
     if weaponEnchantsAreSeparated then

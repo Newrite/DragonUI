@@ -40,6 +40,120 @@ function addon:tcount(tbl)
     return count
 end
 
+-- Resolve class colors from the live client tables. Ascension extends
+-- RAID_CLASS_COLORS with CoA's runtime class tokens, so keeping this lookup
+-- dynamic avoids stale copies and keeps every DragonUI module on one palette.
+local function IsValidClassColor(color)
+    return type(color) == "table"
+        and type(color.r) == "number"
+        and type(color.g) == "number"
+        and type(color.b) == "number"
+end
+
+function addon.GetClassColor(classToken)
+    if not classToken then return nil end
+
+    local raidColors = _G.RAID_CLASS_COLORS
+    local color = raidColors and raidColors[classToken]
+    if IsValidClassColor(color) then
+        return color
+    end
+
+    local customColors = _G.CUSTOM_CLASS_COLORS
+    color = customColors and customColors[classToken]
+    if IsValidClassColor(color) then
+        return color
+    end
+
+    return nil
+end
+
+-- CoA exposes several legacy runtime tokens that differ from their display
+-- names (for example SONOFARUGAL is Bloodmage). This is only an identity
+-- fallback; RGB values always come from the live client tables above.
+local ASCENSION_CLASS_TOKENS = {
+    BARBARIAN = true,
+    CHRONOMANCER = true,
+    CULTIST = true,
+    DEMONHUNTER = true,
+    FLESHWARDEN = true,
+    GUARDIAN = true,
+    MONK = true,
+    NECROMANCER = true,
+    PROPHET = true,
+    PYROMANCER = true,
+    RANGER = true,
+    REAPER = true,
+    SONOFARUGAL = true,
+    SPIRITMAGE = true,
+    STARCALLER = true,
+    STORMBRINGER = true,
+    SUNCLERIC = true,
+    TINKER = true,
+    WILDWALKER = true,
+    WITCHDOCTOR = true,
+    WITCHHUNTER = true,
+}
+
+local function IsKnownClassToken(classToken)
+    if ASCENSION_CLASS_TOKENS[classToken] then
+        return true
+    end
+
+    local maleNames = _G.LOCALIZED_CLASS_NAMES_MALE
+    local femaleNames = _G.LOCALIZED_CLASS_NAMES_FEMALE
+    if (maleNames and maleNames[classToken]) or (femaleNames and femaleNames[classToken]) then
+        return true
+    end
+
+    local classOrder = _G.CLASS_SORT_ORDER
+    if classOrder then
+        for _, token in ipairs(classOrder) do
+            if token == classToken then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
+-- Native 3.3.5 nameplates expose class identity only through their bar RGB.
+-- Match all live Ascension classes by full color distance instead of reducing
+-- RGB to a collision-prone integer key.
+function addon.FindClassByColor(r, g, b, maxDistance)
+    if type(r) ~= "number" or type(g) ~= "number" or type(b) ~= "number" then
+        return nil
+    end
+
+    local bestToken
+    local bestDistanceSquared
+    local limit = maxDistance or 0.035
+    local limitSquared = limit * limit
+
+    local function ConsiderColorTable(colorTable)
+        if type(colorTable) ~= "table" then return end
+
+        for classToken, color in pairs(colorTable) do
+            if IsKnownClassToken(classToken) and IsValidClassColor(color) then
+                local dr = r - color.r
+                local dg = g - color.g
+                local db = b - color.b
+                local distanceSquared = dr * dr + dg * dg + db * db
+                if distanceSquared <= limitSquared
+                    and (not bestDistanceSquared or distanceSquared < bestDistanceSquared) then
+                    bestToken = classToken
+                    bestDistanceSquared = distanceSquared
+                end
+            end
+        end
+    end
+
+    ConsiderColorTable(_G.RAID_CLASS_COLORS)
+    ConsiderColorTable(_G.CUSTOM_CLASS_COLORS)
+    return bestToken
+end
+
 local function UpperCamelCase(name)
     return (name:gsub("(^%l)", string.upper):gsub("_(%l)", string.upper))
 end

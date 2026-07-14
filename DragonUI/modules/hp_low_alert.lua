@@ -63,7 +63,7 @@ local function UpdateFlashVisuals()
     local c = db.flashColor or { r = 1, g = 0, b = 0 }
     if db.useClassColor then
         local _, class = UnitClass("player")
-        local cc = class and RAID_CLASS_COLORS[class]
+        local cc = addon.GetClassColor(class)
         if cc then c = cc end
     end
     local ext = db.flashExtent or 40

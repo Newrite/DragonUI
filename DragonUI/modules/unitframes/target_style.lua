@@ -315,7 +315,7 @@ function UF.TargetStyle.Create(opts)
                 texture:SetDrawLayer("ARTWORK", 1)
             end
             local _, class = UnitClass(unitToken)
-            local color = RAID_CLASS_COLORS[class]
+            local color = addon.GetClassColor(class)
             if color then
                 texture:SetVertexColor(color.r, color.g, color.b, 1)
             else
@@ -1007,7 +1007,7 @@ function UF.TargetStyle.Create(opts)
                             tex:SetTexture(
                                 TEXTURES.BAR_PREFIX .. "Health-Status")
                             local _, cls = UnitClass("player")
-                            local clr = RAID_CLASS_COLORS[cls]
+                            local clr = addon.GetClassColor(cls)
                             if clr then
                                 tex:SetVertexColor(
                                     clr.r, clr.g, clr.b, 1)

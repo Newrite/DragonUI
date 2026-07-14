@@ -285,7 +285,7 @@ function UF.SmallFrame.Create(opts)
                 -- Update vertex color
                 if config.classcolor and UnitIsPlayer(opts.unitToken) then
                     local _, class = UnitClass(opts.unitToken)
-                    local color = RAID_CLASS_COLORS[class]
+                    local color = addon.GetClassColor(class)
                     if color then
                         texture:SetVertexColor(color.r, color.g, color.b)
                     else
@@ -564,7 +564,7 @@ function UF.SmallFrame.Create(opts)
             local config = GetConfig()
             if config.classcolor and UnitIsPlayer(opts.unitToken) then
                 local _, class = UnitClass(opts.unitToken)
-                local color = class and RAID_CLASS_COLORS[class]
+                local color = addon.GetClassColor(class)
                 if color then
                     texture:SetVertexColor(color.r, color.g, color.b)
                 else

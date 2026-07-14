@@ -404,8 +404,8 @@ local function GetClassColor(unit)
     end
 
     local _, class = UnitClass(unit)
-    if class and RAID_CLASS_COLORS[class] then
-        local color = RAID_CLASS_COLORS[class]
+    local color = addon.GetClassColor(class)
+    if color then
         return color.r, color.g, color.b
     end
 
@@ -441,8 +441,8 @@ local function GetPartyClassColor(partyIndex)
     end
 
     local _, class = UnitClass(unit)
-    if class and RAID_CLASS_COLORS[class] then
-        local color = RAID_CLASS_COLORS[class]
+    local color = addon.GetClassColor(class)
+    if color then
         return color.r, color.g, color.b
     end
 

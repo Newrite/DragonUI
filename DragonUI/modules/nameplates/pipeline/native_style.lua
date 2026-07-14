@@ -289,7 +289,21 @@ function NP.native_style.ResolvePlateClassification(plateData, unit)
 end
 
 function NP.native_style.ClassKeyFromBarColor(r, g, b)
-    return C.CLASS_BY_BAR_COLOR[math.floor(r * 10 + g * 100 + b)]
+    if not r or not g or not b then return nil end
+
+    -- Preserve the stock reaction colors before checking nearby class colors.
+    -- Knight of Xoroth is intentionally very close to hostile red.
+    local epsilon = 0.015
+    if r < epsilon and g < epsilon and b > 1 - epsilon then
+        return "FRIENDLY_PLAYER"
+    end
+    if (r < epsilon and g > 1 - epsilon and b < epsilon)
+        or (r > 1 - epsilon and g > 1 - epsilon and b < epsilon)
+        or (r > 1 - epsilon and g < epsilon and b < epsilon) then
+        return nil
+    end
+
+    return addon.FindClassByColor(r, g, b)
 end
 
 -- Reaction and unit type from health bar color.

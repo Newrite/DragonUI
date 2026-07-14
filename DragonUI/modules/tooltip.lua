@@ -35,14 +35,7 @@ local function IsModuleEnabled()
     return addon:IsModuleEnabled("tooltip")
 end
 
--- ============================================================================
--- CLASS COLOR CACHE
--- ============================================================================
-
-local CLASS_COLORS = {}
-for class, color in pairs(RAID_CLASS_COLORS) do
-    CLASS_COLORS[class] = { r = color.r, g = color.g, b = color.b }
-end
+local GetClassColor = addon.GetClassColor
 
 -- Faction colors for hostile/friendly/neutral
 local FACTION_COLORS = {
@@ -125,10 +118,11 @@ local function ColorTooltipBorder(unit)
 
     if UnitIsPlayer(unit) then
         local _, class = UnitClass(unit)
-        if class and CLASS_COLORS[class] then
-            r = CLASS_COLORS[class].r
-            g = CLASS_COLORS[class].g
-            b = CLASS_COLORS[class].b
+        local color = GetClassColor(class)
+        if color then
+            r = color.r
+            g = color.g
+            b = color.b
         end
     else
         local reaction = UnitReaction(unit, "player")
@@ -160,8 +154,8 @@ local function ColorTooltipName(unit)
 
     if UnitIsPlayer(unit) then
         local _, class = UnitClass(unit)
-        if class and CLASS_COLORS[class] then
-            local c = CLASS_COLORS[class]
+        local c = GetClassColor(class)
+        if c then
             local name = UnitName(unit)
             if name then
                 GameTooltipTextLeft1:SetTextColor(c.r, c.g, c.b)
@@ -188,8 +182,8 @@ local function AddTargetOfTarget(unit)
             local color = "|cFFFFFFFF"
             if UnitIsPlayer(targetUnit) then
                 local _, class = UnitClass(targetUnit)
-                if class and CLASS_COLORS[class] then
-                    local c = CLASS_COLORS[class]
+                local c = GetClassColor(class)
+                if c then
                     color = string.format("|cFF%02x%02x%02x", c.r * 255, c.g * 255, c.b * 255)
                 end
             end
@@ -227,10 +221,11 @@ local function UpdateHealthBar(unit)
     local r, g, b = 0.2, 0.8, 0.2
     if UnitIsPlayer(unit) then
         local _, class = UnitClass(unit)
-        if class and CLASS_COLORS[class] then
-            r = CLASS_COLORS[class].r
-            g = CLASS_COLORS[class].g
-            b = CLASS_COLORS[class].b
+        local color = GetClassColor(class)
+        if color then
+            r = color.r
+            g = color.g
+            b = color.b
         end
     end
     bar:SetStatusBarColor(r, g, b)

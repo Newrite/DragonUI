@@ -422,7 +422,7 @@ function NP.gather.IsPlayerPlate(plateData)
     end
     local classKey = plateData and plateData.classKey
     if classKey and classKey ~= "FRIENDLY_PLAYER" then
-        return RAID_CLASS_COLORS and RAID_CLASS_COLORS[classKey] ~= nil
+        return addon.GetClassColor(classKey) ~= nil
     end
     return classKey == "FRIENDLY_PLAYER"
 end
@@ -458,8 +458,7 @@ function NP.gather.GetHealthBarColor(plateData)
                     end
                 end
             end
-            local cc = plateData._friendlyHealthClass and RAID_CLASS_COLORS
-                and RAID_CLASS_COLORS[plateData._friendlyHealthClass]
+            local cc = addon.GetClassColor(plateData._friendlyHealthClass)
             if cc then
                 return cc.r, cc.g, cc.b
             end
@@ -468,8 +467,9 @@ function NP.gather.GetHealthBarColor(plateData)
             local partyUnit = GetPartyUnitForPlate(plateData)
             if partyUnit then
                 local _, class = UnitClass(partyUnit)
-                if class and RAID_CLASS_COLORS[class] then
-                    return RAID_CLASS_COLORS[class].r, RAID_CLASS_COLORS[class].g, RAID_CLASS_COLORS[class].b
+                local color = addon.GetClassColor(class)
+                if color then
+                    return color.r, color.g, color.b
                 end
             end
         end
@@ -750,7 +750,7 @@ function NP.gather.SyncName(plateData, unit)
 
     local r, g, b = 1, 1, 1
     local classKey = plateData.classKey
-    local classColor = classKey and RAID_CLASS_COLORS and RAID_CLASS_COLORS[classKey]
+    local classColor = addon.GetClassColor(classKey)
     local isEnemyPlayer = classColor and classKey ~= "FRIENDLY_PLAYER"
     local allowEnemyNameClass = cfg.enemyPlayerClassColors ~= false and cfg.enemyNameClassColors == true
     if cfg.nameReactionColors then
@@ -784,8 +784,7 @@ function NP.gather.SyncName(plateData, unit)
         end
     end
     if nameOnly and cfg.friendlyNameOnlyClassColor then
-        local cc = plateData._headlineClass and RAID_CLASS_COLORS
-            and RAID_CLASS_COLORS[plateData._headlineClass]
+        local cc = addon.GetClassColor(plateData._headlineClass)
         if cc then r, g, b = cc.r, cc.g, cc.b end
     end
     local displayName

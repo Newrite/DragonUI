@@ -15,9 +15,9 @@ NP.const = {
     CAST_NOTINT_ICON_SCALE = 1,
     CAST_NOTINT_ICON_OFFSET_X = -3,
     CAST_NOTINT_ICON_OFFSET_Y = 7,
-    CAST_TEX_STANDARD = "Interface\\AddOns\\DragonUI\\Textures\\CastbarOriginal\\CastingBarStandard2",
+    CAST_TEX_STANDARD = "Interface\\AddOns\\DragonUI\\Textures\\Nameplates\\bar-fill",
     CAST_TEX_INTERRUPTED = "Interface\\AddOns\\DragonUI\\Textures\\CastbarOriginal\\CastingBarInterrupted2",
-    CAST_TEX_CHANNEL = "Interface\\AddOns\\DragonUI\\Textures\\CastbarOriginal\\CastingBarChannel-Plate",
+    CAST_TEX_CHANNEL = "Interface\\AddOns\\DragonUI\\Textures\\Nameplates\\bar-fill",
     CAST_TEX_SPARK = "Interface\\AddOns\\DragonUI\\Textures\\CastbarOriginal\\CastingBarSpark",
     CAST_COLOR_STANDARD = { 1, 0.7, 0 },
     CAST_COLOR_CHANNEL = { 1, 1, 1 },
@@ -115,20 +115,6 @@ C.NAMEPLATE_FONT_MAP = {
 C.EXCLUDED_FRAME_NAMES = {
     ["WorldFrameDragOverlay"] = true,
     ["BNToastFrame"] = true,
-}
-
-C.CLASS_BY_BAR_COLOR = {
-    [000] = "FRIENDLY_PLAYER",
-    [019] = "DEATHKNIGHT",
-    [058] = "DRUID",
-    [089] = "HUNTER",
-    [085] = "MAGE",
-    [065] = "PALADIN",
-    [110] = "PRIEST",
-    [106] = "ROGUE",
-    [044] = "SHAMAN",
-    [057] = "WARLOCK",
-    [068] = "WARRIOR",
 }
 
 C.AGGRO_COLORS = {
