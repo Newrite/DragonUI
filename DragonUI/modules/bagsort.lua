@@ -1634,10 +1634,9 @@ end
 -- TRANSMOG COLLECT
 -- ============================================================================
 
-local processedGuidCache = {}  -- Per-session GUID cache for the manual button
-
 local function CollectAllTransmogAppearances()
     if not C_AppearanceCollection or type(C_AppearanceCollection.CollectItemAppearance) ~= "function" then
+        addon:Print(L["Transmog collection API is not available yet. Please try again in a few seconds."])
         return
     end
 
@@ -1650,8 +1649,7 @@ local function CollectAllTransmogAppearances()
                     local _, _, classID = GetItemInfo(itemID)
                     if not classID or classID < 5 then
                         local guid = GetContainerItemGUID(bag, slot)
-                        if guid and not processedGuidCache[guid] then
-                            processedGuidCache[guid] = true
+                        if guid then
                             C_AppearanceCollection.CollectItemAppearance(guid)
                         end
                     end
