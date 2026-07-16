@@ -23,8 +23,7 @@ local MainbarsModule = {
     originalVisibility = {},
     actionBarFrames = nil,
     pageDriverInstalled = false,
-    pageDriverFrame = nil,
-    pageChangeHookInstalled = false
+    pageDriverFrame = nil
 }
 addon.MainbarsModule = MainbarsModule  -- Expose globally for external access
 
@@ -294,6 +293,9 @@ local mainBarPageByClass = {
   REAPER = '[form:1] 7; [nostealth] 1;',
   SPIRITMAGE = '[stealth] 7; [nostealth] 1;',
   HERO = '[bonusbar:1,nostealth] 7; [bonusbar:1,stealth] 8; [bonusbar:2] 8; [bonusbar:3] 9; [bonusbar:4] 10;',
+  -- Bloodmage uses the HERO-style stealth/form page layout. The generic
+  -- form fallback reserves page 7 differently and shifts these pages by one.
+  SONOFARUGAL = '[bonusbar:1,nostealth] 7; [bonusbar:1,stealth] 8; [bonusbar:2] 8; [bonusbar:3] 9; [bonusbar:4] 10;',
   DEFAULT = '[bonusbar:5] 11; [bar:2] 2; [bar:3] 3; [bar:4] 4; [bar:5] 5; [bar:6] 6;'
 }
 
@@ -533,9 +535,11 @@ local function InitializeMainbars()
         -- the secure handler execution context for all reparented buttons.
         -- Hook OnAttributeChanged on the main bar to force a full refresh of
         -- every action button whenever the 'page' attribute changes.
-        if not MainbarsModule.pageChangeHookInstalled then
+        -- HookScript cannot be removed. Store the guard on the frame so module
+        -- disable/enable cycles never stack duplicate handlers.
+        if not mainBar._dragonUIPageChangeHookInstalled then
             mainBar:HookScript('OnAttributeChanged', function(self, name, value)
-                if name == 'page' and value then
+                if name == 'page' and value and MainbarsModule.applied then
                     for i = 1, NUM_ACTIONBAR_BUTTONS do
                         local button = _G['ActionButton' .. i]
                         if button then
@@ -544,7 +548,7 @@ local function InitializeMainbars()
                     end
                 end
             end)
-            MainbarsModule.pageChangeHookInstalled = true
+            mainBar._dragonUIPageChangeHookInstalled = true
         end
 
         -- For unknown CoA custom classes: regenerate the page condition when
@@ -663,7 +667,6 @@ local function InitializeMainbars()
         MainbarsModule.stateDrivers = {}
         MainbarsModule.pageDriverInstalled = false
         MainbarsModule.pageDriverFrame = nil
-        MainbarsModule.pageChangeHookInstalled = false
 
         -- Hide DragonUI frames
         if MainbarsModule.frames.pUiMainBar then

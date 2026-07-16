@@ -1072,7 +1072,13 @@ end
 local current = { unit = nil, className = nil, tree = nil, slot = nil }
 
 local function SetClassBackground(frame, classFile, slot)
+    local border = frame and frame._InspectorBorder
+    if not border or not border.ClassBg then return end
+
+    -- Frames are reused between inspected units; clear the previous class first.
+    border.ClassBg:Hide()
     if not classFile then return end
+
     local util = CAU()
     if not util or type(util.GetBackgroundAtlas) ~= "function" then
         LogMsg("GetBackgroundAtlas not available")
@@ -1089,26 +1095,36 @@ local function SetClassBackground(frame, classFile, slot)
         end
     end
 
-    -- Try with spec, class-only, and with className variant
-    local atlas = nil
-    local className = (util.GetClassDBCByFile and pcall(util.GetClassDBCByFile, classFile))
+    local className
+    if type(util.GetClassDBCByFile) == "function" then
+        local ok, name = pcall(util.GetClassDBCByFile, classFile)
+        if ok and type(name) == "string" and name ~= "" then
+            className = name
+        end
+    end
 
+    local function GetAtlas(class, spec)
+        if not class then return nil end
+        local ok, atlas = pcall(util.GetBackgroundAtlas, class, spec)
+        if ok and type(atlas) == "string" and atlas ~= "" then
+            return atlas
+        end
+        return nil
+    end
+
+    -- Ascension builds differ on whether this API expects a class file token
+    -- or its DBC display name, so support both signatures.
+    local atlas
     if specFile then
-        local ok, a = pcall(util.GetBackgroundAtlas, classFile, specFile)
-        if ok and a and type(a) == "string" and a ~= "" then atlas = a end
+        atlas = GetAtlas(classFile, specFile) or GetAtlas(className, specFile)
     end
     if not atlas then
-        local ok, a = pcall(util.GetBackgroundAtlas, classFile, nil)
-        if ok and a and type(a) == "string" and a ~= "" then atlas = a end
+        atlas = GetAtlas(classFile, nil) or GetAtlas(className, nil)
     end
 
-    local border = frame._InspectorBorder
-    if not border then return end
-    if atlas and border.ClassBg then
+    if atlas then
         border.ClassBg:SetAtlas(atlas)
         border.ClassBg:Show()
-    elseif border.ClassBg then
-        border.ClassBg:Hide()
     end
 end
 

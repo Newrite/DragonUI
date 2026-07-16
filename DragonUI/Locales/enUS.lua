@@ -355,6 +355,7 @@ L["No scrap items to sell."] = true
 -- Transmog Collect
 L["Collect Transmog"] = true
 L["Click to collect all uncollected transmog appearances from your bags."] = true
+L["Transmog collection API is not available yet. Please try again in a few seconds."] = true
 -- Guild Bank Sort
 L["You must be at the guild bank."] = true
 L["Could not determine the current guild bank tab."] = true
