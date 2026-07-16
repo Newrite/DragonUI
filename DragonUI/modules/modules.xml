@@ -8,6 +8,7 @@
     <Script file="rage_indicator.lua"/>
     <Script file="cooldowns.lua"/>
     <Script file="auracooldowns.lua"/>
+    <Script file="auraborders.lua"/>
     <Script file="mainbars.lua"/>
 
     <!-- Attack Bar (swing timer for main/off hand, ranged, and enemy) -->
