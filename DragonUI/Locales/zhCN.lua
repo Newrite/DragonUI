@@ -263,6 +263,10 @@ L["Conflicts with DragonUI's custom unit frame textures and power bar system."] 
 L["Known taint issues when manipulating party frames during combat. DragonUI provides automatic fixes."] = "在战斗中操作小队框架会产生已知污染问题。DragonUI 会自动处理。"
 L["Resets minimap mask and blip textures. DragonUI re-applies its custom textures automatically."] = "会重置小地图遮罩和图标纹理。DragonUI 会自动重新应用自定义纹理。"
 L["SexyMap modifies the minimap borders, shape, and zone text which conflicts with DragonUI's minimap module."] = "SexyMap 会修改小地图边框、形状和区域文字，这与 DragonUI 的小地图模块冲突。"
+L["Reads native nameplate alpha to identify the target's plate; conflicts with DragonUI's default anti-dim behavior."] = "通过姓名板的原生透明度来识别目标姓名板，与 DragonUI 默认的防变暗行为冲突。"
+
+L["Detected |cFFFFFF00%s|r. Enable Nameplate Addon Compatibility so it works correctly?"] = "检测到 |cFFFFFF00%s|r。是否启用姓名板插件兼容模式以使其正常工作？"
+L["Enable"] = "启用"
 
 L["DragonUI - SexyMap Detected"] = "DragonUI - 检测到 SexyMap"
 L["Which minimap do you want to use?"] = "你想使用哪种小地图？"
@@ -339,6 +343,8 @@ L["No scrap items to sell."] = "没有可出售的垃圾物品。"
 -- Transmog Collect
 L["Collect Transmog"] = "收集幻化外观"
 L["Click to collect all uncollected transmog appearances from your bags."] = "点击以收集背包中所有未收集的幻化外观。"
+L["Open a merchant window first to sell scrap items."] = "请先打开商人窗口再出售垃圾物品。"
+
 -- Guild Bank Sort
 L["You must be at the guild bank."] = "你必须在公会银行。"
 L["Could not determine the current guild bank tab."] = "无法确定当前的公会银行页签。"

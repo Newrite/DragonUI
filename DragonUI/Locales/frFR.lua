@@ -119,6 +119,10 @@ L["Delete Preset"] = "Supprimer le préréglage"
 L["Export Preset"] = "Exporter le préréglage"
 L["Import Preset"] = "Importer le préréglage"
 
+-- Bag Sort (Sell Scrap)
+L["Sell Scrap"] = "Vendre ferraille"
+L["Open a merchant window first to sell scrap items."] = "Ouvrez d'abord une fenêtre de marchand pour vendre la ferraille."
+
 -- Guild Bank Sort
 L["You must be at the guild bank."] = "Vous devez être à la banque de guilde."
 L["Could not determine the current guild bank tab."] = "Impossible de déterminer l'onglet actuel de la banque de guilde."
@@ -158,3 +162,8 @@ L["Broadcast and detect addon version updates across group members"] = "Détecte
 
 -- Aura labels
 L["Auras"] = "Auras"
+-- Nameplate addon compatibility popup
+L["Reads native nameplate alpha to identify the target's plate; conflicts with DragonUI's default anti-dim behavior."] = "Utilise la transparence native de la plaque pour identifier la plaque de la cible ; entre en conflit avec le comportement anti-assombrissement par défaut de DragonUI."
+L["Detected |cFFFFFF00%s|r. Enable Nameplate Addon Compatibility so it works correctly?"] = "|cFFFFFF00%s|r détecté. Activer la compatibilité des addons de plaques de nom pour qu'il fonctionne correctement ?"
+L["Enable"] = "Activer"
+

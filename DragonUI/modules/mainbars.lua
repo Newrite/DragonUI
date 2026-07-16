@@ -23,7 +23,8 @@ local MainbarsModule = {
     originalVisibility = {},
     actionBarFrames = nil,
     pageDriverInstalled = false,
-    pageDriverFrame = nil
+    pageDriverFrame = nil,
+    pageChangeHookInstalled = false
 }
 addon.MainbarsModule = MainbarsModule  -- Expose globally for external access
 
@@ -293,7 +294,6 @@ local mainBarPageByClass = {
   REAPER = '[form:1] 7; [nostealth] 1;',
   SPIRITMAGE = '[stealth] 7; [nostealth] 1;',
   HERO = '[bonusbar:1,nostealth] 7; [bonusbar:1,stealth] 8; [bonusbar:2] 8; [bonusbar:3] 9; [bonusbar:4] 10;',
-  SONOFARUGAL = '[bonusbar:1,nostealth] 7; [bonusbar:1,stealth] 8; [bonusbar:2] 8; [bonusbar:3] 9; [bonusbar:4] 10;',
   DEFAULT = '[bonusbar:5] 11; [bar:2] 2; [bar:3] 3; [bar:4] 4; [bar:5] 5; [bar:6] 6;'
 }
 
@@ -526,6 +526,27 @@ local function InitializeMainbars()
             end
         end
 
+        -- BUGFIX #???: When the state driver re-evaluates (e.g. stealth breaks),
+        -- _onstate-page sets actionpage on each button, but ActionButton_Update
+        -- is not reliably called for all buttons afterward because the
+        -- OnAttributeChanged -> ActionButton_UpdateAction chain may not fire in
+        -- the secure handler execution context for all reparented buttons.
+        -- Hook OnAttributeChanged on the main bar to force a full refresh of
+        -- every action button whenever the 'page' attribute changes.
+        if not MainbarsModule.pageChangeHookInstalled then
+            mainBar:HookScript('OnAttributeChanged', function(self, name, value)
+                if name == 'page' and value then
+                    for i = 1, NUM_ACTIONBAR_BUTTONS do
+                        local button = _G['ActionButton' .. i]
+                        if button then
+                            ActionButton_Update(button)
+                        end
+                    end
+                end
+            end)
+            MainbarsModule.pageChangeHookInstalled = true
+        end
+
         -- For unknown CoA custom classes: regenerate the page condition when
         -- shapeshift forms become available (GetNumShapeshiftForms() may return
         -- 0 at init because talents haven't loaded yet, making the [form:X]
@@ -642,6 +663,7 @@ local function InitializeMainbars()
         MainbarsModule.stateDrivers = {}
         MainbarsModule.pageDriverInstalled = false
         MainbarsModule.pageDriverFrame = nil
+        MainbarsModule.pageChangeHookInstalled = false
 
         -- Hide DragonUI frames
         if MainbarsModule.frames.pUiMainBar then

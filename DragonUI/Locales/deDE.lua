@@ -268,6 +268,11 @@ L["Conflicts with DragonUI's custom unit frame textures and power bar system."] 
 L["Known taint issues when manipulating party frames during combat. DragonUI provides automatic fixes."] = "Bekannte Kontaminationsprobleme beim Manipulieren von Gruppenrahmen im Kampf. DragonUI bietet automatische Korrekturen."
 L["Resets minimap mask and blip textures. DragonUI re-applies its custom textures automatically."] = "Setzt Minimap-Maske und Markierungs-Texturen zurück. DragonUI wendet seine benutzerdefinierten Texturen automatisch erneut an."
 L["SexyMap modifies the minimap borders, shape, and zone text which conflicts with DragonUI's minimap module."] = "SexyMap verändert die Minimap-Rahmen, Form und Zonentexte, was mit dem Minimap-Modul von DragonUI kollidiert."
+L["Reads native nameplate alpha to identify the target's plate; conflicts with DragonUI's default anti-dim behavior."] = "Nutzt die native Transparenz der Namensplakette, um die Zielplakette zu erkennen; kollidiert mit DragonUIs Standard-Anti-Abdunkelung."
+
+-- Nameplate addon compatibility popup
+L["Detected |cFFFFFF00%s|r. Enable Nameplate Addon Compatibility so it works correctly?"] = "|cFFFFFF00%s|r erkannt. Namensplaketten-Addon-Kompatibilität aktivieren, damit es korrekt funktioniert?"
+L["Enable"] = "Aktivieren"
 
 -- SexyMap compatibility popup
 L["DragonUI - SexyMap Detected"] = "DragonUI - SexyMap erkannt"
@@ -344,6 +349,8 @@ L["No scrap items to sell."] = "Keine Schrott-Gegenstände zu verkaufen."
 -- Transmog Collect
 L["Collect Transmog"] = "Transmog sammeln"
 L["Click to collect all uncollected transmog appearances from your bags."] = "Klicken, um alle nicht gesammelten Transmog-Erscheinungsbilder aus deinen Taschen zu sammeln."
+L["Open a merchant window first to sell scrap items."] = "Öffne zuerst ein Händlerfenster, um Schrott zu verkaufen."
+
 -- Guild Bank Sort
 L["You must be at the guild bank."] = "Du musst dich an der Gildenbank befinden."
 L["Could not determine the current guild bank tab."] = "Die aktuelle Gildenbank-Registerkarte konnte nicht ermittelt werden."

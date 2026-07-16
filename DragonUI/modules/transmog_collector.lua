@@ -64,7 +64,6 @@ end)
 local eventFrame          -- BAG_UPDATE listener
 local scanQueue     = {} -- {bag, slot} entries pending scan
 local isScanning    = false
-local knownCache    = nil  -- { [guid] = true } for current session (memory only)
 
 -- =============================================================================
 -- BAG SCANNER
@@ -99,12 +98,11 @@ local function ScanQueueProcessor()
     local slot = entry.slot
     local guid = GetContainerItemGUID(bag, slot)
 
-    if not guid or knownCache[guid] then
-        -- Already seen or no GUID, skip to next
+    if not guid then
+        -- No GUID, skip to next
         addon:After(0, ScanQueueProcessor)
         return
     end
-    knownCache[guid] = true
 
     local itemID = GetContainerItemID(bag, slot)
     if IsCollectableItem(itemID) and IsCollectionAvailable() then
@@ -159,9 +157,6 @@ end
 function addon.ApplyTransmogCollectorSystem()
     if TransmogCollector.applied then return end
     TransmogCollector.applied = true
-
-    -- Fresh session cache
-    knownCache = {}
 
     if not eventFrame then
         eventFrame = CreateFrame("Frame")

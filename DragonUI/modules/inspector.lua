@@ -110,6 +110,17 @@ local function AddInspectorBorder(frame)
     bg:SetFrameLevel(0)
     ns.Bg = bg
 
+    -- Class-specific background atlas (Ascension: one per class)
+    -- Must be on the bg frame so it draws above frame-level BACKGROUND textures
+    ns.ClassBg = bg:CreateTexture(nil, 'BACKGROUND', nil, 1)
+    ns.ClassBg:SetAllPoints(bg)
+    ns.ClassBg:Hide()
+
+    -- Spec passive background (wraps right-side talents, Ascension "ca-passive-bg" atlas)
+    ns.SpecBg = frame:CreateTexture(nil, 'OVERLAY')
+    ns.SpecBg:SetAtlas("ca-passive-bg")
+    ns.SpecBg:Hide()
+
     local bgTex = bg:CreateTexture(nil, 'BACKGROUND')
     bgTex:SetTexture(TEX.frame_bg)
     bgTex:SetAllPoints(bg)
@@ -175,7 +186,7 @@ local MIN_CELL = 22
 local TITLE_H = 24
 local SPEC_H = 24
 local PAD = 12
-local TAB_HEADER = 18
+local TAB_HEADER = 38
 local TAB_COL_GAP = 26
 local SECTION_GAP = 48
 
@@ -736,7 +747,7 @@ end
 function TP.AttachTo(inspectFrame, showCompare)
     local f = TP.Get()
     f:ClearAllPoints()
-    f:SetPoint("CENTER", inspectFrame, "CENTER", 95, 0)
+    f:SetPoint("CENTER", inspectFrame, "CENTER", 95, 15)
     if showCompare then
         local cf = CP.Get()
         cf:ClearAllPoints()
@@ -957,7 +968,21 @@ function TP.Render(model, slot, className, classFile)
     for _, e in ipairs(model.edges) do edges[#edges + 1] = { from = "t" .. e.from, to = "t" .. e.to } end
     EdgeLines.Draw(f.content, edges, centers, 2, f.linePool, iconSize)
 
-    DrawDividers(f, rects, maxColH)
+    -- Position spec passive background (ca-passive-bg) on right edge
+    local border = f._InspectorBorder
+    if border and border.SpecBg then
+        if #rects >= 2 then
+            local rightCol = rects[#rects]
+            local rightEdge = PAD + rightCol.x + rightCol.w
+            border.SpecBg:ClearAllPoints()
+            border.SpecBg:SetPoint("RIGHT", f, "LEFT", rightEdge + 10, 15)
+            border.SpecBg:SetPoint("TOP", f, "TOP", 0, -TITLE_H + 5)
+            border.SpecBg:SetSize(74, math.min(maxColH + 10, 480))
+            border.SpecBg:Show()
+        else
+            border.SpecBg:Hide()
+        end
+    end
 
     local headerTotal = TITLE_H + SPEC_H
     local maxPanelInner = math.floor(sh * 0.9) - headerTotal - PAD
@@ -1037,7 +1062,6 @@ function CP.Render(model, slot, className, classFile)
     local edges = {}
     for _, e in ipairs(model.edges) do edges[#edges + 1] = { from = "m" .. e.from, to = "m" .. e.to } end
     EdgeLines.Draw(f.content, edges, centers, 2, f.linePool, iconSize)
-    DrawDividers(f, rects, maxColH)
 
     local maxPanelInner = 600
     local innerH = math.min(contentH, maxPanelInner)
@@ -1046,6 +1070,47 @@ function CP.Render(model, slot, className, classFile)
 end
 
 local current = { unit = nil, className = nil, tree = nil, slot = nil }
+
+local function SetClassBackground(frame, classFile, slot)
+    if not classFile then return end
+    local util = CAU()
+    if not util or type(util.GetBackgroundAtlas) ~= "function" then
+        LogMsg("GetBackgroundAtlas not available")
+        return
+    end
+
+    -- Resolve spec name. Ascension slots (1,2,3) are NOT Blizzard spec IDs (71,72,73).
+    -- Try GetAllSpecs indexed by slot position as a heuristic.
+    local specFile = nil
+    if slot and C_ClassInfo and C_ClassInfo.GetAllSpecs then
+        local ok, specs = pcall(C_ClassInfo.GetAllSpecs, classFile)
+        if ok and type(specs) == "table" and #specs >= slot then
+            specFile = specs[slot]
+        end
+    end
+
+    -- Try with spec, class-only, and with className variant
+    local atlas = nil
+    local className = (util.GetClassDBCByFile and pcall(util.GetClassDBCByFile, classFile))
+
+    if specFile then
+        local ok, a = pcall(util.GetBackgroundAtlas, classFile, specFile)
+        if ok and a and type(a) == "string" and a ~= "" then atlas = a end
+    end
+    if not atlas then
+        local ok, a = pcall(util.GetBackgroundAtlas, classFile, nil)
+        if ok and a and type(a) == "string" and a ~= "" then atlas = a end
+    end
+
+    local border = frame._InspectorBorder
+    if not border then return end
+    if atlas and border.ClassBg then
+        border.ClassBg:SetAtlas(atlas)
+        border.ClassBg:Show()
+    elseif border.ClassBg then
+        border.ClassBg:Hide()
+    end
+end
 
 local function GetInspectFrame()
     local names = { "AscensionInspectFrame", "InspectFrame", "InspectPaperDollFrame" }
@@ -1095,6 +1160,7 @@ local function RenderFor(unit, slot)
     f.title:SetText(UnitName(unit))
 
     local _, classFile = UnitClass(unit)
+    SetClassBackground(f, classFile, slot)
 
     local CLASS_ICON_ROUND = "Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES-ROUND"
     local roundCoords = CLASS_ICON_TCOORDS_ROUND and CLASS_ICON_TCOORDS_ROUND[classFile]
@@ -1154,6 +1220,7 @@ local function RenderFor(unit, slot)
                 local myBuild = CAReader.GetPlayerBuild(mySlot, myTree)
                 local myModel = TreeModel.Build(myTree, myBuild)
                 local _, myClassFile = UnitClass("player")
+                SetClassBackground(CP.Get(), myClassFile, mySlot)
                 CP.Render(myModel, mySlot, myClass, myClassFile)
             end
         end

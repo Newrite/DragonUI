@@ -228,28 +228,88 @@ function NP.discovery.CreateMinaBar(parent, fillTex, r, g, b)
 end
 
 -- Native chrome suppression
+-- Keep FontStrings on the plate (BGH/compat scan GetRegions + GetText).
+-- FruitPlates-style wipe: SetWidth(0.001)+SetAlpha(0); client re-Shows on hover so we reassert.
 
-local function SuppressNativeFontString(fs)
+local function SuppressNativeFontString(fs, alphaOnly)
     if not fs then
         return
     end
-    -- Keep native text for integrations that read nameRegion:GetText().
+    fs._duiChromeActive = true
+    fs._duiAlphaOnly = alphaOnly and true or false
+    if fs.SetWidth then
+        if fs._duiOrigWidth == nil and fs.GetWidth then
+            local w = fs:GetWidth()
+            if w and w > 0.01 then
+                fs._duiOrigWidth = w
+            end
+        end
+        fs:SetWidth(0.001)
+    end
     if fs.SetAlpha then
         fs:SetAlpha(0)
     end
-    fs:Hide()
+    if not alphaOnly then
+        fs:Hide()
+    end
+    if not fs._duiChromeHooked and fs.HookScript then
+        fs._duiChromeHooked = true
+        fs:HookScript("OnShow", function(self)
+            if not self._duiChromeActive then
+                return
+            end
+            if self.SetWidth then
+                self:SetWidth(0.001)
+            end
+            if self.SetAlpha then
+                self:SetAlpha(0)
+            end
+            if not self._duiAlphaOnly then
+                self:Hide()
+            end
+        end)
+    end
 end
 
-local function RestoreNativeFontString(fs)
+local function RestoreNativeFontString(fs, _parent)
     if not fs then
         return
     end
+    fs._duiChromeActive = nil
+    fs._duiAlphaOnly = nil
+    if fs.SetWidth and fs._duiOrigWidth then
+        fs:SetWidth(fs._duiOrigWidth)
+    end
+    fs._duiOrigWidth = nil
     if fs.SetAlpha then
         fs:SetAlpha(1)
     end
     if fs.Show then
         fs:Show()
     end
+end
+
+-- Cheap per-frame stomp; client undoes Hide/alpha/width on hover without a reliable event.
+function NP.discovery.ReassertNativeFontChrome(plateData)
+    if not plateData then
+        return
+    end
+    local function reassert(fs)
+        if not fs or not fs._duiChromeActive then
+            return
+        end
+        if fs.SetWidth and (not fs.GetWidth or fs:GetWidth() > 0.01) then
+            fs:SetWidth(0.001)
+        end
+        if fs.SetAlpha and (not fs.GetAlpha or fs:GetAlpha() ~= 0) then
+            fs:SetAlpha(0)
+        end
+        if not fs._duiAlphaOnly and fs.Hide and fs.IsShown and fs:IsShown() then
+            fs:Hide()
+        end
+    end
+    reassert(plateData.ogNameText)
+    reassert(plateData.levelText)
 end
 
 function NP.discovery.HideCastChrome(plateData)
@@ -266,13 +326,15 @@ end
 
 function NP.discovery.SuppressNativeChrome(plateData)
     NP.native_style.NoteNativePlateClassification(plateData)
-    -- BattleGroundHealers identifies nameplates by the native border texture path.
-    if NP.config.IsBattleGroundHealersLoaded and NP.config.IsBattleGroundHealersLoaded() then
+    -- Some external addons (BattleGroundHealers, or nameplateAlphaCompat's PlateBuffs/Icicle
+    -- etc.) identify nameplates by the native border texture path and gate on IsShown().
+    local alphaOnlyChrome = (NP.config.IsBattleGroundHealersLoaded and NP.config.IsBattleGroundHealersLoaded())
+        or (NP.config.IsPlateAlphaCompatEnabled and NP.config.IsPlateAlphaCompatEnabled())
+    -- Cached for ReassertHotChrome, which re-suppresses every frame without recomputing cfg/IsAddOnLoaded.
+    plateData._alphaOnlyChrome = alphaOnlyChrome
+    if alphaOnlyChrome then
         if plateData.border and plateData.border.SetAlpha then
             plateData.border:SetAlpha(0)
-        end
-        if plateData.border and plateData.border.Hide then
-            plateData.border:Hide()
         end
     else
         NP.native_style.HideRegion(plateData.border)
@@ -293,7 +355,7 @@ function NP.discovery.SuppressNativeChrome(plateData)
     -- Custom castbar replaces native cast visuals while active.
     NP.discovery.HideCastChrome(plateData)
 
-    SuppressNativeFontString(plateData.ogNameText)
+    SuppressNativeFontString(plateData.ogNameText, alphaOnlyChrome)
 
     local lvlText = plateData.levelText
     if lvlText then
@@ -319,10 +381,7 @@ function NP.discovery.SuppressNativeChrome(plateData)
             plateData.plateLevel = nil
             plateData._plateLevelName = nil
         end
-        if lvlText.SetAlpha then
-            lvlText:SetAlpha(0)
-        end
-        lvlText:Hide()
+        SuppressNativeFontString(lvlText, alphaOnlyChrome)
     end
 
     local highlight = plateData.highlight
@@ -342,8 +401,15 @@ function NP.discovery.SuppressNativeChrome(plateData)
     NP.native_style.HideRegion(plateData.castBarBorder)
 end
 
+-- Client keeps re-showing native name/bar on hover/target on its own; stomp it every frame here.
+function NP.discovery.ReassertHotChrome(plateData)
+    SuppressNativeFontString(plateData.ogNameText, plateData._alphaOnlyChrome)
+    NP.native_style.NeutralizeStatusBarVisual(plateData.healthBar)
+end
+
 function NP.discovery.RestoreNativeChrome(plateData)
     if not plateData then return end
+    local plate = plateData.plate
     local showElite = NP.config.GetCfg().showEliteIcon ~= false
     if plateData.border and plateData.border.Show then
         if plateData.border.SetAlpha then
@@ -384,11 +450,11 @@ function NP.discovery.RestoreNativeChrome(plateData)
     if plateData.highlight then
         if plateData.highlight.SetAlpha then plateData.highlight:SetAlpha(1) end
     end
-    RestoreNativeFontString(plateData.ogNameText)
+    RestoreNativeFontString(plateData.ogNameText, plate)
     if plateData.ogNameText and plateData.ogNameText.SetText and plateData.plateName then
         plateData.ogNameText:SetText(plateData.plateName)
     end
-    RestoreNativeFontString(plateData.levelText)
+    RestoreNativeFontString(plateData.levelText, plate)
     if showElite then
         if plateData.eliteIcon and plateData.eliteIcon.Show then plateData.eliteIcon:Show() end
         if plateData.bossIcon and plateData.bossIcon.Show then plateData.bossIcon:Show() end

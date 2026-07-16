@@ -357,8 +357,9 @@ local function EngineOnUpdate(_, elapsed)
 
     -- 1. Harvest native alpha, then force plate root to 1 when target exists.
     -- retailCfg hoisted out of per-plate path (was 40 GetCfg/frame).
-    -- awesome_wotlk only: skip forcing alpha to 1 (stock dims non-target plates; awesome manages alpha/LoS).
-    local skipAlphaForce = C_NamePlate ~= nil
+    -- awesome_wotlk: skip forcing alpha to 1 (stock dims non-target plates; awesome manages alpha/LoS).
+    -- nameplateAlphaCompat: same skip, opt-in for external plate addons that read native alpha as identity (PlateBuffs, Icicle, ...).
+    local skipAlphaForce = C_NamePlate ~= nil or NP.config.IsPlateAlphaCompatEnabled()
     local retailBehavior = NP.module._retailBehavior
     local retailCfg = retailBehavior and NP.config.GetCfg() or nil
     local levelSettleNow = GetTime and GetTime() or 0
@@ -404,6 +405,22 @@ local function EngineOnUpdate(_, elapsed)
 
     -- 3. Identity transitions (target / mouseover / focus / threat).
     NP.identity.ProcessContextTransitions()
+
+    -- Client re-reveals native chrome on hover/target continuously; reassert every frame here.
+    if NP.module.targetPlate then
+        NP.discovery.ReassertHotChrome(NP.module.targetPlate)
+    end
+    if NP.module.mouseoverPlate and NP.module.mouseoverPlate ~= NP.module.targetPlate then
+        NP.discovery.ReassertHotChrome(NP.module.mouseoverPlate)
+    end
+    -- Client re-Shows/resizes native name+level on hover; stomp all shown plates (BGH-safe).
+    for _, pd in pairs(NP.module.plates) do
+        local pl = pd.plate
+        if pl and pl.IsShown and pl:IsShown() then
+            NP.discovery.ReassertNativeFontChrome(pd)
+        end
+    end
+
     local threatBuckets = (C and C.THREAT_BUDGET_BUCKETS) or 4
     NP.module._budgetFrame = ((NP.module._budgetFrame or 0) + 1) % threatBuckets
     NP.gather.ProcessThreatTransitions()
