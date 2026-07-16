@@ -619,6 +619,12 @@ L["Use Blizzard vehicle bar art with health/power display. Requires reload."] = 
 -- Totem Bar
 L["Totem Bar"] = "Панель тотемов"
 L["Totem Bar (Shaman)"] = "Панель тотемов (Шаман)"
+
+-- Extra Bar (issue #330)
+L["Extra Bar"] = "Дополнительная панель"
+L["A 12-button action bar independent of every class's bonus bar (stance/stealth/vehicle)."] = "Панель действий с 12 кнопками, независимая от дополнительной панели любого класса (форма/скрытность/транспорт)."
+L["Fade the extra bar until you hover over it."] = "Скрывать дополнительную панель, пока на неё не наведён курсор."
+L["Fade the extra bar until you enter combat."] = "Скрывать дополнительную панель до вступления в бой."
 L["Shamans only - Totem multicast bar. Position is controlled via Editor Mode."] = "Только для шаманов — панель мультикаста тотемов. Позиция настраивается в режиме редактора."
 L["TIP: Use Editor Mode to position the totem bar (type /dragonui edit)."] = "СОВЕТ: Используйте режим редактора для позиционирования панели тотемов (введите /dragonui edit)."
 
@@ -1215,6 +1221,8 @@ L["Health number font scale (1-10)."] = "Масштаб шрифта числа 
 L["Center Name Only"] = "Только имя по центру"
 L["Centers the unit name and hides the health percent."] = "Центрирует имя и скрывает процент здоровья."
 L["Hides level text and health percent, and centers the unit name on the nameplate."] = "Скрывает уровень и % здоровья, центрирует имя на индикаторе."
+L["Gray Tapped Units"] = "Серые занятые цели"
+L["Grays the health bar when a unit is tapped by another player or group."] = "Делает полосу здоровья серой, если цель занята другим игроком или группой."
 L["Friendly Player Color"] = "Цвет дружественных игроков"
 L["Friendly NPC Color"] = "Цвет дружественных NPC"
 L["Party Class Colors"] = "Цвета классов в группе"

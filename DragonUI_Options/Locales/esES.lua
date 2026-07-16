@@ -635,6 +635,12 @@ L["Use Blizzard vehicle bar art with health/power display. Requires reload."] = 
 -- Totem Bar
 L["Totem Bar"] = "Barra de Tótems"
 L["Totem Bar (Shaman)"] = "Barra de Tótems (Chamán)"
+
+-- Extra Bar (issue #330)
+L["Extra Bar"] = "Barra Extra"
+L["A 12-button action bar independent of every class's bonus bar (stance/stealth/vehicle)."] = "Una barra de acción de 12 botones, independiente de la barra de bonificación de cualquier clase (forma/sigilo/vehículo)."
+L["Fade the extra bar until you hover over it."] = "Atenúa la barra extra hasta que pases el ratón por encima."
+L["Fade the extra bar until you enter combat."] = "Atenúa la barra extra hasta que entres en combate."
 L["Shamans only - Totem multicast bar. Position is controlled via Editor Mode."] = "Solo chamanes - Barra multicast de tótems. La posición se controla mediante el Modo Editor."
 L["TIP: Use Editor Mode to position the totem bar (type /dragonui edit)."] = "CONSEJO: Usa el Modo Editor para posicionar la barra de tótems (escribe /dragonui edit)."
 
@@ -1213,6 +1219,8 @@ L["Health number font scale (1-10)."] = "Escala de fuente del número de vida (1
 L["Center Name Only"] = "Solo nombre centrado"
 L["Centers the unit name and hides the health percent."] = "Centra el nombre y oculta el porcentaje de vida."
 L["Hides level text and health percent, and centers the unit name on the nameplate."] = "Oculta el nivel y el % de vida, y centra el nombre en la placa."
+L["Gray Tapped Units"] = "Unidades tagueadas en gris"
+L["Grays the health bar when a unit is tapped by another player or group."] = "Pone la barra de vida en gris cuando una unidad está tagueada por otro jugador o grupo."
 L["Friendly Player Color"] = "Color de jugador aliado"
 L["Friendly NPC Color"] = "Color de PNJ aliado"
 L["Party Class Colors"] = "Colores de clase en grupo"

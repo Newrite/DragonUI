@@ -712,6 +712,12 @@ L["Show Totem Bar"] = true
 L["Shamans only - Totem multicast bar. Position is controlled via Editor Mode."] = true
 L["TIP: Use Editor Mode to position the totem bar (type /dragonui edit)."] = true
 
+-- Extra Bar (issue #330)
+L["Extra Bar"] = true
+L["A 12-button action bar independent of every class's bonus bar (stance/stealth/vehicle)."] = true
+L["Fade the extra bar until you hover over it."] = true
+L["Fade the extra bar until you enter combat."] = true
+
 -- ============================================================================
 -- CAST BARS TAB
 -- ============================================================================
@@ -1325,6 +1331,8 @@ L["Health number font scale (1-10)."] = true
 L["Center Name Only"] = true
 L["Centers the unit name and hides the health percent."] = true
 L["Hides level text and health percent, and centers the unit name on the nameplate."] = true
+L["Gray Tapped Units"] = true
+L["Grays the health bar when a unit is tapped by another player or group."] = true
 L["Friendly Player Color"] = true
 L["Friendly NPC Color"] = true
 L["Party Class Colors"] = true

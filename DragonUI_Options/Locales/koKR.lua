@@ -627,6 +627,12 @@ L["Use Blizzard vehicle bar art with health/power display. Requires reload."] = 
 -- Totem Bar
 L["Totem Bar"] = "토템 바"
 L["Totem Bar (Shaman)"] = "토템바 (주술사)"
+
+-- Extra Bar (issue #330)
+L["Extra Bar"] = "추가 바"
+L["A 12-button action bar independent of every class's bonus bar (stance/stealth/vehicle)."] = "모든 직업의 보너스 바(변신/은신/탈것)와 무관한 12칸 액션 바입니다."
+L["Fade the extra bar until you hover over it."] = "마우스를 올리기 전까지 추가 바를 흐리게 표시합니다."
+L["Fade the extra bar until you enter combat."] = "전투에 진입하기 전까지 추가 바를 흐리게 표시합니다."
 L["Shamans only - Totem multicast bar. Position is controlled via Editor Mode."] = "주술사 전용 - 토템 멀티캐스트 바. 위치는 편집 모드에서 조정합니다."
 L["TIP: Use Editor Mode to position the totem bar (type /dragonui edit)."] = "팁: 편집 모드에서 토템 바의 위치를 조정하세요 (/dragonui edit 입력)."
 
@@ -1218,6 +1224,8 @@ L["Health number font scale (1-10)."] = "HP 숫자 글꼴 크기 (1-10)."
 L["Center Name Only"] = "이름만 가운데 정렬"
 L["Centers the unit name and hides the health percent."] = "이름을 가운데 정렬하고 생명력 퍼센트를 숨깁니다."
 L["Hides level text and health percent, and centers the unit name on the nameplate."] = "레벨과 생명력 %를 숨기고 이름표에서 유닛 이름을 가운데 정렬합니다."
+L["Gray Tapped Units"] = "선점된 대상 회색 표시"
+L["Grays the health bar when a unit is tapped by another player or group."] = "다른 플레이어나 파티가 선점한 대상의 생명력 바를 회색으로 표시합니다."
 L["Friendly Player Color"] = "아군 플레이어 색상"
 L["Friendly NPC Color"] = "아군 NPC 색상"
 L["Party Class Colors"] = "파티 직업 색상"

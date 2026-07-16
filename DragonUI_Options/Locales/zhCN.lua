@@ -619,6 +619,12 @@ L["Use Blizzard vehicle bar art with health/power display. Requires reload."] = 
 -- 图腾条
 L["Totem Bar"] = "图腾条"
 L["Totem Bar (Shaman)"] = "图腾条（萨满）"
+
+-- Extra Bar (issue #330)
+L["Extra Bar"] = "额外栏"
+L["A 12-button action bar independent of every class's bonus bar (stance/stealth/vehicle)."] = "一个12格的动作条，独立于任何职业的特殊条（形态/潜行/载具）。"
+L["Fade the extra bar until you hover over it."] = "在鼠标悬停之前淡出额外栏。"
+L["Fade the extra bar until you enter combat."] = "在进入战斗之前淡出额外栏。"
 L["Shamans only - Totem multicast bar. Position is controlled via Editor Mode."] = "仅限萨满 - 图腾多目标施法条。位置通过编辑模式控制。"
 L["TIP: Use Editor Mode to position the totem bar (type /dragonui edit)."] = "提示：使用编辑模式来定位图腾条（输入 /dragonui edit）。"
 
@@ -1214,6 +1220,8 @@ L["Health number font scale (1-10)."] = "血量数值字体大小（1-10）。"
 L["Center Name Only"] = "仅居中显示名称"
 L["Centers the unit name and hides the health percent."] = "居中显示名称并隐藏血量百分比。"
 L["Hides level text and health percent, and centers the unit name on the nameplate."] = "隐藏等级和生命百分比，并在姓名板上居中显示单位名称。"
+L["Gray Tapped Units"] = "已被他人占领时变灰"
+L["Grays the health bar when a unit is tapped by another player or group."] = "当单位被其他玩家或队伍占领时，将生命条显示为灰色。"
 L["Friendly Player Color"] = "友方玩家颜色"
 L["Friendly NPC Color"] = "友方 NPC 颜色"
 L["Party Class Colors"] = "队伍职业颜色"
