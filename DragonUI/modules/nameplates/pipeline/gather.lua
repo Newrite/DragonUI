@@ -444,9 +444,9 @@ function NP.gather.GetHealthBarColor(plateData)
     end
 
     local reaction, unitType = NP.native_style.GetPlateReaction(plateData)
-    if reaction == "FRIENDLY" and unitType == "PLAYER"
-        and plateData.barB
-        and plateData.barB > 0.5 and (plateData.barR or 0) < 0.3 and (plateData.barG or 0) < 0.3 then
+    -- Ascension: GetPlateReaction already corrects attackability under Mercenary;
+    -- trust the reaction directly instead of requiring a blue-ish bar color.
+    if reaction == "FRIENDLY" and unitType == "PLAYER" then
         -- Friendly class color from any resolved token; cached, fills in on hover/target in stock.
         if cfg.friendlyClassColors then
             if not plateData._friendlyHealthClass then
@@ -479,6 +479,23 @@ function NP.gather.GetHealthBarColor(plateData)
     end
     if reaction == "FRIENDLY" and unitType == "NPC" and cfg.friendlyNPCColor then
         return cfg.friendlyNPCColor.r, cfg.friendlyNPCColor.g, cfg.friendlyNPCColor.b
+    end
+    -- Ascension: HOSTILE+PLAYER with a blue-ish bar (same-faction Mercenary)
+    -- needs manual class color from unit token; the CVar won't recolor same-faction bars.
+    if reaction == "HOSTILE" and unitType == "PLAYER"
+        and plateData.barB and plateData.barB > 0.5
+        and (plateData.barR or 0) < 0.3 and (plateData.barG or 0) < 0.3 then
+        if cfg.enemyPlayerClassColors ~= false then
+            local token = ResolvePlateToken(plateData)
+            if token and UnitExists(token) and UnitIsPlayer(token) then
+                local _, class = UnitClass(token)
+                if class and RAID_CLASS_COLORS[class] then
+                    return RAID_CLASS_COLORS[class].r, RAID_CLASS_COLORS[class].g, RAID_CLASS_COLORS[class].b
+                end
+            end
+        end
+        -- Even without class colors, use enemy red instead of copying the blue bar.
+        return 1, 0.1, 0.1
     end
     if plateData.barR then
         return plateData.barR, plateData.barG, plateData.barB
@@ -1110,11 +1127,32 @@ function NP.gather.ProcessThreatTransitions()
     end
 end
 
--- Reaction drift (200ms): re-gather when native bar color changes.
+-- Reaction drift (200ms): re-gather when native bar color changes or
+-- when UnitCanAttack changes for player plates (Ascension Mercenary / PvP toggle).
 function NP.gather.ProcessReactionDrift()
     for _, plateData in pairs(NP.module.plates) do
         local bar = plateData.healthBar
-        if bar and bar.GetStatusBarColor and plateData.barR then
+        if not bar or not bar.GetStatusBarColor or not plateData.barR then
+            -- No bar color baseline yet; skip attackability check too (no styled plate).
+        else
+            -- Ascension: detect attackability changes for player plates without bar color drift.
+            local unit = plateData.namePlateUnitToken or (plateData.plate and plateData.plate.unit)
+            if unit and UnitExists(unit) and UnitIsPlayer(unit) then
+                local canAttack = UnitCanAttack("player", unit)
+                if plateData._lastCanAttack ~= nil and plateData._lastCanAttack ~= canAttack then
+                    if addon.debugMode then
+                        print(string.format(
+                            "|cFFFFFF00[DUI nameplate debug]|r ProcessReactionDrift attackability name=%s canAttack=%s",
+                            tostring(plateData.plateName), tostring(canAttack)))
+                    end
+                    plateData._lastCanAttack = canAttack
+                    NP.gather.RefreshPlateFull(plateData, "reaction_drift")
+                    -- RefreshPlateFull recaptured barR/G/B; bar color check below will be a no-op.
+                else
+                    plateData._lastCanAttack = canAttack
+                end
+            end
+
             local r, g, b = bar:GetStatusBarColor()
             if math.abs(r - plateData.barR) > 0.1
                 or math.abs(g - plateData.barG) > 0.1

@@ -333,8 +333,8 @@ function NP.native_style.ClassKeyFromBarColor(r, g, b)
     return C.CLASS_BY_BAR_COLOR[math.floor(r * 10 + g * 100 + b)]
 end
 
--- Reaction and unit type from health bar color.
-function NP.native_style.GetPlateReaction(plateData)
+-- Reaction and unit type from health bar color (internal; prefer GetPlateReaction).
+local function GetPlateReactionFromBarColor(plateData)
     local r, g, b = plateData.barR, plateData.barG, plateData.barB
     if not r then
         return nil, nil
@@ -349,6 +349,52 @@ function NP.native_style.GetPlateReaction(plateData)
         return "HOSTILE", "NPC"
     end
     return "HOSTILE", "PLAYER"
+end
+
+-- Ascension: lightweight unit token resolver for reaction correction.
+-- Uses identity resolution and native plate tokens; no group lookup.
+local function ResolvePlateTokenForReaction(plateData)
+    local unit = NP.identity.ResolvePlateUnit(plateData)
+    if unit and UnitExists(unit) then
+        return unit
+    end
+    local native = plateData.namePlateUnitToken or (plateData.plate and plateData.plate.unit)
+    if native and UnitExists(native) then
+        return native
+    end
+    return nil
+end
+
+-- Ascension: native bar RGB can disagree with attackability under Mercenary.
+-- Only correct when we have a unit token; plates without tokens stay on bar color.
+local function ReactionFromUnitAttackability(unit, barReaction, barUnitType)
+    if not unit or not UnitExists(unit) or not UnitIsPlayer(unit) then
+        return barReaction, barUnitType
+    end
+    local canAttack = UnitCanAttack("player", unit)
+    if canAttack then
+        if barReaction == "FRIENDLY" then
+            return "HOSTILE", "PLAYER"
+        end
+    else
+        if barReaction == "HOSTILE" and barUnitType == "PLAYER" then
+            return "FRIENDLY", "PLAYER"
+        end
+    end
+    return barReaction, barUnitType
+end
+
+-- Reaction and unit type, corrected for attackability when a player unit token exists.
+function NP.native_style.GetPlateReaction(plateData)
+    local reaction, unitType = GetPlateReactionFromBarColor(plateData)
+    if not reaction then
+        return nil, nil
+    end
+    local unit = ResolvePlateTokenForReaction(plateData)
+    if unit and UnitIsPlayer(unit) then
+        plateData._lastCanAttack = UnitCanAttack("player", unit)
+    end
+    return ReactionFromUnitAttackability(unit, reaction, unitType)
 end
 
 -- Raid icon texcoord → icon name.
