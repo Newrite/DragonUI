@@ -270,9 +270,11 @@ L["Resets minimap mask and blip textures. DragonUI re-applies its custom texture
 L["SexyMap modifies the minimap borders, shape, and zone text which conflicts with DragonUI's minimap module."] = "SexyMap modifica los bordes del minimapa, la forma y el texto de zona, lo cual entra en conflicto con el módulo de minimapa de DragonUI."
 L["Nameplate functionality conflicts with DragonUI's nameplate module."] = "La funcionalidad de nameplates entra en conflicto con el módulo de nameplates de DragonUI."
 L["Reads native nameplate alpha to identify the target's plate; conflicts with DragonUI's default anti-dim behavior."] = "Usa la transparencia nativa de la placa para identificar la placa del objetivo; entra en conflicto con el comportamiento anti-atenuado por defecto de DragonUI."
+L["Parents its cooldown icons to the native health bar; conflicts with DragonUI's default health-bar hiding."] = "Cuelga sus iconos de cooldown en la barra de vida nativa; entra en conflicto con el ocultado por defecto de esa barra en DragonUI."
 
 -- Nameplate addon compatibility popup
 L["Detected |cFFFFFF00%s|r. Enable Nameplate Addon Compatibility so it works correctly?"] = "Se detectó |cFFFFFF00%s|r. ¿Activar la compatibilidad de addons de placas para que funcione correctamente?"
+L["Detected |cFFFFFF00%s|r. Enable Nameplate Health Bar Compatibility so it works correctly?"] = "Se detectó |cFFFFFF00%s|r. ¿Activar la compatibilidad de barra de vida de placas para que funcione correctamente?"
 L["Enable"] = "Activar"
 
 -- SexyMap compatibility popup
