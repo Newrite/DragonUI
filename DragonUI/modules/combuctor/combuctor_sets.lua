@@ -1,18 +1,8 @@
+-- Item filtering / category set registry (CombuctorSet/Sets).
 local addon = select(2, ...)
 local mod = addon.CombuctorModule
--- ============================================================================
--- COMBUCTOR SETS MODULE
--- Provides the item filtering / category set registry (CombuctorSet/Sets).
---
--- Load order: combuctor.lua → combuctor_data.lua → combuctor_sets.lua →
---             combuctor_classes.lua → combuctor_frame.lua → combuctor_system.lua
--- ============================================================================
-
-local addon = select(2, ...)
 local tinsert = table.insert
 
--- Set name constants (previously in core's DATABASE section; moved here
--- because the Sets block is the only consumer).
 local SET_ALL = ALL or "All"
 local SET_EQUIPMENT = "Equipment"
 local SET_USABLE = "Usable"
@@ -77,7 +67,7 @@ do
     mod.L.Normal = SET_NORMAL
     mod.L.Trade = SET_TRADE
 
-    -- Register default item sets (matching KPack Combuctor structure)
+    -- Register default item sets
 
     -- ALL: parent set
     CombuctorSet:Register(SET_ALL, [[Interface\Icons\INV_Misc_EngGizmos_17]], function() return true end)

@@ -349,6 +349,8 @@ L["No scrap items to sell."] = "Нет хлама для продажи."
 -- Transmog Collect
 L["Collect Transmog"] = "Собрать трансмутацию"
 L["Click to collect all uncollected transmog appearances from your bags."] = "Нажмите, чтобы собрать все несобранные облики трансмутации из ваших сумок."
+L["Open a merchant window first to sell scrap items."] = "Сначала откройте окно торговца, чтобы продать хлам."
+
 -- Guild Bank Sort
 L["You must be at the guild bank."] = "Вы должны находиться в гильдейском банке."
 L["Could not determine the current guild bank tab."] = "Не удалось определить текущую вкладку гильдейского банка."

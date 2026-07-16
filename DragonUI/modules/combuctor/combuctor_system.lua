@@ -1,14 +1,5 @@
+-- Apply/restore lifecycle, profile-change handling, init events, slash commands, addon.* exports.
 local addon = select(2, ...)
-local mod = addon.CombuctorModule
--- ============================================================================
--- COMBUCTOR SYSTEM MODULE
--- Owns the apply/restore lifecycle, the profile-change handler, the
--- ADDON_LOADED / PLAYER_ENTERING_WORLD init frame, the /cbt /combuctor
--- slash commands, and the addon.* exports used by the rest of DragonUI.
---
--- Load order: combuctor.lua -> combuctor_data.lua -> combuctor_sets.lua ->
---             combuctor_classes.lua -> combuctor_frame.lua -> combuctor_system.lua
--- ============================================================================
 local mod = addon.CombuctorModule
 
 -- ============================================================================
@@ -81,6 +72,16 @@ local function ApplyCombuctorSystem()
     BankFrame:UnregisterAllEvents()
     BankFrame:Hide()
 
+    -- The stock guild vault is load-on-demand; blanking its loader keeps it from ever existing
+    if mod.CombuctorModule.originalStates.GuildBankFrame_LoadUI == nil then
+        mod.CombuctorModule.originalStates.GuildBankFrame_LoadUI = _G.GuildBankFrame_LoadUI
+    end
+    _G.GuildBankFrame_LoadUI = function() end
+    if _G.GuildBankFrame then
+        GuildBankFrame:UnregisterAllEvents()
+        GuildBankFrame:Hide()
+    end
+
     if not mod.CombuctorModule.hooks.inventoryEvents then
         mod("InventoryEvents"):Register(mod, "BANK_OPENED", function()
             mod:Show(BANK_CONTAINER, true)
@@ -134,6 +135,17 @@ end
 local function RestoreCombuctorSystem()
     if not mod.CombuctorModule.applied then return end
 
+    -- Apply did BankFrame:UnregisterAllEvents(); without these the native bank never opens again
+    BankFrame:RegisterEvent("BANKFRAME_OPENED")
+    BankFrame:RegisterEvent("BANKFRAME_CLOSED")
+
+    if mod.CombuctorModule.originalStates.GuildBankFrame_LoadUI then
+        _G.GuildBankFrame_LoadUI = mod.CombuctorModule.originalStates.GuildBankFrame_LoadUI
+    end
+    if mod.HideGuildFrame then
+        mod.HideGuildFrame()
+    end
+
     if mod.CombuctorModule.frames.autoEventFrame then
         mod.CombuctorModule.frames.autoEventFrame:UnregisterAllEvents()
         mod.CombuctorModule.frames.autoEventFrame:SetScript("OnEvent", nil)
@@ -184,18 +196,40 @@ local function RefreshCombuctorFrames()
             frame:UpdateClampInsets()
         end
 
-        -- Re-skin items and bag slots (local functions guard via _BagSkin_Applied)
+        -- Re-skin items (guarded per-slot via _BagSkin_Applied)
         if frame then
             local name = frame:GetName()
             local gframe = _G[name]
             if gframe then
                 mod.CombuctorSkinItems(gframe)
-                mod.CombuctorSkinBagSlots(gframe)
             end
+        end
+
+        if frame and frame.UpdateBottomLayout then
+            frame:UpdateBottomLayout()
+        end
+
+        -- Re-apply borders and layout so glow/scale/spacing option changes show live
+        if frame and frame.itemFrame then
+            for _, item in pairs(frame.itemFrame.items) do
+                item:UpdateBorder()
+            end
+            frame.itemFrame:RequestLayout()
         end
 
         if frame and frame.moneyFrame and frame.moneyFrame.RefreshDisplay then
             frame.moneyFrame:RefreshDisplay()
+        end
+    end
+
+    -- Guild frame lives outside mod.frames
+    if mod.guildFrame and mod.guildFrame.itemFrame then
+        for _, item in pairs(mod.guildFrame.itemFrame.items) do
+            item:UpdateBorder()
+        end
+        mod.guildFrame.itemFrame:RequestLayout()
+        if mod.guildFrame.moneyFrame then
+            mod.guildFrame.moneyFrame:RefreshDisplay()
         end
     end
 end

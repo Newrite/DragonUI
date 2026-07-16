@@ -349,6 +349,8 @@ L["No scrap items to sell."] = "Keine Schrott-Gegenstände zu verkaufen."
 -- Transmog Collect
 L["Collect Transmog"] = "Transmog sammeln"
 L["Click to collect all uncollected transmog appearances from your bags."] = "Klicken, um alle nicht gesammelten Transmog-Erscheinungsbilder aus deinen Taschen zu sammeln."
+L["Open a merchant window first to sell scrap items."] = "Öffne zuerst ein Händlerfenster, um Schrott zu verkaufen."
+
 -- Guild Bank Sort
 L["You must be at the guild bank."] = "Du musst dich an der Gildenbank befinden."
 L["Could not determine the current guild bank tab."] = "Die aktuelle Gildenbank-Registerkarte konnte nicht ermittelt werden."

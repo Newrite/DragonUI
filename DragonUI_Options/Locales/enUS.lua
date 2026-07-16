@@ -434,6 +434,18 @@ L["Display"] = true
 L["Gold Display"] = true
 L["Text Only"] = true
 L["Gold Icons"] = true
+L["Item Scale"] = true
+L["Maximum size of item slots. The grid still shrinks them to fit the frame."] = true
+L["Item Spacing"] = true
+L["Gap between item slots in the grid."] = true
+L["Quality Glow"] = true
+L["Show a colored ring on uncommon and better items."] = true
+L["Quest Item Glow"] = true
+L["Highlight quest items with a golden border."] = true
+L["Glow Intensity"] = true
+L["Opacity of the quality ring on item slots."] = true
+L["Quality Filter Row"] = true
+L["Show the rarity filter dots at the bottom of the bag frame."] = true
 
 -- Advanced modules - Fallback display names
 L["Main Bars"] = true

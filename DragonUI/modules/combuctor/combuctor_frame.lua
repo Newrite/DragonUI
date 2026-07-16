@@ -1,15 +1,4 @@
-local addon = select(2, ...)
-local mod = addon.CombuctorModule
--- ============================================================================
--- COMBUCTOR FRAME MODULE
--- Contains the FrameEvents relay, InventoryFrame class, template helpers
--- used by InventoryFrame (SetupIconButton, SetupDragFrame, SetupSearchBox,
--- SetupResetButton, SetupBagToggle, CreateInventoryFrame), and the retail-style
--- skinning functions (CombuctorSkinFrame, CombuctorSkinItems,
--- CombuctorSkinBagSlots, CombuctorApplySkin).
---
--- Load order: combuctor.lua -> combuctor_data.lua -> combuctor_sets.lua ->
-
+-- FrameEvents relay, InventoryFrame class, template helpers and frame skinning.
 local addon = select(2, ...)
 local mod = addon.CombuctorModule
 
@@ -101,103 +90,140 @@ end
 -- DragonUI_CombuctorSearchBoxTemplate
 local function SetupSearchBox(eb, parentFrame)
     eb:SetAutoFocus(false)
-    eb:SetHeight(20)
-    eb:SetPoint("TOPLEFT",  parentFrame, "TOPLEFT",  84, -44)
-    eb:SetPoint("TOPRIGHT", parentFrame, "TOPRIGHT", -116, -44)
+    eb:SetHeight(24)
+
+    -- Retail-style dark search box: hide the classic gold input art, add backdrop + magnifier
+    local name = eb:GetName()
+    for _, suffix in ipairs({ "Left", "Middle", "Right" }) do
+        local tex = _G[name .. suffix]
+        if tex then
+            tex:Hide()
+            tex:SetTexture(nil)
+        end
+    end
+    eb:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+        edgeSize = 12,
+        insets = { left = 3, right = 3, top = 3, bottom = 3 },
+    })
+    eb:SetBackdropColor(0, 0, 0, 0.55)
+    eb:SetBackdropBorderColor(0.4, 0.4, 0.4, 0.9)
+    eb:SetTextInsets(24, 20, 0, 0)
+
+    local magnifier = eb:CreateTexture(nil, "OVERLAY")
+    magnifier:SetTexture("Interface\\Minimap\\Tracking\\None")
+    magnifier:SetSize(14, 14)
+    magnifier:SetPoint("LEFT", eb, "LEFT", 7, 0)
+    magnifier:SetVertexColor(0.6, 0.6, 0.6)
+
+    local function UpdatePlaceholderColor(self)
+        if self:GetText() == SEARCH then
+            self:SetTextColor(0.55, 0.55, 0.55)
+        else
+            self:SetTextColor(1, 1, 1)
+        end
+    end
 
     eb:SetScript("OnShow", function(self)
         if self:GetText() == '' then
             self:SetText(SEARCH)
         end
+        UpdatePlaceholderColor(self)
     end)
     eb:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+    -- ClearFocus first: SetText while focused would fire OnTextChanged and search for "Search"
     eb:SetScript("OnEscapePressed", function(self)
-        self:SetText(SEARCH)
         self:ClearFocus()
-        self:GetParent():SetFilter('name', nil, true)
+        self:SetText(SEARCH)
+        self:GetParent():SetSearch(nil)
+        UpdatePlaceholderColor(self)
     end)
     eb:SetScript("OnTextChanged", function(self)
         if self:HasFocus() then
             local text = self:GetText()
-            self:GetParent():SetFilter('name', (text ~= '' and text:lower()) or nil, true)
+            self:GetParent():SetSearch((text ~= '' and text:lower()) or nil)
         end
+        UpdatePlaceholderColor(self)
     end)
     eb:SetScript("OnEditFocusLost", function(self)
         self:HighlightText(0, 0)
         if self:GetText() == '' then
             self:SetText(SEARCH)
         end
+        UpdatePlaceholderColor(self)
     end)
     eb:SetScript("OnEditFocusGained", function(self)
         self:HighlightText()
         if self:GetText() == SEARCH then
             self:SetText('')
         end
+        self:SetTextColor(1, 1, 1)
     end)
 end
 
--- DragonUI_CombuctorResetButtonTemplate
+-- Clear-search "X" tucked inside the search box, retail style
 local function SetupResetButton(btn)
-    btn:SetSize(20, 20)
-    local icon = "Interface\\Icons\\INV_Pet_Broom"
+    btn:SetSize(14, 14)
+    local icon = "Interface\\Buttons\\UI-GroupLoot-Pass-Up"
     local nt = btn:CreateTexture(nil, "ARTWORK")
     nt:SetTexture(icon)
-    nt:SetTexCoord(0.06, 0.94, 0.06, 0.94)
     nt:SetAllPoints(btn)
+    nt:SetVertexColor(0.7, 0.7, 0.7)
     btn:SetNormalTexture(nt)
-    local pt = btn:CreateTexture(nil, "OVERLAY")
-    pt:SetTexture(icon)
-    pt:SetTexCoord(0.06, 0.94, 0.06, 0.94)
-    pt:SetAllPoints(btn)
-    pt:Hide()
-    btn:SetPushedTexture(pt)
     local ht = btn:CreateTexture(nil, "HIGHLIGHT")
-    ht:SetTexture("Interface\\Buttons\\ButtonHilight-Square")
+    ht:SetTexture(icon)
     ht:SetBlendMode("ADD")
     ht:SetAllPoints(btn)
     btn:SetHighlightTexture(ht)
 end
 
--- DragonUI_CombuctorBagToggleTemplate
+-- Built exactly like the dropdown Bag buttons so ring/glow/icon align identically
 local function SetupBagToggle(btn, parentFrame)
-    btn:SetSize(32, 32)
+    btn:SetSize(30, 30)
 
-    -- $parentIcon: Button-Backpack-Up
-    local icon = btn:CreateTexture(btn:GetName() .. "Icon", "BACKGROUND")
+    local background = btn:CreateTexture(nil, "BACKGROUND")
+    background:SetSize(36, 36)
+    background:SetPoint("CENTER")
+    background:SetTexture(mod.CT.bagslot)
+    background:SetTexCoord(295 / 512, 356 / 512, 64 / 128, 125 / 128)
+
+    local icon = btn:CreateTexture(btn:GetName() .. "Icon", "BORDER")
     icon:SetTexture("Interface\\Buttons\\Button-Backpack-Up")
-    icon:SetSize(20, 20)
-    icon:SetPoint("TOPLEFT", btn, "TOPLEFT", 7, -6)
-    icon:SetTexCoord(0.075, 0.925, 0.075, 0.925)
+    icon:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -5, -2.9)
+    icon:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", 2.9, 5)
+    icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
-    -- $parentBorder: MiniMap-TrackingBorder
-    local border = btn:CreateTexture(btn:GetName() .. "Border", "OVERLAY")
-    border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
-    border:SetSize(54, 54)
-    border:SetPoint("TOPLEFT", btn, "TOPLEFT")
-    border:SetDesaturated(true)
-    border:SetAlpha(0.6)
+    local ringBorder = btn:CreateTexture(nil, "OVERLAY")
+    ringBorder:SetSize(36, 36)
+    ringBorder:SetPoint("CENTER")
+    ringBorder:SetTexture(mod.CT.bagslot)
+    ringBorder:SetTexCoord(295 / 512, 356 / 512, 1 / 128, 62 / 128)
 
     btn:RegisterForClicks("anyUp")
 
     btn:SetScript("OnClick", function(self, button)
         self:GetParent():OnBagToggleClick(self, button)
     end)
+    -- Same optical click-zoom as the portrait: crop in on press, restore on release
     btn:SetScript("OnMouseDown", function(self)
-        icon:SetTexCoord(0, 1, 0, 1)
+        icon:SetTexCoord(0.14, 0.86, 0.14, 0.86)
     end)
     btn:SetScript("OnMouseUp", function(self)
-        icon:SetTexCoord(0.075, 0.925, 0.075, 0.925)
+        icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     end)
     btn:SetScript("OnEnter", function(self)
         self:GetParent():OnBagToggleEnter(self)
     end)
     btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    -- HighlightTexture
-    local ht = btn:CreateTexture(nil, "HIGHLIGHT")
-    ht:SetTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+    btn:SetHighlightTexture("")
+    local ht = btn:GetHighlightTexture()
+    ht:SetAllPoints()
     ht:SetBlendMode("ADD")
-    btn:SetHighlightTexture(ht)
+    ht:SetAlpha(0.4)
+    ht:SetTexture(mod.CT.bagslot)
+    ht:SetTexCoord(358 / 512, 419 / 512, 1 / 128, 62 / 128)
 end
 
 -- Replaces DragonUI_CombuctorInventoryTemplate entirely
@@ -242,24 +268,21 @@ local function CreateInventoryFrame(name, parent)
     local resetBtn = CreateFrame("Button", name .. "Reset", f)
     SetupResetButton(resetBtn)
     resetBtn:SetScript("OnClick", function()
-        searchEb:SetText(SEARCH)
         searchEb:ClearFocus()
-        f:SetFilter('name', nil, true)
+        searchEb:SetText(SEARCH)
+        f:SetSearch(nil)
     end)
 
-    -- bagToggle (32x32) anchored top-right
-    bagToggleBtn:SetPoint("TOPRIGHT", f, "TOPRIGHT", -14, -38)
+    -- Header: one row right of the portrait, buttons trailing the search box
+    bagToggleBtn:SetPoint("TOPRIGHT", f, "TOPRIGHT", -12, -30)
 
-    -- resetBtn (32x32): anchor to bag toggle, shift down 6px so visual
-    -- center aligns with the 20px search bar (search top=-44, height=20).
-    -- ClearAllPoints is REQUIRED — without it, SetPoint ADDS a second
-    -- anchor and the button appears stuck because two points fight.
+    searchEb:SetPoint("TOPLEFT", f, "TOPLEFT", 60, -31)
+    searchEb:SetWidth(200)
+
     resetBtn:ClearAllPoints()
-    resetBtn:SetPoint("TOPRIGHT", bagToggleBtn, "TOPLEFT", 3, -11)
-
-    -- searchBox (20px tall): TOPRIGHT Y=0 keeps it horizontal with resetBtn
-    searchEb:SetPoint("TOPLEFT",  f, "TOPLEFT",  14, -44)
-    searchEb:SetPoint("TOPRIGHT", resetBtn, "TOPLEFT", -4, 0)
+    resetBtn:SetPoint("RIGHT", searchEb, "RIGHT", -5, 0)
+    -- Above the EditBox or it never receives the click
+    resetBtn:SetFrameLevel(searchEb:GetFrameLevel() + 2)
 
     -- $parentResize
     local resizeBtn = CreateFrame("Button", name .. "Resize", f)
@@ -275,10 +298,9 @@ local function CreateInventoryFrame(name, parent)
     resizeHt:SetAllPoints(resizeBtn)
     resizeBtn:SetHighlightTexture(resizeHt)
 
-    resizeBtn:SetScript("OnLoad", function(self)
-        self:SetFrameLevel(self:GetFrameLevel() + 4)
-        self:GetNormalTexture():SetVertexColor(1, 0.82, 0)
-    end)
+    -- OnLoad never fires on frames built via CreateFrame; apply directly
+    resizeBtn:SetFrameLevel(resizeBtn:GetFrameLevel() + 4)
+    resizeBtn:GetNormalTexture():SetVertexColor(1, 0.82, 0)
     resizeBtn:SetScript("OnMouseDown", function(self)
         self:GetParent():StartSizing()
     end)
@@ -355,7 +377,7 @@ do
     local BASE_WIDTH = 384
     local ITEM_FRAME_WIDTH_OFFSET = 354 - BASE_WIDTH
     local BASE_HEIGHT = 512
-    local ITEM_FRAME_HEIGHT_OFFSET = 432 - BASE_HEIGHT
+    local ITEM_FRAME_HEIGHT_OFFSET = 420 - BASE_HEIGHT
 
     local lastID = 1
     function InventoryFrame:New(titleText, settings, isBank, key)
@@ -382,45 +404,23 @@ do
         f.nameFilter = _G[f:GetName() .. "Search"]
 
         f.qualityFilter = mod.QualityFilter:New(f)
-        f.qualityFilter:SetPoint("BOTTOMLEFT", 14, 10)
+        f.qualityFilter:SetPoint("BOTTOM", 0, 7)
 
         f.itemFrame = mod.ItemFrame:New(f)
-        f.itemFrame:SetPoint("TOPLEFT", 14, -70)
+        f.itemFrame:SetPoint("TOPLEFT", 14, -62)
 
-        -- Token bar (honor/emblem tracking) — inventory only, at the very bottom
+        -- Bottom band: bare money bottom-right, bare currency tokens bottom-left
+        f.moneyFrame = mod.MoneyFrame:New(f)
+        f.moneyFrame:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -14, 8)
+
         if not isBank then
             f.tokenBar = mod.TokenBar:New(f)
-            f.tokenBar:SetSize(180, 19)
-            f.tokenBar:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -9, 10)
+            f.tokenBar:SetSize(220, 19)
+            f.tokenBar:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 14, 8)
             f.tokenBar:Refresh()
         end
 
-        -- Coinbox frame (pill background for money, shifted up when token bar exists)
-        local coinY = not isBank and (10 + 19 + 3) or 10
-        f.coinFrame = CreateFrame("Frame", nil, f)
-        f.coinFrame:SetSize(180, 19)
-        f.coinFrame:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -9, coinY)
-
-        local coinLeft = f.coinFrame:CreateTexture(nil, "BACKGROUND")
-        coinLeft:SetSize(8, 19)
-        coinLeft:SetPoint("LEFT", f.coinFrame, "LEFT")
-        coinLeft:SetTexture(mod.CT.coinbox)
-        coinLeft:SetTexCoord(0.03125, 0.53125, 0.289062, 0.554688)
-
-        local coinRight = f.coinFrame:CreateTexture(nil, "BACKGROUND")
-        coinRight:SetSize(8, 19)
-        coinRight:SetPoint("RIGHT", f.coinFrame, "RIGHT")
-        coinRight:SetTexture(mod.CT.coinbox)
-        coinRight:SetTexCoord(0.03125, 0.53125, 0.570312, 0.835938)
-
-        local coinMiddle = f.coinFrame:CreateTexture(nil, "BACKGROUND")
-        coinMiddle:SetPoint("TOPLEFT", coinLeft, "TOPRIGHT")
-        coinMiddle:SetPoint("BOTTOMRIGHT", coinRight, "BOTTOMLEFT")
-        coinMiddle:SetTexture(mod.CT.coinbox)
-        coinMiddle:SetTexCoord(0, 0.5, 0.0078125, 0.273438)
-
-        f.moneyFrame = mod.MoneyFrame:New(f)
-        f.moneyFrame:SetPoint("BOTTOMRIGHT", -12, coinY)
+        f:UpdateBottomLayout()
 
         f:UpdateTitleText()
         f:UpdateBagToggleHighlight()
@@ -451,7 +451,7 @@ do
 
     function InventoryFrame:OnBagToggleClick(toggle, button)
         if button == "LeftButton" then
-            _G[toggle:GetName() .. "Icon"]:SetTexCoord(0.075, 0.925, 0.075, 0.925)
+            _G[toggle:GetName() .. "Icon"]:SetTexCoord(0.08, 0.92, 0.08, 0.92)
             self:ToggleBagFrame()
         else
             if self.isBank then
@@ -474,10 +474,63 @@ do
         GameTooltip:Show()
     end
 
+    local ANIM_FADE = 0.15
+    local ANIM_STAGGER = 0.05
+
+    -- Hand-driven cascade: 3.3.5 Alpha animations misbehave with SetStartDelay
+    function InventoryFrame:AnimateBags(opening)
+        local n = #self.bagButtons
+        if n == 0 then return end
+
+        local driver = self._bagAnimDriver
+        if not driver then
+            driver = CreateFrame("Frame", nil, self)
+            self._bagAnimDriver = driver
+        end
+        driver.elapsed = 0
+        driver.opening = opening
+        driver.total = (n - 1) * ANIM_STAGGER + ANIM_FADE
+
+        for _, bag in ipairs(self.bagButtons) do
+            bag:SetAlpha(opening and 0 or 1)
+        end
+
+        local owner = self
+        driver:SetScript("OnUpdate", function(d, elapsed)
+            d.elapsed = d.elapsed + elapsed
+            local count = #owner.bagButtons
+            for i, bag in ipairs(owner.bagButtons) do
+                local step = d.opening and (i - 1) or (count - i)
+                local p = (d.elapsed - step * ANIM_STAGGER) / ANIM_FADE
+                if p < 0 then p = 0 elseif p > 1 then p = 1 end
+                bag:SetAlpha(d.opening and p or (1 - p))
+            end
+            if d.elapsed >= d.total then
+                d:SetScript("OnUpdate", nil)
+                if not d.opening and owner._bagsClosing then
+                    owner._bagsClosing = nil
+                    owner:UpdateBagFrame()
+                end
+            end
+        end)
+    end
+
     function InventoryFrame:ToggleBagFrame()
         self.sets.showBags = not self.sets.showBags
         self:UpdateBagToggleHighlight()
-        self:UpdateBagFrame()
+        if self.sets.showBags then
+            -- Cancels a pending close so a quick re-open just rebuilds
+            self._bagsClosing = nil
+            self:UpdateBagFrame()
+            self:AnimateBags(true)
+        else
+            if #self.bagButtons == 0 then
+                self:UpdateBagFrame()
+                return
+            end
+            self._bagsClosing = true
+            self:AnimateBags(false)
+        end
     end
 
     function InventoryFrame:UpdateBagFrame()
@@ -498,7 +551,8 @@ do
                 if i > 1 then
                     bag:SetPoint("TOP", self.bagButtons[i - 1], "BOTTOM", 0, -6)
                 else
-                    bag:SetPoint("TOPRIGHT", -14, -70)
+                    -- Anchored to the toggle itself so the column shares its exact X axis
+                    bag:SetPoint("TOP", _G[self:GetName() .. "BagToggle"], "BOTTOM", 0, -10)
                 end
                 bag:Show()
             end
@@ -524,6 +578,11 @@ do
 
     function InventoryFrame:GetFilter(key)
         return self.filter[key]
+    end
+
+    -- Search dims non-matching slots instead of filtering them out, so the grid never reshuffles
+    function InventoryFrame:SetSearch(text)
+        self.itemFrame:SetSearch(text)
     end
 
     function InventoryFrame:SetPlayer(player)
@@ -663,10 +722,6 @@ do
             newW = newW - 36
         end
         local newH = self:GetHeight() + ITEM_FRAME_HEIGHT_OFFSET
-        -- Reserve bottom space for token bar (19px) + gap (3px) when inventory (not bank)
-        if not self.isBank and self.tokenBar then
-            newH = newH - 25
-        end
         if not (prevW == newW and prevH == newH) then
             self.itemFrame:SetWidth(newW)
             self.itemFrame:SetHeight(newH)
@@ -674,14 +729,19 @@ do
         end
     end
 
+    -- Quality filter (off by default) sits bottom-center on the bottom band
+    function InventoryFrame:UpdateBottomLayout()
+        local cfg = mod.GetModuleConfig()
+        if cfg and cfg.show_quality_filter then
+            self.qualityFilter:Show()
+        else
+            self.qualityFilter:Hide()
+        end
+    end
+
     function InventoryFrame:UpdateClampInsets()
         local l, r, t, b
-        -- Base bottom: room for coinFrame (19px at y=10) + padding
         local bottomBase = self.bottomFilter:IsShown() and 35 or 65
-        -- Reserve extra space for token bar when inventory (not bank)
-        if not self.isBank and self.tokenBar then
-            bottomBase = bottomBase + 25
-        end
         t, b = -15, bottomBase
         if self.sideFilter:IsShown() then
             if self.sideFilter:Reversed() then
@@ -729,6 +789,7 @@ do
         if self.tokenBar then
             self.tokenBar:Refresh()
         end
+        self:UpdateItemFrameSize()
     end
 
     function InventoryFrame:OnHide()
@@ -787,55 +848,57 @@ local function CombuctorSkinFrame(frame)
     -- Adjust NineSlice so it doesn't cover the header
     if frame._BagSkin_NineSlice then
         local ns = frame._BagSkin_NineSlice
-        ns.Bg:SetPoint('TOPLEFT',     frame, 'TOPLEFT',     3, -18)
+        ns.Bg:SetPoint('TOPLEFT',     frame, 'TOPLEFT',     2, -18)
         ns.Bg:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -3, 3)
     end
 
-    -- Icon/Portrait — shrink, move above nineslice background
+    -- Tweak only the portrait's size/point: click button and hover glow follow it automatically
     local icon = _G[frame:GetName() .. 'IconButton']
     if icon then
-        icon:SetSize(36, 36)
-        icon:ClearAllPoints()
-        icon:SetPoint('TOPLEFT', frame, 'TOPLEFT', -4, 4)
         local origIcon = icon.icon
-        local portrait = icon:CreateTexture(nil, 'ARTWORK')
-        portrait:SetSize(36, 36)
-        portrait:SetPoint('CENTER', icon)
+        local portrait = frame:CreateTexture(nil, 'BORDER')
+        portrait:SetSize(56, 56)
+        portrait:SetPoint('TOPLEFT', frame, 'TOPLEFT', -3, 6)
         icon.icon = portrait
         if origIcon then
             origIcon:Hide()
         end
 
+        icon:ClearAllPoints()
+        icon:SetPoint('TOPLEFT', portrait, 'TOPLEFT', 0, 0)
+        icon:SetPoint('BOTTOMRIGHT', portrait, 'BOTTOMRIGHT', 0, 0)
+
         icon:EnableMouse(true)
-        -- Kill old SetupIconButton resize handlers that blow icon to 56-62px
-        icon:SetScript('OnMouseDown', nil)
-        icon:SetScript('OnMouseUp', nil)
+        -- Glow art is 54px of a 61px region, centered -2.5px; scale/shift so it matches the portrait
+        local hl = icon:GetHighlightTexture()
+        if hl then
+            local size = portrait:GetWidth() * 61 / 54
+            local shift = 2.5 * size / 61
+            hl:SetTexture(mod.CT.bagslot)
+            hl:SetTexCoord(358 / 512, 419 / 512, 1 / 128, 62 / 128)
+            hl:SetBlendMode('ADD')
+            hl:ClearAllPoints()
+            hl:SetSize(size, size)
+            hl:SetPoint('CENTER', portrait, 'CENTER', shift, -shift)
+        end
+        -- Click zoom: texcoord crop + center-kept 6px shrink keeps the circle inside the ring
+        local pSize = portrait:GetWidth()
+        local pPoint, pRel, pRelPoint, pX, pY = portrait:GetPoint(1)
+        icon:SetScript('OnMouseDown', function()
+            portrait:SetSize(pSize - 6, pSize - 6)
+            portrait:SetPoint(pPoint, pRel, pRelPoint, pX + 3, pY - 3)
+            portrait:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        end)
+        icon:SetScript('OnMouseUp', function()
+            portrait:SetSize(pSize, pSize)
+            portrait:SetPoint(pPoint, pRel, pRelPoint, pX, pY)
+            portrait:SetTexCoord(0, 1, 0, 1)
+        end)
         icon:SetScript('OnClick', function()
             ToggleCharacter('PaperDollFrame')
         end)
     end
 
-    -- Bag border frame on top of icon
-    if icon and not frame._BagSkin_PortraitBorder then
-        local borderFrame = CreateFrame('Frame', nil, frame)
-        borderFrame:SetSize(48, 48)
-        borderFrame:SetPoint('TOPLEFT', frame, 'TOPLEFT', -10, 8)
-
-        local iconLevel = 0
-        if icon.GetFrameLevel then
-            iconLevel = icon:GetFrameLevel()
-        elseif frame.GetFrameLevel then
-            iconLevel = frame:GetFrameLevel()
-        end
-        borderFrame:SetFrameLevel(iconLevel + 10)
-
-        local pp = borderFrame:CreateTexture(nil, 'OVERLAY')
-        pp:SetTexture(mod.CT.bag_border)
-        pp:SetAllPoints(borderFrame)
-        pp:SetDrawLayer('OVERLAY', 7)
-
-        frame._BagSkin_PortraitBorder = borderFrame
-    end
 
     -- CloseButton: reposition
     local close = _G[frame:GetName() .. 'CloseButton']
@@ -844,19 +907,17 @@ local function CombuctorSkinFrame(frame)
         close:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', 0, 0)
     end
 
-    -- Title: centered "Combuctor" label on the header border
+    -- Title keeps the dynamic "<player>'s Inventory" text; just sit it on the header band
     local title = _G[frame:GetName() .. 'Title']
     if title then
-        title:SetText('Combuctor')
         title:ClearAllPoints()
         title:SetPoint('TOP', frame, 'TOP', 0, -5)
     end
 
-    -- Bag toggle — reposition
     local bagToggle = _G[frame:GetName() .. 'BagToggle']
     if bagToggle then
         bagToggle:ClearAllPoints()
-        bagToggle:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', -14, -38)
+        bagToggle:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', -12, -30)
     end
 
     -- Portrait click opens CharacterFrame
@@ -883,45 +944,22 @@ local function CombuctorSkinItems(frame)
     end
 end
 
-local function CombuctorSkinBagSlots(frame)
-    for _, child in ipairs({ frame:GetChildren() }) do
-        if child:GetObjectType() == 'Frame' then
-            for _, subchild in ipairs({ child:GetChildren() }) do
-                if subchild:GetObjectType() == 'Button' and subchild:GetName() then
-                    local name = subchild:GetName()
-                    if name:find('DragonUI_CombuctorBag') then
-                        mod.CombuctorRetailBagSlot(subchild)
-                    end
-                end
-            end
-        end
-    end
-end
-
+-- Action-bar bag buttons (backpack, CharacterBag0-3) belong to micromenu — never skin them here.
+-- Bag dropdown buttons style themselves in Bag:New (micromenu treatment).
 local function CombuctorApplySkin()
-    -- Skin all existing Combuctor frames
     for i = 1, 2 do
         local frame = _G['DragonUI_CombuctorFrame' .. i]
         if frame then
             mod.CombuctorSkinFrame(frame)
             mod.CombuctorSkinItems(frame)
-            mod.CombuctorSkinBagSlots(frame)
-        end
-    end
-
-    -- Backpack button on main bar
-    mod.CombuctorRetailBackpackButton()
-
-    -- Character bag slots on action bar
-    for i = 0, 3 do
-        local slot = _G['CharacterBag' .. i .. 'Slot']
-        if slot then
-            mod.CombuctorRetailBagSlot(slot)
         end
     end
 end
 
 mod.CombuctorSkinFrame = CombuctorSkinFrame
 mod.CombuctorSkinItems = CombuctorSkinItems
-mod.CombuctorSkinBagSlots = CombuctorSkinBagSlots
 mod.CombuctorApplySkin = CombuctorApplySkin
+mod.SetupIconButton = SetupIconButton
+mod.SetupDragFrame = SetupDragFrame
+mod.SetupSearchBox = SetupSearchBox
+mod.SetupResetButton = SetupResetButton

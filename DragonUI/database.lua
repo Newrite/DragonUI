@@ -996,7 +996,14 @@ local defaults = {
                 y_offset = 270, -- Vertical offset
             },
             combuctor = {
-                enabled = false -- All-in-one bag replacement with filtering and search
+                enabled = false, -- All-in-one bag replacement with filtering and search
+                money_display = "icons", -- Coin display: "icons" (g/s/c icons) or "text"
+                item_scale = 1, -- Maximum item slot scale in the grid
+                item_spacing = 2, -- Gap in pixels between item slots
+                glow_quality = true, -- Colored ring on uncommon and better items
+                glow_quest = true, -- Golden border on quest items
+                glow_alpha = 1, -- Quality ring opacity
+                show_quality_filter = true, -- Rarity filter dots centered on the bottom band
             },
             bags_skin = {
                 enabled = true -- Experimental retail-style bag window skin

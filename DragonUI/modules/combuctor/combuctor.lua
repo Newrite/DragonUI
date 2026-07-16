@@ -2,7 +2,6 @@ local addon = select(2, ...)
 
 -- ============================================================================
 -- COMBUCTOR MODULE FOR DRAGONUI
--- Ported from KPack Combuctor by bkader
 -- All-in-one bag replacement with item filtering, search, bank integration.
 -- ============================================================================
 
@@ -29,22 +28,6 @@ local ContainerIDToInventoryID = ContainerIDToInventoryID
 local BankButtonIDToInvSlotID = BankButtonIDToInvSlotID
 local ContainerFrame_UpdateCooldown = ContainerFrame_UpdateCooldown
 local CooldownFrame_SetTimer = CooldownFrame_SetTimer
-local _OrigSetItemButtonTexture = SetItemButtonTexture
-local function SetItemButtonTexture(button, texture)
-    _OrigSetItemButtonTexture(button, texture)
-    local name = button:GetName()
-    if name then
-        local icon = _G[name .. 'IconTexture']
-        if icon then
-            icon:SetDrawLayer('BORDER')
-            icon:Show()
-        end
-        local count = _G[name .. 'Count']
-        if count then
-            count:SetDrawLayer('BORDER')
-        end
-    end
-end
 local SetItemButtonCount = SetItemButtonCount
 local SetItemButtonDesaturated, SetItemButtonTextureVertexColor = SetItemButtonDesaturated, SetItemButtonTextureVertexColor
 local CursorHasItem, PickupContainerItem = CursorHasItem, PickupContainerItem
@@ -86,9 +69,7 @@ end
 
 
 -- ============================================================================
--- COMBUCTOR SELF-CONTAINED RETAIL SKINNING
--- Combuctor manages its own textures and skinning functions.
--- Zero dependency on bags_skin module.
+-- SELF-CONTAINED RETAIL SKINNING (no dependency on bags_skin)
 -- ============================================================================
 
 local CombuctorAssets = addon._dir
@@ -102,14 +83,11 @@ local CT = {
     frame_metal_v     = CombuctorAssets .. 'uiframemetalvertical2x',
     frame_bg          = CombuctorAssets .. 'ui-background-rock',
     close_btn         = CombuctorAssets .. 'redbutton2x',
-    bigbag            = CombuctorAssets .. 'bigbag',
-    bigbag_highlight  = CombuctorAssets .. 'bigbagHighlight',
     bagslot           = CombuctorAssets .. 'bagslots2x',
-    bagslot_cutout    = CombuctorAssets .. 'bagslotCutout',
     bag_border        = CombuctorAssets .. 'bagborder2',
     slot_border       = CombuctorAssets .. 'ui-quickslot2',
-    coinbox           = CombuctorAssets .. 'commoncoinbox',
-    currencybox       = CombuctorAssets .. 'commoncurrencybox',
+    tabs              = CombuctorAssets .. 'uiframetabs',
+    sidetab           = CombuctorAssets .. 'sidetab',
     coinGold          = CombuctorAssets .. 'coingold',
     coinSilver        = CombuctorAssets .. 'coinsilver',
     coinCopper        = CombuctorAssets .. 'coincopper',
@@ -133,7 +111,7 @@ local function CombuctorAddNineSlice(frame)
     ns.RightEdge         = frame:CreateTexture(nil, 'OVERLAY')
 
     local bg = CreateFrame('Frame', nil, frame)
-    bg:SetPoint('TOPLEFT', frame, 'TOPLEFT', 3, -18)
+    bg:SetPoint('TOPLEFT', frame, 'TOPLEFT', 2, -18)
     bg:SetPoint('BOTTOMRIGHT', frame, 'BOTTOMRIGHT', -3, 3)
     bg:SetFrameLevel(0)
     ns.Bg = bg
@@ -144,11 +122,12 @@ local function CombuctorAddNineSlice(frame)
     bgTex:SetAlpha(0.8)
     ns.BgTex = bgTex
 
+    -- Corner variant with the big portrait circle baked in (bags_skin "large")
     local tlc = ns.TopLeftCorner
     tlc:SetTexture(CT.frame_metal)
-    tlc:SetTexCoord(0.00195312, 0.294922, 0.00195312, 0.294922)
+    tlc:SetTexCoord(0.00195312, 0.294922, 0.298828, 0.591797)
     tlc:SetSize(75, 75)
-    tlc:SetPoint('TOPLEFT', -12, 16)
+    tlc:SetPoint('TOPLEFT', -13, 16)
 
     local trc = ns.TopRightCorner
     trc:SetTexture(CT.frame_metal)
@@ -156,11 +135,12 @@ local function CombuctorAddNineSlice(frame)
     trc:SetSize(75, 75)
     trc:SetPoint('TOPRIGHT', 4, 16)
 
+    -- Same -13 as the top-left corner or the LeftEdge connects two misaligned corners
     local blc = ns.BottomLeftCorner
     blc:SetTexture(CT.frame_metal)
     blc:SetTexCoord(0.298828, 0.423828, 0.298828, 0.423828)
     blc:SetSize(32, 32)
-    blc:SetPoint('BOTTOMLEFT', -12, -3)
+    blc:SetPoint('BOTTOMLEFT', -13, -3)
 
     local brc = ns.BottomRightCorner
     brc:SetTexture(CT.frame_metal)
@@ -279,86 +259,6 @@ local function CombuctorRetailItemSlot(btn)
     end
 end
 
--- Retail-style bag slot restyle for Combuctor bag toggle buttons
-local function CombuctorRetailBagSlot(btn)
-    if btn._BagSkin_Applied then return end
-    btn._BagSkin_Applied = true
-
-    for _, region in ipairs({ btn:GetRegions() }) do
-        if region:GetObjectType() == 'Texture' then
-            local tex = region:GetTexture() or ''
-            local rname = (region.GetName and region:GetName()) or ''
-            if not rname:find('IconTexture') then
-                if tex:find('UI%-Quickslot') or tex:find('ButtonHilight') then
-                    region:SetTexture(nil)
-                    region:SetAlpha(0)
-                    region:Hide()
-                end
-            end
-        end
-    end
-
-    local size = 30.5
-
-    local nt = btn:GetNormalTexture()
-    if nt then
-        nt:SetTexture(CT.bagslot)
-        nt:SetTexCoord(0.576172, 0.695312, 0.5, 0.976562)
-        nt:SetSize(size, size)
-        nt:ClearAllPoints()
-        nt:SetPoint('CENTER', 2, -1)
-        nt:SetDrawLayer('BORDER', 0)
-        nt:SetAlpha(1)
-        nt:Show()
-    end
-
-    local ht = btn:GetHighlightTexture()
-    if ht then
-        ht:SetTexture(CT.bagslot)
-        ht:SetTexCoord(0.699219, 0.818359, 0.0078125, 0.484375)
-        ht:SetSize(size, size)
-        ht:ClearAllPoints()
-        ht:SetPoint('CENTER', 2, -1)
-        ht:SetAlpha(1)
-        ht:Show()
-    end
-
-    local pt = btn:GetPushedTexture()
-    if pt then
-        pt:SetTexture(CT.bagslot)
-        pt:SetTexCoord(0.699219, 0.818359, 0.0078125, 0.484375)
-        pt:SetSize(size, size)
-        pt:ClearAllPoints()
-        pt:SetPoint('CENTER', 2, -1)
-        pt:SetAlpha(1)
-        pt:Show()
-    end
-end
-
--- Retail-style backpack button restyle
-local function CombuctorRetailBackpackButton()
-    local btn = MainMenuBarBackpackButton
-    if not btn or btn._BagSkin_Backpack then return end
-    btn._BagSkin_Backpack = true
-
-    SetItemButtonTexture(btn, CT.bigbag)
-    btn:SetHighlightTexture(CT.bigbag_highlight)
-    btn:SetPushedTexture(CT.bigbag_highlight)
-    btn:SetCheckedTexture(CT.bigbag_highlight)
-
-    if MainMenuBarBackpackButtonNormalTexture then
-        MainMenuBarBackpackButtonNormalTexture:Hide()
-        MainMenuBarBackpackButtonNormalTexture:SetTexture()
-    end
-
-    if not btn._BagSkin_Border then
-        local border = btn:CreateTexture(nil, 'OVERLAY')
-        border:SetTexture(CT.bagslot_cutout)
-        border:SetPoint('TOPLEFT', btn, 'TOPLEFT', 0, 0)
-        border:SetPoint('BOTTOMRIGHT', btn, 'BOTTOMRIGHT', 0, 0)
-        btn._BagSkin_Border = border
-    end
-end
 
 local function GetModuleConfig()
     return addon:GetModuleConfig("combuctor")
@@ -369,7 +269,7 @@ local function IsModuleEnabled()
 end
 
 -- ============================================================================
--- MODULE INTERNALS (replaces KPack core:NewClass / core:NewModule)
+-- MODULE INTERNALS (minimal class factory and module registry)
 -- ============================================================================
 
 local mod = {}
@@ -413,11 +313,7 @@ setmetatable(mod, {
     end
 })
 
--- Expose the mod table so the split files (combuctor_data.lua,
--- combuctor_sets.lua, combuctor_classes.lua, combuctor_frame.lua,
--- combuctor_system.lua) can fetch it as `addon.CombuctorModule`.
--- (mod.CombuctorModule remains the metadata table for the module
--- registry — different namespace, intentionally.)
+-- mod.CombuctorModule stays the registry metadata table; addon.CombuctorModule is the split-file namespace.
 addon.CombuctorModule = mod
 
 -- ============================================================================
@@ -451,6 +347,11 @@ local defaults = {
         h = 512,
         sets = {},
         exclude = {}
+    },
+    guild = {
+        position = { "LEFT", nil, "LEFT", 24, 0 },
+        w = 512,
+        h = 512
     }
 }
 
@@ -492,6 +393,7 @@ local function SetupDatabase()
     if not addon.db.profile.modules then addon.db.profile.modules = {} end
     if not addon.db.profile.modules.combuctor then addon.db.profile.modules.combuctor = {} end
 
+    -- Option defaults live in database.lua (modules.combuctor); only the frame layout db is lazy
     local mc = addon.db.profile.modules.combuctor
     if not mc.db then mc.db = {} end
     if mc.money_display == nil then mc.money_display = "icons" end
@@ -517,6 +419,17 @@ local function SetupDatabase()
                 for kk, vv in pairs(v) do DB.bank[k][kk] = vv end
             else
                 DB.bank[k] = v
+            end
+        end
+    end
+    if not DB.guild then
+        DB.guild = {}
+        for k, v in pairs(defaults.guild) do
+            if type(v) == "table" then
+                DB.guild[k] = {}
+                for kk, vv in pairs(v) do DB.guild[k][kk] = vv end
+            else
+                DB.guild[k] = v
             end
         end
     end
@@ -569,14 +482,6 @@ function mod:GetProfile()
     return DB
 end
 
-function mod:SetMaxItemScale(scale)
-    if DB then DB.maxScale = scale or 1 end
-end
-
-function mod:GetMaxItemScale()
-    return (DB and DB.maxScale) or 1
-end
-
 -- ============================================================================
 -- BAG TOGGLE
 -- ============================================================================
@@ -615,10 +520,7 @@ function mod:Toggle(bag)
 end
 
 -- ============================================================================
--- SHARED LOCALS → mod.X PROMOTIONS
--- Promotes file-local upvalues to mod fields so downstream split files can
--- access them via mod.X after extraction (PR #2). The locals remain valid
--- as upvalues within this file; behaviors are unchanged.
+-- SHARED LOCALS EXPORTED FOR THE SPLIT FILES
 -- ============================================================================
 
 mod.CT = CT
@@ -633,8 +535,6 @@ mod.SetupDatabase = SetupDatabase
 mod.CombuctorModule = CombuctorModule
 mod.CombuctorAddNineSlice = CombuctorAddNineSlice
 mod.CombuctorRetailItemSlot = CombuctorRetailItemSlot
-mod.CombuctorRetailBagSlot = CombuctorRetailBagSlot
-mod.CombuctorRetailBackpackButton = CombuctorRetailBackpackButton
 mod.GetSetDisplayName = GetSetDisplayName
 mod.TEXTURE_ITEM_QUEST_BORDER = TEXTURE_ITEM_QUEST_BORDER
 mod.TEXTURE_ITEM_QUEST_BANG = TEXTURE_ITEM_QUEST_BANG
