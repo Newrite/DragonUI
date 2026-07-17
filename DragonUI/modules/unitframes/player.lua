@@ -2820,6 +2820,8 @@ local function SetupPlayerEvents()
                     PlayerFrameManaBar:GetScript("OnEvent")(PlayerFrameManaBar, "UNIT_POWER_UPDATE", "player")
                     -- FIX: Restore white tint for texture purity
                     UpdateManaBarColor(PlayerFrameManaBar)
+                    -- Re-apply fat mana bar hide state after vehicle exit
+                    ApplyFatManaBar()
                 end
             end
         end
@@ -2962,6 +2964,16 @@ end)
 hooksecurefunc("UnitFrameManaBar_Update", function(statusbar, unit)
     if unit == "player" then
         local config = GetPlayerConfig()
+        -- Re-apply fat mana bar hide state on every power update.
+        -- Blizzard native code may re-show PlayerFrameManaBar; this lightweight
+        -- guard re-hides it without the layout overhead of ApplyFatManaBar().
+        if config and config.fat_healthbar and config.fat_manabar_hidden and not IsInVehicle() then
+            PlayerFrameManaBar:Hide()
+            local alternateManaBar = _G.PlayerFrameAlternateManaBar
+            if alternateManaBar then
+                alternateManaBar:Hide()
+            end
+        end
         if config and config.alwaysShowAlternateManaText then
             -- Always visible mode: update immediately
             UpdateAlternateManaText()
