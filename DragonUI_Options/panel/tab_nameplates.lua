@@ -550,6 +550,112 @@ local function BuildLayoutSubTab(scroll)
         callback = RefreshNameplates,
     })
 
+    local function IsPersonalResourceVertical()
+        return C:GetDBValue(DB .. ".personalResourceOrientation") == "vertical"
+    end
+
+    local function IsPersonalHealthHidden()
+        return not C:GetDBValue(DB .. ".personalResourceShowHealth")
+    end
+
+    local function IsPersonalPowerHidden()
+        return not C:GetDBValue(DB .. ".personalResourceShowPower")
+    end
+
+    C:AddToggle(personalResource, {
+        label = LO["Show Personal Resource Health Bar"],
+        dbPath = DB .. ".personalResourceShowHealth",
+        callback = RefreshAndRebuildNameplates,
+    })
+
+    C:AddToggle(personalResource, {
+        label = LO["Show Personal Resource Power Bar"],
+        dbPath = DB .. ".personalResourceShowPower",
+        callback = RefreshAndRebuildNameplates,
+    })
+
+    C:AddSlider(personalResource, {
+        label = LO["Personal Resource Scale"],
+        dbPath = DB .. ".personalResourceScale",
+        min = 0.5, max = 2.5, step = 0.05,
+        isPercent = true,
+        width = 220,
+        callback = RefreshNameplates,
+    })
+
+    C:AddSlider(personalResource, {
+        label = LO["Personal Resource Width"],
+        desc = LO["Horizontal bar width. Set to 0 to inherit the regular nameplate width."],
+        dbPath = DB .. ".personalResourceWidth",
+        min = 0, max = 400, step = 1,
+        width = 220,
+        disabled = IsPersonalResourceVertical,
+        callback = RefreshNameplates,
+    })
+
+    C:AddSlider(personalResource, {
+        label = LO["Personal Resource Height"],
+        desc = LO["Horizontal bar height. Set to 0 to inherit the regular nameplate height."],
+        dbPath = DB .. ".personalResourceHeight",
+        min = 0, max = 60, step = 1,
+        width = 220,
+        disabled = IsPersonalResourceVertical,
+        callback = RefreshNameplates,
+    })
+
+    C:AddDropdown(personalResource, {
+        label = LO["Personal Resource Orientation"],
+        desc = LO["Arrange personal health and power as horizontal bars or vertical bars side by side."],
+        dbPath = DB .. ".personalResourceOrientation",
+        values = {
+            horizontal = LO["Horizontal"],
+            vertical = LO["Vertical"],
+        },
+        width = 220,
+        callback = RefreshAndRebuildNameplates,
+    })
+
+    C:AddSlider(personalResource, {
+        label = LO["Personal Resource Vertical Width"],
+        dbPath = DB .. ".personalResourceVerticalWidth",
+        min = 4, max = 40, step = 1,
+        width = 220,
+        disabled = function() return not IsPersonalResourceVertical() end,
+        callback = RefreshNameplates,
+    })
+
+    C:AddSlider(personalResource, {
+        label = LO["Personal Resource Vertical Height"],
+        dbPath = DB .. ".personalResourceVerticalHeight",
+        min = 40, max = 300, step = 1,
+        width = 220,
+        disabled = function() return not IsPersonalResourceVertical() end,
+        callback = RefreshNameplates,
+    })
+
+    C:AddSlider(personalResource, {
+        label = LO["Personal Resource Vertical Gap"],
+        dbPath = DB .. ".personalResourceVerticalGap",
+        min = 0, max = 30, step = 1,
+        width = 220,
+        disabled = function() return not IsPersonalResourceVertical() end,
+        callback = RefreshNameplates,
+    })
+
+    C:AddDropdown(personalResource, {
+        label = LO["Personal Resource Vertical Order"],
+        dbPath = DB .. ".personalResourceVerticalHealthSide",
+        values = {
+            left = LO["Health Left, Power Right"],
+            right = LO["Power Left, Health Right"],
+        },
+        width = 220,
+        disabled = function()
+            return not IsPersonalResourceVertical() or IsPersonalHealthHidden() or IsPersonalPowerHidden()
+        end,
+        callback = RefreshNameplates,
+    })
+
     local personalResourceTextFormats = {
         none = LO["None"],
         current = LO["Current Value Only"],
@@ -564,6 +670,7 @@ local function BuildLayoutSubTab(scroll)
         dbPath = DB .. ".personalResourceHealthText",
         values = personalResourceTextFormats,
         width = 220,
+        disabled = IsPersonalHealthHidden,
         callback = RefreshNameplates,
     })
 
@@ -573,14 +680,36 @@ local function BuildLayoutSubTab(scroll)
         dbPath = DB .. ".personalResourcePowerText",
         values = personalResourceTextFormats,
         width = 220,
+        disabled = IsPersonalPowerHidden,
         callback = RefreshNameplates,
     })
 
     C:AddToggle(personalResource, {
         label = LO["Show Personal Resource Absorb"],
-        desc = LO["Show the player's active absorb shield over the personal health bar."],
+        desc = LO["Show absorb effects on the player from any tracked source over the personal health bar."],
         dbPath = DB .. ".personalResourceShowAbsorb",
-        callback = RefreshNameplates,
+        disabled = IsPersonalHealthHidden,
+        callback = RefreshAndRebuildNameplates,
+    })
+
+    C:AddButton(personalResource, {
+        label = LO["Test Personal Resource Absorb"],
+        desc = LO["Show a simulated absorb shield for 5 seconds and report the all-source amount tracked by AbsorbsMonitor."],
+        width = 220,
+        disabled = function()
+            return IsPersonalHealthHidden() or not C:GetDBValue(DB .. ".personalResourceShowAbsorb")
+        end,
+        callback = function()
+            local gather = addon.Nameplates and addon.Nameplates.gather
+            if not gather then return end
+            local tracked = gather.GetTrackedPlayerAbsorbAmount and gather.GetTrackedPlayerAbsorbAmount() or 0
+            print("|cFF00FF00[DragonUI]|r " .. string.format(
+                LO["AbsorbsMonitor tracked absorb: %s. Showing a simulated shield for 5 seconds."],
+                tostring(tracked)))
+            if gather.StartPersonalResourceAbsorbPreview then
+                gather.StartPersonalResourceAbsorbPreview()
+            end
+        end,
     })
 
     local clickboxSection = C:AddSection(scroll, LO["Clickbox"])

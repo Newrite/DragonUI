@@ -454,7 +454,8 @@ local function EngineOnUpdate(_, elapsed)
     if NP.module._driftElapsed >= DRIFT_INTERVAL then
         NP.module._driftElapsed = 0
         NP.gather.ProcessReactionDrift()
-        if NP.config.GetCfg().personalResourceShowAbsorb ~= false then
+        local cfg = NP.config.GetCfg()
+        if cfg.personalResourceShowAbsorb ~= false and cfg.personalResourceShowHealth ~= false then
             for _, plateData in pairs(NP.module.plates) do
                 local plate = plateData.plate
                 if plate and plate:IsShown() and NP.identity.IsPersonalResourcePlate(plateData) then
@@ -1049,6 +1050,7 @@ local function RunNameplatesRestore()
     NP.module._clickboxNativeW = nil
     NP.module._clickboxNativeH = nil
     NP.module._clickboxSecurePending = nil
+    NP.module._personalAbsorbPreviewUntil = nil
     NP.module.applied = false
 end
 

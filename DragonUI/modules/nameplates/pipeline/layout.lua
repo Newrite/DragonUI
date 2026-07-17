@@ -1018,6 +1018,17 @@ function NP.layout.LayoutMinaStack(plateData)
     local visW, barH = NP.config.GetBarRefSize()
     local cfg = NP.config.GetCfg()
     local isPersonalResource = NP.identity.IsPersonalResourcePlate(plateData)
+    local isVertical = isPersonalResource and cfg.personalResourceOrientation == "vertical"
+    local showHealth = not isPersonalResource or cfg.personalResourceShowHealth ~= false
+    local showPower = not isPersonalResource or cfg.personalResourceShowPower ~= false
+    local horizontalWidth = isPersonalResource and tonumber(cfg.personalResourceWidth) or nil
+    local horizontalHeight = isPersonalResource and tonumber(cfg.personalResourceHeight) or nil
+    horizontalWidth = horizontalWidth and horizontalWidth > 0 and horizontalWidth or visW
+    horizontalHeight = horizontalHeight and horizontalHeight > 0 and horizontalHeight or barH
+    local verticalWidth = cfg.personalResourceVerticalWidth or 14
+    local verticalHeight = cfg.personalResourceVerticalHeight or 120
+    local verticalGap = cfg.personalResourceVerticalGap or 4
+    local healthOnRight = cfg.personalResourceVerticalHealthSide == "right"
     local ox, oy
     if isPersonalResource then
         ox = cfg.personalResourceOffsetX or 0
@@ -1030,20 +1041,53 @@ function NP.layout.LayoutMinaStack(plateData)
     if visualRoot and visualRoot.SetPoint then
         visualRoot:ClearAllPoints()
         visualRoot:SetPoint("TOP", plate, "TOP", 0, 0)
+        visualRoot:SetScale(isPersonalResource and (cfg.personalResourceScale or 1) or 1)
     end
 
     hp:ClearAllPoints()
-    hp:SetSize(visW, barH)
-    hp:SetPoint("CENTER", visualRoot, "CENTER", ox, oy)
+    hp:SetOrientation(isVertical and "VERTICAL" or "HORIZONTAL")
+    if isVertical then
+        hp:SetSize(verticalWidth, verticalHeight)
+        if showHealth and showPower then
+            if healthOnRight then
+                hp:SetPoint("LEFT", visualRoot, "CENTER", ox + verticalGap / 2, oy)
+            else
+                hp:SetPoint("RIGHT", visualRoot, "CENTER", ox - verticalGap / 2, oy)
+            end
+        else
+            hp:SetPoint("CENTER", visualRoot, "CENTER", ox, oy)
+        end
+    else
+        hp:SetSize(horizontalWidth, horizontalHeight)
+        hp:SetPoint("CENTER", visualRoot, "CENTER", ox, oy)
+    end
     if hp.minaBg then
         local bgTex = (cfg.healthBarBackground == "castbar") and "bar-bg" or "bar-bg-health"
         hp.minaBg:SetTexture(C.MINA_TEX .. bgTex)
     end
 
     po:ClearAllPoints()
-    po:SetSize(visW, barH)
+    po:SetOrientation(isVertical and "VERTICAL" or "HORIZONTAL")
     local stackGap = NP.config.GetStackBarGap()
-    po:SetPoint("TOP", hp, "BOTTOM", 0, -stackGap)
+    if isVertical then
+        po:SetSize(verticalWidth, verticalHeight)
+        if showHealth and showPower then
+            if healthOnRight then
+                po:SetPoint("RIGHT", visualRoot, "CENTER", ox - verticalGap / 2, oy)
+            else
+                po:SetPoint("LEFT", visualRoot, "CENTER", ox + verticalGap / 2, oy)
+            end
+        else
+            po:SetPoint("CENTER", visualRoot, "CENTER", ox, oy)
+        end
+    else
+        po:SetSize(horizontalWidth, horizontalHeight)
+        if isPersonalResource and not showHealth then
+            po:SetPoint("CENTER", visualRoot, "CENTER", ox, oy)
+        else
+            po:SetPoint("TOP", hp, "BOTTOM", 0, -stackGap)
+        end
+    end
     if po.minaBg then
         local poBgTex = (cfg.powerBarBackground == "castbar") and "bar-bg" or "bar-bg-power"
         po.minaBg:SetTexture(C.MINA_TEX .. poBgTex)
@@ -1051,9 +1095,9 @@ function NP.layout.LayoutMinaStack(plateData)
 
     if target then
         target:ClearAllPoints()
-        target:SetSize(visW + 1, barH + 1)
+        target:SetSize(hp:GetWidth() + 1, hp:GetHeight() + 1)
         target:SetPoint("CENTER", hp, "CENTER", 0, 0)
-        local arrowSize = math.max(barH * 2, 14)
+        local arrowSize = math.max((isVertical and verticalWidth or barH) * 2, 14)
         target.arrowL:SetSize(arrowSize, arrowSize)
         target.arrowR:SetSize(arrowSize, arrowSize)
     end
@@ -1124,44 +1168,58 @@ function NP.layout.LayoutMinaStack(plateData)
 
     if plateData.minaHpTextRow then
         plateData.minaHpTextRow:ClearAllPoints()
-        plateData.minaHpTextRow:SetAllPoints(hp)
+        if isVertical then
+            plateData.minaHpTextRow:SetSize(math.max(100, visW), 12)
+            plateData.minaHpTextRow:SetPoint("BOTTOM", visualRoot, "CENTER", ox,
+                oy + verticalHeight / 2 + 3)
+        else
+            plateData.minaHpTextRow:SetAllPoints(hp)
+        end
     end
+    local healthTextAnchor = isVertical and plateData.minaHpTextRow or hp
     if plateData.minaHpNum then
         plateData.minaHpNum:ClearAllPoints()
         if isPersonalResource and cfg.personalResourceHealthText ~= "current_percent" then
             plateData.minaHpNum:SetJustifyH("CENTER")
-            plateData.minaHpNum:SetPoint("LEFT", hp, "LEFT", 2, 0)
-            plateData.minaHpNum:SetPoint("RIGHT", hp, "RIGHT", -2, 0)
+            plateData.minaHpNum:SetPoint("LEFT", healthTextAnchor, "LEFT", 2, 0)
+            plateData.minaHpNum:SetPoint("RIGHT", healthTextAnchor, "RIGHT", -2, 0)
         else
             plateData.minaHpNum:SetJustifyH("LEFT")
-            plateData.minaHpNum:SetPoint("LEFT", hp, "LEFT", 4, 0)
+            plateData.minaHpNum:SetPoint("LEFT", healthTextAnchor, "LEFT", 4, 0)
         end
     end
     if plateData.minaHpBarPct then
         plateData.minaHpBarPct:ClearAllPoints()
-        plateData.minaHpBarPct:SetPoint("RIGHT", hp, "RIGHT", -4, 0)
+        plateData.minaHpBarPct:SetPoint("RIGHT", healthTextAnchor, "RIGHT", -4, 0)
     end
 
     if plateData.minaPoTextRow then
         plateData.minaPoTextRow:ClearAllPoints()
-        plateData.minaPoTextRow:SetAllPoints(po)
+        if isVertical then
+            plateData.minaPoTextRow:SetSize(math.max(100, visW), 12)
+            plateData.minaPoTextRow:SetPoint("TOP", visualRoot, "CENTER", ox,
+                oy - verticalHeight / 2 - 3)
+        else
+            plateData.minaPoTextRow:SetAllPoints(po)
+        end
     end
 
+    local powerTextAnchor = isVertical and plateData.minaPoTextRow or po
     if plateData.minaPoCur then
         plateData.minaPoCur:ClearAllPoints()
         if isPersonalResource and cfg.personalResourcePowerText ~= "current_percent" then
             plateData.minaPoCur:SetJustifyH("CENTER")
-            plateData.minaPoCur:SetPoint("LEFT", po, "LEFT", 2, 0)
-            plateData.minaPoCur:SetPoint("RIGHT", po, "RIGHT", -2, 0)
+            plateData.minaPoCur:SetPoint("LEFT", powerTextAnchor, "LEFT", 2, 0)
+            plateData.minaPoCur:SetPoint("RIGHT", powerTextAnchor, "RIGHT", -2, 0)
         else
             plateData.minaPoCur:SetJustifyH("LEFT")
-            plateData.minaPoCur:SetPoint("LEFT", po, "LEFT", 4, 0)
+            plateData.minaPoCur:SetPoint("LEFT", powerTextAnchor, "LEFT", 4, 0)
         end
     end
 
     if plateData.minaPoPct then
         plateData.minaPoPct:ClearAllPoints()
-        plateData.minaPoPct:SetPoint("RIGHT", po, "RIGHT", -4, 0)
+        plateData.minaPoPct:SetPoint("RIGHT", powerTextAnchor, "RIGHT", -4, 0)
     end
 
     if plateData.minaDebuffHost then

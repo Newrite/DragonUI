@@ -112,7 +112,7 @@ function NP.gather.ComputeVisualState(plateData, snapshot, context, reason)
         return {
             reason = reason,
             isPersonalResource = true,
-            showPower = true,
+            showPower = npCfg.personalResourceShowPower ~= false,
             showDebuffs = false,
             showCastbar = false,
             showTargetHighlight = false,
@@ -577,6 +577,17 @@ local function GetPlayerAbsorbAmount()
     return tonumber(AbsorbsMonitor.Unit_Total(playerGUID)) or 0
 end
 
+function NP.gather.GetTrackedPlayerAbsorbAmount()
+    return GetPlayerAbsorbAmount()
+end
+
+function NP.gather.StartPersonalResourceAbsorbPreview()
+    NP.module._personalAbsorbPreviewUntil = (GetTime and GetTime() or 0) + 5
+    if addon.RefreshNameplates then
+        addon:RefreshNameplates()
+    end
+end
+
 local function FormatResourceValue(value)
     value = math.floor((tonumber(value) or 0) + 0.5)
     return addon.TextSystem and addon.TextSystem.AbbreviateLargeNumbers(value) or tostring(value)
@@ -630,12 +641,19 @@ local function SetPersonalResourceText(plateData, primaryKey, secondaryKey, cach
     end
 end
 
-local function SyncPersonalResourceAbsorb(plateData, current, maximum, enabled)
+local function SyncPersonalResourceAbsorb(plateData, current, maximum, enabled, isVertical)
     local absorb = plateData.minaHpAbsorb
     local overAbsorb = plateData.minaHpOverAbsorb
     if not absorb then return end
 
     local amount = enabled and GetPlayerAbsorbAmount() or 0
+    local now = GetTime and GetTime() or 0
+    local previewUntil = NP.module._personalAbsorbPreviewUntil
+    if enabled and previewUntil and now < previewUntil then
+        amount = maximum * 0.35
+    elseif previewUntil then
+        NP.module._personalAbsorbPreviewUntil = nil
+    end
     if amount <= 0 or not maximum or maximum <= 0 then
         absorb:Hide()
         if overAbsorb then overAbsorb:Hide() end
@@ -643,19 +661,28 @@ local function SyncPersonalResourceAbsorb(plateData, current, maximum, enabled)
     end
 
     local bar = plateData.minaHp
-    local width = math.max(1, math.min(amount / maximum, 1) * bar:GetWidth())
     absorb:ClearAllPoints()
-    absorb:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -1, -1)
-    absorb:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", -1, 1)
-    absorb:SetWidth(width)
+    if isVertical then
+        absorb:SetSize(math.max(1, bar:GetWidth() - 2),
+            math.max(1, math.min(amount / maximum, 1) * bar:GetHeight()))
+        absorb:SetPoint("TOP", bar, "TOP", 0, -1)
+    else
+        absorb:SetSize(math.max(1, math.min(amount / maximum, 1) * bar:GetWidth()),
+            math.max(1, bar:GetHeight() - 2))
+        absorb:SetPoint("RIGHT", bar, "RIGHT", -1, 0)
+    end
     absorb:Show()
 
     if overAbsorb then
         if current + amount >= maximum then
             overAbsorb:ClearAllPoints()
-            overAbsorb:SetPoint("TOPRIGHT", bar, "TOPRIGHT", 4, 1)
-            overAbsorb:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 4, -1)
-            overAbsorb:SetWidth(8)
+            if isVertical then
+                overAbsorb:SetSize(bar:GetWidth() + 2, 8)
+                overAbsorb:SetPoint("TOP", bar, "TOP", 0, 4)
+            else
+                overAbsorb:SetSize(8, bar:GetHeight() + 2)
+                overAbsorb:SetPoint("RIGHT", bar, "RIGHT", 4, 0)
+            end
             overAbsorb:Show()
         else
             overAbsorb:Hide()
@@ -669,6 +696,15 @@ function NP.gather.SyncHealth(plateData, value)
     if not src or not bar then return end
 
     local isPersonalResource = NP.identity.IsPersonalResourcePlate(plateData)
+    if isPersonalResource and NP.config.GetCfg().personalResourceShowHealth == false then
+        bar:Hide()
+        if plateData.minaHpPct then plateData.minaHpPct:Hide() end
+        if plateData.minaHpNum then plateData.minaHpNum:Hide() end
+        if plateData.minaHpBarPct then plateData.minaHpBarPct:Hide() end
+        if plateData.minaHpAbsorb then plateData.minaHpAbsorb:Hide() end
+        if plateData.minaHpOverAbsorb then plateData.minaHpOverAbsorb:Hide() end
+        return
+    end
     if not isPersonalResource then
         if plateData.minaHpAbsorb then plateData.minaHpAbsorb:Hide() end
         if plateData.minaHpOverAbsorb then plateData.minaHpOverAbsorb:Hide() end
@@ -734,7 +770,8 @@ function NP.gather.SyncHealth(plateData, value)
         local primary, secondary = BuildPersonalResourceText(cfg.personalResourceHealthText, cur, maxVal)
         SetPersonalResourceText(plateData, "minaHpNum", "minaHpBarPct", "_lastPersonalHealthText",
             primary, secondary)
-        SyncPersonalResourceAbsorb(plateData, cur, maxVal, cfg.personalResourceShowAbsorb ~= false)
+        SyncPersonalResourceAbsorb(plateData, cur, maxVal, cfg.personalResourceShowAbsorb ~= false,
+            cfg.personalResourceOrientation == "vertical")
         return
     end
 
@@ -800,6 +837,11 @@ function NP.gather.SyncPower(plateData, unit)
     end
 
     local cfg = NP.config.GetCfg()
+    if isPersonalResource and cfg.personalResourceShowPower == false then
+        HidePowerBar(plateData)
+        finish()
+        return
+    end
     if cfg.showPowerBar == false and not isPersonalResource then
         HidePowerBar(plateData)
         finish()
