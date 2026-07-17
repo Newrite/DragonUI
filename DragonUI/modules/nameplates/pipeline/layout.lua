@@ -1026,6 +1026,35 @@ local function SetMinaBarOrientation(bar, vertical)
     SetTextureVertical(bar.minaBrTex or (bar.minaBr and bar.minaBr.minaTexture), vertical)
 end
 
+function NP.layout.SyncPersonalResourceScale(plateData, cfg)
+    if not plateData or not NP.identity.IsPersonalResourcePlate(plateData) then return end
+    local visualRoot = plateData.visualRoot
+    local plate = plateData.plate
+    if not visualRoot or not plate then return end
+
+    cfg = cfg or NP.config.GetCfg()
+    local stabilize = cfg.personalResourceFixedPosition == true
+    local scale = tonumber(cfg.personalResourceScale) or 1
+    if visualRoot.SetIgnoreParentScale then
+        visualRoot:SetIgnoreParentScale(stabilize)
+        plateData._personalResourceIgnoreParentScale = stabilize and true or nil
+        plateData._personalResourceScaleFallback = nil
+    elseif stabilize and plate.GetEffectiveScale and UIParent and UIParent.GetEffectiveScale then
+        local parentScale = plate:GetEffectiveScale()
+        local uiScale = UIParent:GetEffectiveScale()
+        if parentScale and parentScale > 0 and uiScale and uiScale > 0 then
+            scale = scale * uiScale / parentScale
+            plateData._personalResourceScaleFallback = true
+        end
+    else
+        plateData._personalResourceScaleFallback = nil
+    end
+
+    if not visualRoot.GetScale or math.abs((visualRoot:GetScale() or 1) - scale) >= 0.0005 then
+        visualRoot:SetScale(scale)
+    end
+end
+
 function NP.layout.LayoutMinaStack(plateData)
     local border = plateData.border
     local hp = plateData.minaHp
@@ -1036,7 +1065,6 @@ function NP.layout.LayoutMinaStack(plateData)
     local visW, barH = NP.config.GetBarRefSize()
     local cfg = NP.config.GetCfg()
     local isPersonalResource = NP.identity.IsPersonalResourcePlate(plateData)
-    local fixedPosition = isPersonalResource and cfg.personalResourceFixedPosition == true
     local isVertical = isPersonalResource and cfg.personalResourceOrientation == "vertical"
     local showHealth = not isPersonalResource or cfg.personalResourceShowHealth ~= false
     local showPower = not isPersonalResource or cfg.personalResourceShowPower ~= false
@@ -1049,9 +1077,7 @@ function NP.layout.LayoutMinaStack(plateData)
     local verticalGap = cfg.personalResourceVerticalGap or 4
     local healthOnRight = cfg.personalResourceVerticalHealthSide == "right"
     local ox, oy
-    if fixedPosition then
-        ox, oy = 0, 0
-    elseif isPersonalResource then
+    if isPersonalResource then
         ox = cfg.personalResourceOffsetX or 0
         oy = cfg.personalResourceOffsetY or 0
     else
@@ -1060,34 +1086,23 @@ function NP.layout.LayoutMinaStack(plateData)
     local visualRoot = plateData.visualRoot or plateData.plate
     local plate = plateData.plate
     if visualRoot and visualRoot.SetPoint then
-        local desiredParent = fixedPosition and UIParent or plate
-        local parentChanged = visualRoot.GetParent and visualRoot:GetParent() ~= desiredParent
-        if parentChanged and visualRoot.SetParent then
-            visualRoot:SetParent(desiredParent)
+        if visualRoot.GetParent and visualRoot:GetParent() ~= plate and visualRoot.SetParent then
+            visualRoot:SetParent(plate)
         end
         visualRoot:ClearAllPoints()
-        if fixedPosition then
-            visualRoot:SetPoint("CENTER", UIParent, "CENTER",
-                cfg.personalResourceFixedX or 0, cfg.personalResourceFixedY or -160)
-            if visualRoot.SetFrameStrata then visualRoot:SetFrameStrata("MEDIUM") end
-            if visualRoot.SetFrameLevel then visualRoot:SetFrameLevel(20) end
+        visualRoot:SetPoint("TOP", plate, "TOP", 0, 0)
+
+        if isPersonalResource then
+            NP.layout.SyncPersonalResourceScale(plateData, cfg)
         else
-            visualRoot:SetPoint("TOP", plate, "TOP", 0, 0)
-            if visualRoot.SetFrameStrata and plate.GetFrameStrata then
-                visualRoot:SetFrameStrata(plate:GetFrameStrata())
+            if visualRoot.SetIgnoreParentScale and plateData._personalResourceIgnoreParentScale then
+                visualRoot:SetIgnoreParentScale(false)
             end
-            if visualRoot.SetFrameLevel and plate.GetFrameLevel then
-                visualRoot:SetFrameLevel(plate:GetFrameLevel())
-            end
+            plateData._personalResourceIgnoreParentScale = nil
+            plateData._personalResourceScaleFallback = nil
+            visualRoot:SetScale(1)
         end
-        visualRoot:SetScale(isPersonalResource and (cfg.personalResourceScale or 1) or 1)
         visualRoot:Show()
-        local previousFixedPosition = plateData._personalResourceFixedApplied == true
-        if parentChanged or previousFixedPosition ~= fixedPosition then
-            plateData._levelsApplied = nil
-            ApplyCreationFrameLevels(plateData)
-        end
-        plateData._personalResourceFixedApplied = fixedPosition
     end
 
     hp:ClearAllPoints()

@@ -532,15 +532,11 @@ local function BuildLayoutSubTab(scroll)
 
     local personalResource = C:AddSection(scroll, LO["Personal Resource Display"])
     C:AddDescription(personalResource,
-        LO["Configure DragonUI health and resource bars in native-following or fixed-screen mode."])
-
-    local function IsPersonalResourceFixed()
-        return C:GetDBValue(DB .. ".personalResourceFixedPosition") == true
-    end
+        LO["Configure DragonUI health and resource bars relative to the native personal resource anchor."])
 
     C:AddToggle(personalResource, {
-        label = LO["Fix Personal Resource Position to Screen"],
-        desc = LO["Detach the DragonUI personal resource bars from the camera-driven native anchor."],
+        label = LO["Stabilize Personal Resource Position"],
+        desc = LO["Keep the DragonUI personal resource bars attached to the character while compensating for camera-driven native scale."],
         dbPath = DB .. ".personalResourceFixedPosition",
         callback = RefreshAndRebuildNameplates,
     })
@@ -551,7 +547,6 @@ local function BuildLayoutSubTab(scroll)
         dbPath = DB .. ".personalResourceOffsetX",
         min = -500, max = 500, step = 1,
         width = 200,
-        disabled = IsPersonalResourceFixed,
         callback = RefreshNameplates,
     })
 
@@ -561,27 +556,6 @@ local function BuildLayoutSubTab(scroll)
         dbPath = DB .. ".personalResourceOffsetY",
         min = -500, max = 500, step = 1,
         width = 200,
-        disabled = IsPersonalResourceFixed,
-        callback = RefreshNameplates,
-    })
-
-    C:AddSlider(personalResource, {
-        label = LO["Personal Resource Screen X"],
-        desc = LO["Fixed horizontal position relative to the center of the screen."],
-        dbPath = DB .. ".personalResourceFixedX",
-        min = -1000, max = 1000, step = 1,
-        width = 200,
-        disabled = function() return not IsPersonalResourceFixed() end,
-        callback = RefreshNameplates,
-    })
-
-    C:AddSlider(personalResource, {
-        label = LO["Personal Resource Screen Y"],
-        desc = LO["Fixed vertical position relative to the center of the screen."],
-        dbPath = DB .. ".personalResourceFixedY",
-        min = -1000, max = 1000, step = 1,
-        width = 200,
-        disabled = function() return not IsPersonalResourceFixed() end,
         callback = RefreshNameplates,
     })
 

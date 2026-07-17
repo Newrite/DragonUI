@@ -1037,15 +1037,11 @@ L["Health Left, Power Right"] = true
 L["Power Left, Health Right"] = true
 L["Horizontal"] = true
 L["Vertical"] = true
-L["Configure DragonUI health and resource bars in native-following or fixed-screen mode."] = true
-L["Fix Personal Resource Position to Screen"] = true
-L["Detach the DragonUI personal resource bars from the camera-driven native anchor."] = true
+L["Configure DragonUI health and resource bars relative to the native personal resource anchor."] = true
+L["Stabilize Personal Resource Position"] = true
+L["Keep the DragonUI personal resource bars attached to the character while compensating for camera-driven native scale."] = true
 L["Horizontal offset from the native personal resource anchor."] = true
 L["Vertical offset from the native personal resource anchor."] = true
-L["Personal Resource Screen X"] = true
-L["Fixed horizontal position relative to the center of the screen."] = true
-L["Personal Resource Screen Y"] = true
-L["Fixed vertical position relative to the center of the screen."] = true
 
 -- Party text format values
 L["Current Value Only (2345)"] = true

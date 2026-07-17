@@ -926,15 +926,11 @@ L["Health Left, Power Right"] = "Здоровье слева, ресурс сп�
 L["Power Left, Health Right"] = "Ресурс слева, здоровье справа"
 L["Horizontal"] = "Горизонтально"
 L["Vertical"] = "Вертикально"
-L["Configure DragonUI health and resource bars in native-following or fixed-screen mode."] = "Настройка полос здоровья и ресурса DragonUI в режиме привязки к стандартному PRD или фиксации на экране."
-L["Fix Personal Resource Position to Screen"] = "Фиксировать позицию PRD на экране"
-L["Detach the DragonUI personal resource bars from the camera-driven native anchor."] = "Отвязать полосы личного ресурса DragonUI от стандартной точки, положение которой зависит от камеры."
+L["Configure DragonUI health and resource bars relative to the native personal resource anchor."] = "Настройка полос здоровья и ресурса DragonUI относительно стандартной точки привязки личного ресурса."
+L["Stabilize Personal Resource Position"] = "Стабилизировать позицию PRD"
+L["Keep the DragonUI personal resource bars attached to the character while compensating for camera-driven native scale."] = "Оставить полосы личного ресурса DragonUI привязанными к персонажу, компенсируя изменение стандартного масштаба из-за камеры."
 L["Horizontal offset from the native personal resource anchor."] = "Горизонтальное смещение относительно стандартной точки привязки личного ресурса."
 L["Vertical offset from the native personal resource anchor."] = "Вертикальное смещение относительно стандартной точки привязки личного ресурса."
-L["Personal Resource Screen X"] = "Позиция PRD на экране по X"
-L["Fixed horizontal position relative to the center of the screen."] = "Фиксированная горизонтальная позиция относительно центра экрана."
-L["Personal Resource Screen Y"] = "Позиция PRD на экране по Y"
-L["Fixed vertical position relative to the center of the screen."] = "Фиксированная вертикальная позиция относительно центра экрана."
 
 -- Party text format values
 L["Current Value Only (2345)"] = "Только текущее (2345)"

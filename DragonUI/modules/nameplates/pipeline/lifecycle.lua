@@ -249,10 +249,6 @@ function NP.lifecycle.OnHideNameplate(plateData, _reason)
     -- Preserve focus GUID through hide/show; no native re-acquire signal.
     local isFocusPlate = NP.identity and NP.identity.IsFocusPlate and NP.identity.IsFocusPlate(plateData)
     NP.lifecycle.InvalidatePlateVisuals(plateData, not isFocusPlate)
-    -- A fixed PRD is parented to UIParent and no longer inherits the native plate's hidden state.
-    if plateData._personalResourceFixedApplied and plateData.visualRoot and plateData.visualRoot.Hide then
-        plateData.visualRoot:Hide()
-    end
     plateData._isVisible = false
     plateData.plateName = nil
     plateData._petCloneSnapshot = nil
