@@ -928,7 +928,7 @@ L["Horizontal"] = "Горизонтально"
 L["Vertical"] = "Вертикально"
 L["Configure DragonUI health and resource bars relative to the native personal resource anchor."] = "Настройка полос здоровья и ресурса DragonUI относительно стандартной точки привязки личного ресурса."
 L["Stabilize Personal Resource Position"] = "Стабилизировать позицию PRD"
-L["Keep the DragonUI personal resource bars attached to the character while compensating for camera-driven native scale."] = "Оставить полосы личного ресурса DragonUI привязанными к персонажу, компенсируя изменение стандартного масштаба из-за камеры."
+L["Follow the character's native personal resource anchor while applying X/Y offsets in stable screen space."] = "Следовать за стандартной точкой личного ресурса персонажа, применяя смещения X/Y в стабильных экранных координатах."
 L["Horizontal offset from the native personal resource anchor."] = "Горизонтальное смещение относительно стандартной точки привязки личного ресурса."
 L["Vertical offset from the native personal resource anchor."] = "Вертикальное смещение относительно стандартной точки привязки личного ресурса."
 

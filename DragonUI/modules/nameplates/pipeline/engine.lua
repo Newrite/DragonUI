@@ -400,8 +400,9 @@ local function EngineOnUpdate(_, elapsed)
         elseif pd._retailScale or pd._pendingRetailScale then
             NP.layout.SetRetailPlateScale(pd, 1)
         end
-        if pd._personalResourceScaleFallback then
-            NP.layout.SyncPersonalResourceScale(pd)
+        if pd._personalResourceScreenAnchor and pd.visualRoot
+            and pd.visualRoot.IsShown and pd.visualRoot:IsShown() then
+            NP.layout.SyncPersonalResourceAnchor(pd)
         end
         if pd._levelSettleAt and levelSettleNow >= pd._levelSettleAt then
             pd._levelSettleAt = nil
@@ -1005,6 +1006,15 @@ local function RunNameplatesRestore()
 
         local plate = plateData.plate
         if plate then
+            local visualRoot = plateData.visualRoot
+            if plateData._personalResourceScreenAnchor and visualRoot then
+                if visualRoot.GetParent and visualRoot:GetParent() ~= plate and visualRoot.SetParent then
+                    visualRoot:SetParent(plate)
+                end
+                visualRoot:ClearAllPoints()
+                visualRoot:SetPoint("TOP", plate, "TOP", 0, 0)
+                visualRoot:SetScale(1)
+            end
             if not InCombatLockdown() then
                 if NP.clickbox and NP.clickbox.RestorePlate then
                     NP.clickbox.RestorePlate(plateData)
@@ -1028,6 +1038,9 @@ local function RunNameplatesRestore()
         plateData._retailStackingApplied = nil
         plateData._bghCompatApplied = nil
         plateData._layoutSig = nil
+        plateData._personalResourceScreenAnchor = nil
+        plateData._personalResourceAnchorX = nil
+        plateData._personalResourceAnchorY = nil
         if NP.clickbox and NP.clickbox.ResetPlate then
             NP.clickbox.ResetPlate(plateData)
         end

@@ -1039,7 +1039,7 @@ L["Horizontal"] = true
 L["Vertical"] = true
 L["Configure DragonUI health and resource bars relative to the native personal resource anchor."] = true
 L["Stabilize Personal Resource Position"] = true
-L["Keep the DragonUI personal resource bars attached to the character while compensating for camera-driven native scale."] = true
+L["Follow the character's native personal resource anchor while applying X/Y offsets in stable screen space."] = true
 L["Horizontal offset from the native personal resource anchor."] = true
 L["Vertical offset from the native personal resource anchor."] = true
 

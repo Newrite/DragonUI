@@ -1026,33 +1026,39 @@ local function SetMinaBarOrientation(bar, vertical)
     SetTextureVertical(bar.minaBrTex or (bar.minaBr and bar.minaBr.minaTexture), vertical)
 end
 
-function NP.layout.SyncPersonalResourceScale(plateData, cfg)
-    if not plateData or not NP.identity.IsPersonalResourcePlate(plateData) then return end
+function NP.layout.SyncPersonalResourceAnchor(plateData, cfg)
+    if not plateData or not plateData._personalResourceScreenAnchor then return end
     local visualRoot = plateData.visualRoot
     local plate = plateData.plate
     if not visualRoot or not plate then return end
 
     cfg = cfg or NP.config.GetCfg()
-    local stabilize = cfg.personalResourceFixedPosition == true
-    local scale = tonumber(cfg.personalResourceScale) or 1
-    if visualRoot.SetIgnoreParentScale then
-        visualRoot:SetIgnoreParentScale(stabilize)
-        plateData._personalResourceIgnoreParentScale = stabilize and true or nil
-        plateData._personalResourceScaleFallback = nil
-    elseif stabilize and plate.GetEffectiveScale and UIParent and UIParent.GetEffectiveScale then
-        local parentScale = plate:GetEffectiveScale()
-        local uiScale = UIParent:GetEffectiveScale()
-        if parentScale and parentScale > 0 and uiScale and uiScale > 0 then
-            scale = scale * uiScale / parentScale
-            plateData._personalResourceScaleFallback = true
-        end
-    else
-        plateData._personalResourceScaleFallback = nil
-    end
+    if not plate.GetCenter or not plate.GetTop or not plate.GetEffectiveScale
+        or not visualRoot.GetEffectiveScale or not UIParent or not UIParent.GetCenter
+        or not UIParent.GetEffectiveScale then return end
 
-    if not visualRoot.GetScale or math.abs((visualRoot:GetScale() or 1) - scale) >= 0.0005 then
-        visualRoot:SetScale(scale)
-    end
+    local plateX = plate:GetCenter()
+    local plateY = plate:GetTop()
+    local uiX, uiY = UIParent:GetCenter()
+    local plateScale = plate:GetEffectiveScale()
+    local rootScale = visualRoot:GetEffectiveScale()
+    local uiScale = UIParent:GetEffectiveScale()
+    if not plateX or not plateY or not uiX or not uiY
+        or not plateScale or plateScale <= 0 or not rootScale or rootScale <= 0
+        or not uiScale or uiScale <= 0 then return end
+
+    local offsetX = tonumber(cfg.personalResourceOffsetX) or 0
+    local offsetY = tonumber(cfg.personalResourceOffsetY) or 0
+    local x = (plateX * plateScale - uiX * uiScale + offsetX * uiScale) / rootScale
+    local y = (plateY * plateScale - uiY * uiScale + offsetY * uiScale) / rootScale
+    if plateData._personalResourceAnchorX
+        and math.abs(plateData._personalResourceAnchorX - x) < 0.01
+        and math.abs(plateData._personalResourceAnchorY - y) < 0.01 then return end
+
+    plateData._personalResourceAnchorX = x
+    plateData._personalResourceAnchorY = y
+    visualRoot:ClearAllPoints()
+    visualRoot:SetPoint("TOP", UIParent, "CENTER", x, y)
 end
 
 function NP.layout.LayoutMinaStack(plateData)
@@ -1065,6 +1071,7 @@ function NP.layout.LayoutMinaStack(plateData)
     local visW, barH = NP.config.GetBarRefSize()
     local cfg = NP.config.GetCfg()
     local isPersonalResource = NP.identity.IsPersonalResourcePlate(plateData)
+    local stabilizePosition = isPersonalResource and cfg.personalResourceFixedPosition == true
     local isVertical = isPersonalResource and cfg.personalResourceOrientation == "vertical"
     local showHealth = not isPersonalResource or cfg.personalResourceShowHealth ~= false
     local showPower = not isPersonalResource or cfg.personalResourceShowPower ~= false
@@ -1077,7 +1084,9 @@ function NP.layout.LayoutMinaStack(plateData)
     local verticalGap = cfg.personalResourceVerticalGap or 4
     local healthOnRight = cfg.personalResourceVerticalHealthSide == "right"
     local ox, oy
-    if isPersonalResource then
+    if stabilizePosition then
+        ox, oy = 0, 0
+    elseif isPersonalResource then
         ox = cfg.personalResourceOffsetX or 0
         oy = cfg.personalResourceOffsetY or 0
     else
@@ -1086,21 +1095,25 @@ function NP.layout.LayoutMinaStack(plateData)
     local visualRoot = plateData.visualRoot or plateData.plate
     local plate = plateData.plate
     if visualRoot and visualRoot.SetPoint then
-        if visualRoot.GetParent and visualRoot:GetParent() ~= plate and visualRoot.SetParent then
-            visualRoot:SetParent(plate)
-        end
-        visualRoot:ClearAllPoints()
-        visualRoot:SetPoint("TOP", plate, "TOP", 0, 0)
-
-        if isPersonalResource then
-            NP.layout.SyncPersonalResourceScale(plateData, cfg)
-        else
-            if visualRoot.SetIgnoreParentScale and plateData._personalResourceIgnoreParentScale then
-                visualRoot:SetIgnoreParentScale(false)
+        if stabilizePosition then
+            if visualRoot.GetParent and visualRoot:GetParent() ~= UIParent and visualRoot.SetParent then
+                visualRoot:SetParent(UIParent)
             end
-            plateData._personalResourceIgnoreParentScale = nil
-            plateData._personalResourceScaleFallback = nil
-            visualRoot:SetScale(1)
+            visualRoot:SetScale(tonumber(cfg.personalResourceScale) or 1)
+            plateData._personalResourceScreenAnchor = true
+            plateData._personalResourceAnchorX = nil
+            plateData._personalResourceAnchorY = nil
+            NP.layout.SyncPersonalResourceAnchor(plateData, cfg)
+        else
+            if visualRoot.GetParent and visualRoot:GetParent() ~= plate and visualRoot.SetParent then
+                visualRoot:SetParent(plate)
+            end
+            visualRoot:ClearAllPoints()
+            visualRoot:SetPoint("TOP", plate, "TOP", 0, 0)
+            visualRoot:SetScale(isPersonalResource and (tonumber(cfg.personalResourceScale) or 1) or 1)
+            plateData._personalResourceScreenAnchor = nil
+            plateData._personalResourceAnchorX = nil
+            plateData._personalResourceAnchorY = nil
         end
         visualRoot:Show()
     end

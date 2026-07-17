@@ -536,7 +536,7 @@ local function BuildLayoutSubTab(scroll)
 
     C:AddToggle(personalResource, {
         label = LO["Stabilize Personal Resource Position"],
-        desc = LO["Keep the DragonUI personal resource bars attached to the character while compensating for camera-driven native scale."],
+        desc = LO["Follow the character's native personal resource anchor while applying X/Y offsets in stable screen space."],
         dbPath = DB .. ".personalResourceFixedPosition",
         callback = RefreshAndRebuildNameplates,
     })
