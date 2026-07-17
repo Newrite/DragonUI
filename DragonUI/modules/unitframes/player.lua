@@ -2960,6 +2960,37 @@ hooksecurefunc("PlayerFrame_ToVehicleArt", function()
     UpdatePlayerDragonDecoration()
 end)
 
+-- GUARD: Re-hide mana bar whenever Blizzard shows it while fat-manabar-hidden is active.
+-- TextStatusBar_UpdateTextString calls statusbar:Show() for any bar with valueMax > 0, and
+-- this is reached from MULTIPLE code paths (UnitFrameManaBar_Update, predictedPower OnUpdate,
+-- PaperDoll stat updates, etc.). Hooking OnShow catches ALL of them.
+if not PlayerFrameManaBar.__DragonUI_FatManaShowGuard then
+    PlayerFrameManaBar:HookScript("OnShow", function(self)
+        if self.__DragonUI_SuppressShow then return end
+        local config = GetPlayerConfig()
+        if config and config.fat_healthbar and config.fat_manabar_hidden and not IsInVehicle() then
+            self.__DragonUI_SuppressShow = true
+            self:Hide()
+            self.__DragonUI_SuppressShow = nil
+        end
+    end)
+    PlayerFrameManaBar.__DragonUI_FatManaShowGuard = true
+end
+
+local alternateManaBar = _G.PlayerFrameAlternateManaBar
+if alternateManaBar and not alternateManaBar.__DragonUI_FatManaShowGuard then
+    alternateManaBar:HookScript("OnShow", function(self)
+        if self.__DragonUI_SuppressShow then return end
+        local config = GetPlayerConfig()
+        if config and config.fat_healthbar and config.fat_manabar_hidden and not IsInVehicle() then
+            self.__DragonUI_SuppressShow = true
+            self:Hide()
+            self.__DragonUI_SuppressShow = nil
+        end
+    end)
+    alternateManaBar.__DragonUI_FatManaShowGuard = true
+end
+
 -- Hook to update alternate mana bar text when power changes
 hooksecurefunc("UnitFrameManaBar_Update", function(statusbar, unit)
     if unit == "player" then
