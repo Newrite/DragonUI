@@ -118,7 +118,9 @@ end
 
 function NP.config.IsPowerShown(plateData)
     local cfg = NP.config.GetCfg()
-    if cfg.showPowerBar == false then return false end
+    if cfg.showPowerBar == false and not NP.identity.IsPersonalResourcePlate(plateData) then
+        return false
+    end
     local po = plateData.minaPo
     return po and po.IsShown and po:IsShown()
 end

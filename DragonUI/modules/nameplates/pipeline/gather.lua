@@ -92,12 +92,14 @@ function NP.gather.ResolveContext(plateData, snapshot, reason)
         end
     end
 
-    local resolvedUnit = NP.identity.GetUnitForPlate(plateData)
+    local isPersonalResource = NP.identity.IsPersonalResourcePlate(plateData)
+    local resolvedUnit = isPersonalResource and "player" or NP.identity.GetUnitForPlate(plateData)
     local isTarget = NP.identity.IsTargetPlate(plateData)
     return {
         reason = reason,
         plateGUID = NP.state.GetPlateGUID(plateData),
         resolvedUnit = resolvedUnit,
+        isPersonalResource = isPersonalResource,
         isTarget = isTarget,
         isMouseover = NP.identity.IsMouseoverPlate(plateData),
         classification = NP.native_style.ResolvePlateClassification(plateData, resolvedUnit),
@@ -106,6 +108,16 @@ end
 
 function NP.gather.ComputeVisualState(plateData, snapshot, context, reason)
     local npCfg = NP.config.GetCfg()
+    if context.isPersonalResource then
+        return {
+            reason = reason,
+            isPersonalResource = true,
+            showPower = true,
+            showDebuffs = false,
+            showCastbar = false,
+            showTargetHighlight = false,
+        }
+    end
     -- Headline mode always hides power. Health text and cast bars have their
     -- own explicit headline options; the health bar itself stays hidden.
     local nameOnly = NP.gather.IsHeadlineActive(plateData)
@@ -131,10 +143,14 @@ end
 
 local function BuildLayoutSignature(plateData)
     local isPlayer = NP.gather.IsPlayerPlate(plateData) and "p" or "n"
-    return tostring(NP.module._cfgRev or 0) .. ":" .. isPlayer
+    local isPersonal = NP.identity.IsPersonalResourcePlate(plateData) and "r" or "w"
+    return tostring(NP.module._cfgRev or 0) .. ":" .. isPlayer .. ":" .. isPersonal
 end
 
 local function ComputeTotemIconOnlyActive(plateData)
+    if NP.identity.IsPersonalResourcePlate(plateData) then
+        return false
+    end
     local cfg = NP.config.GetCfg()
     if cfg.totemIconOnly ~= true or cfg.showTotemIcons == false then
         return false
@@ -217,7 +233,11 @@ function NP.gather.ApplyVisualState(plateData, snapshot, context, state, reason)
     elseif state.showCastbar then
         NP.castbar.SyncCastBar(plateData)
     else
-        NP.castbar.HidePlateCastBar(plateData)
+        NP.castbar.HidePlateCastBar(plateData, state.isPersonalResource)
+        if state.isPersonalResource and NP.castbar.PartyRaidCastTracker
+            and NP.castbar.PartyRaidCastTracker.HideBar then
+            NP.castbar.PartyRaidCastTracker:HideBar(plateData)
+        end
     end
 end
 
@@ -322,6 +342,9 @@ function NP.gather.IsFriendlyNPCNameOnlyActive(plateData)
 end
 
 local function ComputeHeadlineActive(plateData)
+    if NP.identity.IsPersonalResourcePlate(plateData) then
+        return false
+    end
     if not (NP.gather.IsFriendlyNameOnlyActive(plateData)
         or NP.gather.IsFriendlyNPCNameOnlyActive(plateData)) then
         return false
@@ -524,7 +547,8 @@ function NP.gather.SyncHealth(plateData, value)
     local bar = plateData.minaHp
     if not src or not bar then return end
 
-    if NP.gather.IsTotemIconOnlyActive(plateData) then
+    local isPersonalResource = NP.identity.IsPersonalResourcePlate(plateData)
+    if not isPersonalResource and NP.gather.IsTotemIconOnlyActive(plateData) then
         bar:Hide()
         if plateData.minaHpPct then plateData.minaHpPct:Hide() end
         if plateData.minaHpNum then plateData.minaHpNum:Hide() end
@@ -629,25 +653,26 @@ end
 function NP.gather.SyncPower(plateData, unit)
     local bar = plateData.minaPo
     if not bar then return end
+    local isPersonalResource = NP.identity.IsPersonalResourcePlate(plateData)
 
     local function finish()
         NP.layout.RelayoutCastStack(plateData)
     end
 
-    if NP.gather.IsTotemIconOnlyActive(plateData) then
+    if not isPersonalResource and NP.gather.IsTotemIconOnlyActive(plateData) then
         HidePowerBar(plateData)
         finish()
         return
     end
 
     local cfg = NP.config.GetCfg()
-    if cfg.showPowerBar == false then
+    if cfg.showPowerBar == false and not isPersonalResource then
         HidePowerBar(plateData)
         finish()
         return
     end
 
-    unit = unit or NP.identity.ResolvePlateUnit(plateData)
+    unit = isPersonalResource and "player" or unit or NP.identity.ResolvePlateUnit(plateData)
     if not unit or not UnitExists(unit) then
         HidePowerBar(plateData)
         finish()
@@ -751,6 +776,12 @@ end
 
 function NP.gather.SyncName(plateData, unit)
     if not plateData.minaName then return end
+    if NP.identity.IsPersonalResourcePlate(plateData) then
+        plateData.minaName:Hide()
+        if plateData.minaBossSkull then plateData.minaBossSkull:Hide() end
+        if plateData.minaSubTitle then plateData.minaSubTitle:Hide() end
+        return
+    end
     if NP.gather.IsTotemIconOnlyActive(plateData) then
         plateData.minaName:Hide()
         if plateData.minaBossSkull then plateData.minaBossSkull:Hide() end
@@ -1050,9 +1081,12 @@ function NP.gather.RefreshPlatePower(plateData, reason)
         NP.gather.SyncPower(plateData, state.showPower and context.resolvedUnit or nil)
         return
     end
+    local isPersonalResource = NP.identity.IsPersonalResourcePlate(plateData)
     local cfg = NP.config.GetCfg()
-    local showPower = (not NP.gather.IsHeadlineActive(plateData)) and (cfg.showPowerBar ~= false)
-    NP.gather.SyncPower(plateData, showPower and NP.identity.ResolvePlateUnit(plateData) or nil)
+    local showPower = isPersonalResource
+        or ((not NP.gather.IsHeadlineActive(plateData)) and (cfg.showPowerBar ~= false))
+    local unit = isPersonalResource and "player" or NP.identity.ResolvePlateUnit(plateData)
+    NP.gather.SyncPower(plateData, showPower and unit or nil)
 end
 
 function NP.gather.RefreshPlateName(plateData, reason)
@@ -1082,6 +1116,13 @@ end
 function NP.gather.RefreshPlateCastbar(plateData, reason)
     local refreshReason = reason or "cast_update"
     local cfg = NP.config.GetCfg()
+    if NP.identity.IsPersonalResourcePlate(plateData) then
+        NP.castbar.HidePlateCastBar(plateData, true)
+        if NP.castbar.PartyRaidCastTracker and NP.castbar.PartyRaidCastTracker.HideBar then
+            NP.castbar.PartyRaidCastTracker:HideBar(plateData)
+        end
+        return
+    end
     if NP.gather.IsHeadlineActive(plateData) and cfg.headlineShowCastBar ~= true then
         NP.castbar.HidePlateCastBar(plateData)
         return

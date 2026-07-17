@@ -523,6 +523,26 @@ local function BuildLayoutSubTab(scroll)
 
     UpdateClampControlStates()
 
+    local personalResource = C:AddSection(scroll, LO["Personal Resource Display"])
+    C:AddDescription(personalResource,
+        LO["Position of DragonUI health and resource bars relative to the native personal resource anchor."])
+
+    C:AddSlider(personalResource, {
+        label = LO["Personal Resource X Offset"],
+        dbPath = DB .. ".personalResourceOffsetX",
+        min = -500, max = 500, step = 1,
+        width = 200,
+        callback = RefreshNameplates,
+    })
+
+    C:AddSlider(personalResource, {
+        label = LO["Personal Resource Y Offset"],
+        dbPath = DB .. ".personalResourceOffsetY",
+        min = -500, max = 500, step = 1,
+        width = 200,
+        callback = RefreshNameplates,
+    })
+
     local clickboxSection = C:AddSection(scroll, LO["Clickbox"])
 
     local function OnClickboxSliderChanged()

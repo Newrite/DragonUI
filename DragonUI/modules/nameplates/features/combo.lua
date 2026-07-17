@@ -77,7 +77,7 @@ end
 function NP.widgets.SyncComboPoints(plateData)
     local cfg = NP.config.GetCfg()
     local host = plateData._comboHost
-    if cfg.showComboPoints == false then
+    if NP.identity.IsPersonalResourcePlate(plateData) or cfg.showComboPoints == false then
         if host then host:Hide() end
         if NP.widgets and NP.widgets.ReflowTopOverlays then
             NP.widgets.ReflowTopOverlays(plateData)

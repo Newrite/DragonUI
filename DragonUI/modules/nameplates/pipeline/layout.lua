@@ -261,7 +261,8 @@ function NP.layout.UpdateDepthOrdering(elapsed)
     for _, plateData in pairs(NP.module.plates) do
         local plate = plateData and plateData.plate
         local visual = plateData and (plateData.visualRoot or plate)
-        if plate and visual and plate.IsShown and plate:IsShown() and visual.GetEffectiveDepth then
+        if plate and visual and plate.IsShown and plate:IsShown() and visual.GetEffectiveDepth
+            and not NP.identity.IsPersonalResourcePlate(plateData) then
             local depth = visual:GetEffectiveDepth()
             if depth and depth > 0 then
                 -- Target sorts on top.
@@ -538,6 +539,9 @@ end
 local function ApplySimpleClamp(plateData)
     local plate = plateData.plate
     if not plate or not plate.SetClampedToScreen or not plate.GetPoint then return end
+    if NP.identity.IsPersonalResourcePlate(plateData) then
+        return
+    end
 
     local want = PlateWantsClamp(plateData)
     plateData._clamped = want
@@ -612,7 +616,8 @@ local function UpdateRetailStacking()
         local reaction = NP.native_style.GetPlateReaction(plateData)
         local isFriendly = reaction == "FRIENDLY"
         -- Non-friendly plates only.
-        if plate and plate.IsShown and plate:IsShown() and not isFriendly then
+        if plate and plate.IsShown and plate:IsShown() and not isFriendly
+            and not NP.identity.IsPersonalResourcePlate(plateData) then
             stackable[#stackable + 1] = plateData
             activeStackable[plateData] = true
             local state = EnsureRetailStackState(plateData)
@@ -1001,10 +1006,16 @@ function NP.layout.LayoutMinaStack(plateData)
     if not border or not hp or not po then return end
 
     local visW, barH = NP.config.GetBarRefSize()
-    local ox, oy = NP.config.GetStackOffset()
+    local cfg = NP.config.GetCfg()
+    local ox, oy
+    if NP.identity.IsPersonalResourcePlate(plateData) then
+        ox = cfg.personalResourceOffsetX or 0
+        oy = cfg.personalResourceOffsetY or 0
+    else
+        ox, oy = NP.config.GetStackOffset()
+    end
     local visualRoot = plateData.visualRoot or plateData.plate
     local plate = plateData.plate
-    local cfg = NP.config.GetCfg()
     if visualRoot and visualRoot.SetPoint then
         visualRoot:ClearAllPoints()
         visualRoot:SetPoint("TOP", plate, "TOP", 0, 0)
@@ -1143,7 +1154,8 @@ function NP.layout.LayoutMinaStack(plateData)
     end
 
     local cfg = NP.config.GetCfg()
-    if cfg.showPartyRaidCastBars and plateData.minaPartyCast then
+    if not NP.identity.IsPersonalResourcePlate(plateData)
+        and cfg.showPartyRaidCastBars and plateData.minaPartyCast then
         NP.castbar.LayoutPartyCastBar(plateData)
     end
 end
@@ -1166,6 +1178,9 @@ function NP.layout.RelayoutCastStack(plateData)
 end
 
 function NP.layout.LayoutCastBarStack(plateData)
+    if NP.identity.IsPersonalResourcePlate(plateData) then
+        return
+    end
     local bar = plateData.minaCast
     local border = plateData.border
     local hp = plateData.minaHp

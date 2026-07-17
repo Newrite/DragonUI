@@ -159,6 +159,12 @@ function NP.clickbox.EnsureOverlay(plateData)
 end
 
 function NP.clickbox.SyncOverlay(plateData)
+    if NP.identity.IsPersonalResourcePlate(plateData) then
+        if plateData.clickboxOverlay then
+            plateData.clickboxOverlay:Hide()
+        end
+        return
+    end
     local overlay = NP.clickbox.EnsureOverlay(plateData)
     if not overlay then
         return
@@ -196,6 +202,13 @@ end
 function NP.clickbox.ApplyPlateClickbox(plateData)
     local plate = plateData and plateData.plate
     if not plate then
+        return true
+    end
+    if NP.identity.IsPersonalResourcePlate(plateData) then
+        plateData._clickAreaPending = nil
+        if plateData.clickboxOverlay then
+            plateData.clickboxOverlay:Hide()
+        end
         return true
     end
 
@@ -244,6 +257,12 @@ end
 
 function NP.clickbox.OnPlateShown(plateData)
     if not plateData then
+        return
+    end
+    if NP.identity.IsPersonalResourcePlate(plateData) then
+        if plateData.clickboxOverlay then
+            plateData.clickboxOverlay:Hide()
+        end
         return
     end
     NP.clickbox.EnsureOverlay(plateData)

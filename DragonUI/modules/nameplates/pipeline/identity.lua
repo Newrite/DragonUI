@@ -12,6 +12,78 @@ NP.match = NP.identity
 
 local identity = NP.identity
 
+local personalPlateCacheKey
+local personalPlateFrame
+local personalPlateRoot
+local personalPlateHost
+
+local function UnitTokenIsPlayer(unit)
+    if not unit or not UnitExists(unit) then
+        return false
+    end
+    if unit == "player" then
+        return true
+    end
+    return UnitIsUnit and UnitIsUnit(unit, "player") and true or false
+end
+
+local function GetPersonalPlateFrames()
+    if not (C_NamePlate and C_NamePlate.GetNamePlateForUnit) then
+        return nil, nil, nil
+    end
+
+    local cacheKey = NP.module._engineFrame
+        or math.floor(((GetTime and GetTime()) or 0) * 4)
+    if personalPlateCacheKey ~= cacheKey then
+        personalPlateCacheKey = cacheKey
+        personalPlateFrame = nil
+        personalPlateRoot = nil
+        personalPlateHost = nil
+
+        local ok, frame = pcall(C_NamePlate.GetNamePlateForUnit, "player")
+        if ok and frame then
+            personalPlateFrame = frame
+            personalPlateRoot, personalPlateHost = NP.native_style.ResolvePlateFrames(frame)
+        end
+    end
+    return personalPlateFrame, personalPlateRoot, personalPlateHost
+end
+
+-- Ascension implements Personal Resource Display as the player's own nameplate.
+-- Keep this identity independent from target/mouseover matching so PRD cannot
+-- inherit headline, cast, aura, clickbox, or stacking behavior.
+function identity.IsPersonalResourcePlate(plateData)
+    if not plateData then
+        return false
+    end
+    if plateData._isPersonalResource then
+        return true
+    end
+
+    local plate = plateData.plate
+    local token = plateData.namePlateUnitToken
+        or (plate and (plate.namePlateUnitToken or plate.unit))
+    if UnitTokenIsPlayer(token) then
+        plateData._isPersonalResource = true
+        return true
+    end
+
+    local playerFrame, playerRoot, playerHost = GetPersonalPlateFrames()
+    if playerFrame and (plate == playerFrame or plateData.widgetHost == playerFrame
+        or plate == playerRoot or plateData.widgetHost == playerHost) then
+        plateData._isPersonalResource = true
+        return true
+    end
+
+    local plateGUID = NP.state.GetPlateGUID(plateData)
+    local playerGUID = UnitGUID("player")
+    if plateGUID and playerGUID and plateGUID == playerGUID then
+        plateData._isPersonalResource = true
+        return true
+    end
+    return false
+end
+
 local function StripRealm(name)
     return NP.native_style.StripRealm(name)
 end
@@ -399,7 +471,13 @@ local function PlateMatchesUnit(plateData, unit)
 end
 
 function identity.GetUnitForPlate(plateData, hintedUnit)
-    if not plateData or not plateData.plateName then
+    if not plateData then
+        return nil
+    end
+    if identity.IsPersonalResourcePlate(plateData) then
+        return "player"
+    end
+    if not plateData.plateName then
         return nil
     end
     if hintedUnit == "target" or hintedUnit == "focus" or hintedUnit == "mouseover" then
@@ -709,6 +787,21 @@ function identity.UpdatePlateUnitToken(plateData)
     end
 
     local plate = plateData.plate
+    if identity.IsPersonalResourcePlate(plateData) then
+        plateData.namePlateUnitToken = "player"
+        plateData.unitToken = "player"
+        if plate then
+            plate.namePlateUnitToken = "player"
+        end
+        local playerGUID = UnitGUID("player")
+        if playerGUID and NP.state.GetPlateGUID(plateData) ~= playerGUID then
+            NP.state.SetPlateGUID(plateData, playerGUID, {
+                source = "NAMEPLATE_TOKEN",
+                confidence = C.GUID_CONFIDENCE.NAMEPLATE_TOKEN,
+            })
+        end
+        return "player"
+    end
     local nativeToken = plateData.namePlateUnitToken or (plate and plate.namePlateUnitToken)
     if nativeToken and nativeToken ~= "" and UnitExists(nativeToken) then
         if identity.UnitNameMatchesPlate(nativeToken, plateData)

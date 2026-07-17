@@ -28,6 +28,11 @@ function NP.widgets.Sync(name, plateData, context, state)
     local widget = NP.widgets.Get(name)
     if not widget then return end
 
+    if NP.identity.IsPersonalResourcePlate(plateData) then
+        NP.widgets.Hide(name, plateData, context, state)
+        return
+    end
+
     -- Totem icon-only hides other widgets; Totem is exempt.
     if name ~= "Totem" and NP.gather and NP.gather.IsTotemIconOnlyActive
         and NP.gather.IsTotemIconOnlyActive(plateData) then

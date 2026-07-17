@@ -66,6 +66,7 @@ function NP.lifecycle.PrepareNameplate(plateData)
     plateData._resolvedHealthFriendly = nil
     plateData._resolvedHealthIdentityName = nil
     plateData._afkState = nil
+    plateData._isPersonalResource = nil
     plateData.namePlateUnitToken = nil
     plateData.unitToken = nil
     if plateData.plate then
@@ -251,6 +252,7 @@ function NP.lifecycle.OnHideNameplate(plateData, _reason)
     plateData._castIdentityName = nil
     plateData._debuffIdentityName = nil
     plateData._eliteIdentityName = nil
+    plateData._isPersonalResource = nil
     plateData.namePlateUnitToken = nil
     plateData.unitToken = nil
     plateData._plateClassification = nil

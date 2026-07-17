@@ -200,6 +200,10 @@ function NP.castbar.BindNativeCastPlateIdentity(plateData)
 end
 
 function NP.castbar.OnNativeCastShown(plateData)
+    if NP.identity.IsPersonalResourcePlate(plateData) then
+        NP.castbar.HidePlateCastBar(plateData, true)
+        return
+    end
     ResetNativeCastTrack(plateData)
     NP.layout.EnsureMinaStack(plateData)
     local bar = plateData.minaCast
@@ -234,6 +238,11 @@ function NP.castbar.OnNativeCastShown(plateData)
 end
 
 function NP.castbar.OnNativeCastHidden(plateData)
+    if NP.identity.IsPersonalResourcePlate(plateData) then
+        ResetNativeCastTrack(plateData)
+        NP.castbar.HidePlateCastBar(plateData, true)
+        return
+    end
     local snapFrame = plateData._castShieldSnapFrame
     if snapFrame then
         snapFrame:Hide()
@@ -383,6 +392,7 @@ function NP.castbar.ShowInterruptedState(bar, plateData, isPartyBar)
     local cfg = NP.config.GetCfg()
     local displayDisabled = cfg.showCastBar == false
         or (isPartyBar and cfg.showPartyRaidCastBars == false)
+        or (plateData and NP.identity.IsPersonalResourcePlate(plateData))
         or (plateData and NP.gather and NP.gather.IsHeadlineActive(plateData)
             and cfg.headlineShowCastBar ~= true)
     if displayDisabled then
@@ -3267,6 +3277,14 @@ function NP.castbar.SyncCastBar(plateData)
     local cfg = NP.config.GetCfg()
     local src = plateData.castBar
     local bar = plateData.minaCast
+
+    if NP.identity.IsPersonalResourcePlate(plateData) then
+        NP.castbar.HidePlateCastBar(plateData, true)
+        if PartyRaidCastTracker.HideBar then
+            PartyRaidCastTracker:HideBar(plateData)
+        end
+        return
+    end
     if not bar then return end
 
     if NP.gather.IsTotemIconOnlyActive(plateData) then
@@ -3523,6 +3541,10 @@ end
 -- Native castbar hook handler (lifecycle)
 
 function NP.castbar.OnNativeCastValueChanged(plateData, val)
+    if NP.identity.IsPersonalResourcePlate(plateData) then
+        NP.castbar.HidePlateCastBar(plateData, true)
+        return
+    end
     val = tonumber(val)
     if val and val >= 0.002 then
         UpdateNativeCastTrack(plateData, val)

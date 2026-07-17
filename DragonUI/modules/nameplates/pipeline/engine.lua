@@ -11,6 +11,18 @@ NP.engine = NP.engine or {}
 local E = NP.engine
 
 local DRIFT_INTERVAL = 0.2
+local POWER_EVENT_NAMES = {
+    "UNIT_MANA", "UNIT_MAXMANA",
+    "UNIT_RAGE", "UNIT_MAXRAGE",
+    "UNIT_ENERGY", "UNIT_MAXENERGY",
+    "UNIT_RUNIC_POWER", "UNIT_MAXRUNIC_POWER",
+    "UNIT_FOCUS", "UNIT_MAXFOCUS",
+    "UNIT_POWER", "UNIT_MAXPOWER", "UNIT_POWER_UPDATE", "UNIT_DISPLAYPOWER",
+}
+local POWER_EVENTS = {}
+for i = 1, #POWER_EVENT_NAMES do
+    POWER_EVENTS[POWER_EVENT_NAMES[i]] = true
+end
 
 -- 3.3.5a CLEU: OnEvent(_, event, timestamp, subevent, sourceGUID, ...) — no hideCaster slot.
 
@@ -465,7 +477,8 @@ local function EngineOnUpdate(_, elapsed)
             local pl = pd.plate
             if pl and pl.IsShown and pl:IsShown() then
                 local visualAlpha = NP.module._opacityValue
-                if NP.identity.IsTargetPlateVisual(pd, hasTarget)
+                if NP.identity.IsPersonalResourcePlate(pd)
+                    or NP.identity.IsTargetPlateVisual(pd, hasTarget)
                     or ((not hasTarget) and NP.module._opacityFullNoTarget)
                     or (fullParty and NP.gather.IsGroupMemberPlate(pd)) then
                     visualAlpha = 1.0
@@ -627,16 +640,23 @@ local function EngineOnEvent(_, event, unit, ...)
         end
         if isNewSetup then
             NP.lifecycle.SetupPlate(plateData)
-            -- Style immediately (no OnShow re-entrancy); avoids 1-frame native chrome flash.
-            if plateData.plate and plateData.plate.IsShown and plateData.plate:IsShown() then
-                NP.gather.RefreshPlateFull(plateData, "awesome_wotlk_unit_added")
-            end
         end
         if plateData then
+            local isPersonal = unit == "player"
+                or (UnitIsUnit and UnitExists(unit) and UnitIsUnit(unit, "player"))
+            plateData._isPersonalResource = isPersonal and true or nil
             plateData.namePlateUnitToken = unit
             if plateData.plate then
                 plateData.plate.namePlateUnitToken = unit
             end
+        end
+        if isNewSetup then
+            -- Style immediately (no OnShow re-entrancy); avoids 1-frame native chrome flash.
+            if plateData.plate and plateData.plate.IsShown and plateData.plate:IsShown() then
+                NP.gather.RefreshPlateFull(plateData, "awesome_wotlk_unit_added")
+            end
+        elseif plateData then
+            E.QueuePlate(plateData, CB.OnUpdateNameplate)
         end
         return
     end
@@ -733,20 +753,25 @@ local function EngineOnEvent(_, event, unit, ...)
     end
 
     -- Health / power: prefer GUID map over full scan.
-    if event == "UNIT_HEALTH" or event == "UNIT_MANA" or event == "UNIT_MAXMANA" then
+    if event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or POWER_EVENTS[event] then
         local unitGUID = UnitGUID(unit)
         local plateData = unitGUID and NP.state.GUIDToPlate[unitGUID]
-        -- ResolvePlateUnit only covers target/focus/mouseover; skip O(n) scan for other units.
-        if not plateData and (unit == "target" or unit == "focus" or unit == "mouseover") then
+        if unit == "player" and plateData
+            and not NP.identity.IsPersonalResourcePlate(plateData) then
+            plateData = nil
+        end
+        if not plateData and (unit == "player" or unit == "target"
+            or unit == "focus" or unit == "mouseover") then
             for _, candidate in pairs(NP.module.plates) do
-                if NP.identity.ResolvePlateUnit(candidate) == unit then
+                if (unit == "player" and NP.identity.IsPersonalResourcePlate(candidate))
+                    or NP.identity.ResolvePlateUnit(candidate) == unit then
                     plateData = candidate
                     break
                 end
             end
         end
         if plateData then
-            if event == "UNIT_HEALTH" then
+            if event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" then
                 E.QueuePlate(plateData, CB.OnUpdateHealth)
             else
                 E.QueuePlate(plateData, CB.OnUpdatePower)
@@ -811,8 +836,11 @@ local function RunNameplatesApply()
         f:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
         f:RegisterEvent("UNIT_TARGET")
         f:RegisterEvent("UNIT_HEALTH")
-        f:RegisterEvent("UNIT_MANA")
-        f:RegisterEvent("UNIT_MAXMANA")
+        f:RegisterEvent("UNIT_MAXHEALTH")
+        for i = 1, #POWER_EVENT_NAMES do
+            -- Ascension exposes a mixed 3.3.5/modern event set; ignore unavailable events.
+            pcall(f.RegisterEvent, f, POWER_EVENT_NAMES[i])
+        end
         f:RegisterEvent("UNIT_AURA")
         f:RegisterEvent("UNIT_SPELLCAST_START")
         f:RegisterEvent("UNIT_SPELLCAST_STOP")
