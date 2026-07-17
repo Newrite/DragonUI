@@ -200,7 +200,7 @@ local function BuildGeneralTab(scroll)
 
     C:AddToggle(behavior, {
         label = LO["Disable Form Page Switching"],
-        desc = LO["When enabled, the main action bar stays on the same page regardless of stance/form changes. Useful for druids, warriors, and rogues who prefer manual page management."],
+        desc = LO["When enabled, the main action bar stays on the same page regardless of stance/form changes. Useful for druids, warriors, and CoA Classes who prefer manual page management."],
         dbPath = "modules.mainbars.disable_form_page_switching",
         requiresReload = true,
     })
