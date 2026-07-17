@@ -290,6 +290,10 @@ local function InstallHooks()
                     StyleAura(enchant, false, "TempEnchant" .. i .. "Border", false)
                 end
             end
+            -- VanityBuffs container (Ascension) — styled like a buff, no debuff border to suppress
+            if VanityBuffs and VanityBuffs:IsShown() then
+                StyleAura(VanityBuffs, false, nil, false)
+            end
         end)
     end
 
@@ -327,6 +331,10 @@ local function RestyleAll()
         for i = 1, MAX_TARGET_DEBUFFS do
             RestyleShown(frameName .. "Debuff" .. i, true, "Border", true)
         end
+    end
+    -- VanityBuffs container (Ascension)
+    if VanityBuffs then
+        RestyleShown("VanityBuffs", false, nil, false)
     end
 end
 
