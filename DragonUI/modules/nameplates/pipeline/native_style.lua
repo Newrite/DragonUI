@@ -72,14 +72,55 @@ function NP.native_style.HideRegion(tex)
     end
 end
 
+-- Texture-only hide (never SetAlpha(0) on the bar, Icicle parents icons there); GetAlpha() gate skips no-op frames.
+local function SetBarTextureAlphas(bar, alpha)
+    local statusTex = bar.GetStatusBarTexture and bar:GetStatusBarTexture() or nil
+    if statusTex and statusTex.SetAlpha and statusTex.GetAlpha and statusTex:GetAlpha() ~= alpha then
+        statusTex:SetAlpha(alpha)
+    end
+    if not bar.GetNumRegions or not bar.GetRegions then
+        return
+    end
+    local n = bar:GetNumRegions()
+    if n == 0 then
+        return
+    end
+    local regions = { bar:GetRegions() }
+    for i = 1, n do
+        local region = regions[i]
+        if region and region ~= statusTex and region.GetObjectType and region:GetObjectType() == "Texture"
+            and region.SetAlpha and region.GetAlpha and region:GetAlpha() ~= alpha then
+            region:SetAlpha(alpha)
+        end
+    end
+end
+
+-- compat mode = texture-only path (Icicle parents widgets to the bar); default = cheap bar-level SetAlpha.
 function NP.native_style.NeutralizeStatusBarVisual(bar)
     if not bar then
         return
     end
-    -- Alpha suppression is reversible; replacing the status-bar texture is not.
-    if bar.SetAlpha then
-        bar:SetAlpha(0)
+    if not NP.module._barAlphaCompat then
+        if bar.SetAlpha and bar.GetAlpha and bar:GetAlpha() ~= 0 then
+            bar:SetAlpha(0)
+        end
+        return
     end
+    if bar.SetAlpha and bar.GetAlpha and bar:GetAlpha() ~= 1 then
+        bar:SetAlpha(1)
+    end
+    SetBarTextureAlphas(bar, 0)
+end
+
+-- Unconditional (not just under compat): a prior compat-on session may have zeroed the textures.
+function NP.native_style.RestoreStatusBarVisual(bar)
+    if not bar then
+        return
+    end
+    if bar.SetAlpha and bar.GetAlpha and bar:GetAlpha() ~= 1 then
+        bar:SetAlpha(1)
+    end
+    SetBarTextureAlphas(bar, 1)
 end
 
 -- Elite/rare classification
@@ -306,8 +347,8 @@ function NP.native_style.ClassKeyFromBarColor(r, g, b)
     return addon.FindClassByColor(r, g, b)
 end
 
--- Reaction and unit type from health bar color.
-function NP.native_style.GetPlateReaction(plateData)
+-- Reaction and unit type from health bar color (internal; prefer GetPlateReaction).
+local function GetPlateReactionFromBarColor(plateData)
     local r, g, b = plateData.barR, plateData.barG, plateData.barB
     if not r then
         return nil, nil
@@ -322,6 +363,52 @@ function NP.native_style.GetPlateReaction(plateData)
         return "HOSTILE", "NPC"
     end
     return "HOSTILE", "PLAYER"
+end
+
+-- Ascension: lightweight unit token resolver for reaction correction.
+-- Uses identity resolution and native plate tokens; no group lookup.
+local function ResolvePlateTokenForReaction(plateData)
+    local unit = NP.identity.ResolvePlateUnit(plateData)
+    if unit and UnitExists(unit) then
+        return unit
+    end
+    local native = plateData.namePlateUnitToken or (plateData.plate and plateData.plate.unit)
+    if native and UnitExists(native) then
+        return native
+    end
+    return nil
+end
+
+-- Ascension: native bar RGB can disagree with attackability under Mercenary.
+-- Only correct when we have a unit token; plates without tokens stay on bar color.
+local function ReactionFromUnitAttackability(unit, barReaction, barUnitType)
+    if not unit or not UnitExists(unit) or not UnitIsPlayer(unit) then
+        return barReaction, barUnitType
+    end
+    local canAttack = UnitCanAttack("player", unit)
+    if canAttack then
+        if barReaction == "FRIENDLY" then
+            return "HOSTILE", "PLAYER"
+        end
+    else
+        if barReaction == "HOSTILE" and barUnitType == "PLAYER" then
+            return "FRIENDLY", "PLAYER"
+        end
+    end
+    return barReaction, barUnitType
+end
+
+-- Reaction and unit type, corrected for attackability when a player unit token exists.
+function NP.native_style.GetPlateReaction(plateData)
+    local reaction, unitType = GetPlateReactionFromBarColor(plateData)
+    if not reaction then
+        return nil, nil
+    end
+    local unit = ResolvePlateTokenForReaction(plateData)
+    if unit and UnitIsPlayer(unit) then
+        plateData._lastCanAttack = UnitCanAttack("player", unit)
+    end
+    return ReactionFromUnitAttackability(unit, reaction, unitType)
 end
 
 -- Raid icon texcoord → icon name.

@@ -129,6 +129,7 @@ function NP.lifecycle.SetupPlateHooks(plateData)
             if not NP.module.applied then return end
             local current = CurrentPlateData()
             if not current then return end
+            NP.native_style.NeutralizeStatusBarVisual(healthBar)
             NP.native_style.CaptureBarColor(current)
             NP.gather.SyncHealth(current, val)
             NP.widgets.Sync("ThreatGlow", current)
@@ -136,7 +137,9 @@ function NP.lifecycle.SetupPlateHooks(plateData)
         healthBar:HookScript("OnShow", function()
             if not NP.module.applied then return end
             local current = CurrentPlateData()
-            if current then NP.lifecycle.OnShowNameplate(current, "healthbar_show") end
+            if not current then return end
+            NP.native_style.NeutralizeStatusBarVisual(healthBar)
+            NP.lifecycle.OnShowNameplate(current, "healthbar_show")
         end)
         healthBar:HookScript("OnHide", function()
             if not NP.module.applied then return end

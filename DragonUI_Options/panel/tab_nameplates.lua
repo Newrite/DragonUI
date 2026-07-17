@@ -248,15 +248,6 @@ local function BuildGeneralSubTab(scroll)
         end,
     })
 
-    local addonCompat = C:AddSection(scroll, LO["Addon Compatibility"])
-    C:AddDescription(addonCompat, LO["Enable this if you use an external nameplate addon (PlateBuffs, Icicle, ...) that isn't detecting DragonUI's nameplates correctly."])
-    C:AddToggle(addonCompat, {
-        label = LO["Nameplate Addon Compatibility"],
-        desc = LO["Stops overriding the nameplate's native transparency/visibility, which some external addons rely on to find their target. Non-target nameplates will dim like vanilla."],
-        dbPath = DB .. ".nameplateAlphaCompat",
-        requiresReload = true,
-    })
-
     local unitPlates = C:AddSection(scroll, LO["Unit Nameplates"])
     local unitCols = C:AddRow(unitPlates, { layout = "Flow" })
 
@@ -347,6 +338,22 @@ local function BuildGeneralSubTab(scroll)
         desc = LO["Always show party and raid member nameplates at full opacity, regardless of target or fade settings. Does not affect pets or NPCs."],
         dbPath = DB .. ".opacityFullParty",
         callback = RefreshNameplates,
+    })
+
+    local addonCompat = C:AddSection(scroll, LO["Addon Compatibility"])
+    C:AddDescription(addonCompat, LO["Enable this if you use an external nameplate addon (PlateBuffs, Crosshairs, ...) that isn't detecting DragonUI's nameplates correctly."])
+    C:AddToggle(addonCompat, {
+        label = LO["Nameplate Addon Compatibility"],
+        desc = LO["Stops overriding the nameplate's native transparency/visibility, which some external addons rely on to find their target. Non-target nameplates will dim like vanilla."],
+        dbPath = DB .. ".nameplateAlphaCompat",
+        requiresReload = true,
+    })
+    C:AddDescription(addonCompat, LO["Enable this if you use an addon (Icicle, ...) that attaches its own widgets to DragonUI's nameplate health bar."])
+    C:AddToggle(addonCompat, {
+        label = LO["Nameplate Health Bar Compatibility"],
+        desc = LO["Hides the native health bar by fading its individual textures instead of the whole bar, for addons that attach widgets directly to it."],
+        dbPath = DB .. ".nameplateBarAlphaCompat",
+        requiresReload = true,
     })
 
 end
@@ -662,6 +669,21 @@ local function BuildHealthSubTab(scroll)
     })
 
     C:AddSpacer(health)
+
+    C:AddToggle(health, {
+        label = LO["Gray Tapped Units"],
+        desc = LO["Grays the health bar when a unit is tapped by another player or group."],
+        dbPath = DB .. ".tapDeniedGray",
+        callback = function()
+            if addon.Nameplates and addon.Nameplates.tap then
+                local np = addon.db.profile.modules and addon.db.profile.modules.nameplates
+                if np and np.tapDeniedGray == false then
+                    addon.Nameplates.tap.WipeCache()
+                end
+            end
+            RefreshNameplates()
+        end,
+    })
 
     C:AddColorPicker(health, {
         label = LO["Friendly Player Color"],

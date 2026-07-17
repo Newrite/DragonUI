@@ -712,6 +712,12 @@ L["Show Totem Bar"] = true
 L["Shamans only - Totem multicast bar. Position is controlled via Editor Mode."] = true
 L["TIP: Use Editor Mode to position the totem bar (type /dragonui edit)."] = true
 
+-- Extra Bar (issue #330)
+L["Extra Bar"] = true
+L["A 12-button action bar independent of every class's bonus bar (stance/stealth/vehicle)."] = true
+L["Fade the extra bar until you hover over it."] = true
+L["Fade the extra bar until you enter combat."] = true
+
 -- ============================================================================
 -- CAST BARS TAB
 -- ============================================================================
@@ -1329,6 +1335,8 @@ L["Health number font scale (1-10)."] = true
 L["Center Name Only"] = true
 L["Centers the unit name and hides the health percent."] = true
 L["Hides level text and health percent, and centers the unit name on the nameplate."] = true
+L["Gray Tapped Units"] = true
+L["Grays the health bar when a unit is tapped by another player or group."] = true
 L["Friendly Player Color"] = true
 L["Friendly NPC Color"] = true
 L["Party Class Colors"] = true
@@ -1561,9 +1569,13 @@ L["DragonUI (Custom)"] = true
 L["Allow Nameplate Overlap"] = true
 L["Allow plates to overlap instead of stacking."] = true
 L["Addon Compatibility"] = true
-L["Enable this if you use an external nameplate addon (PlateBuffs, Icicle, ...) that isn't detecting DragonUI's nameplates correctly."] = true
+L["Enable this if you use an external nameplate addon (PlateBuffs, Crosshairs, ...) that isn't detecting DragonUI's nameplates correctly."] = true
 L["Nameplate Addon Compatibility"] = true
 L["Stops overriding the nameplate's native transparency/visibility, which some external addons rely on to find their target. Non-target nameplates will dim like vanilla."] = true
+L["Enable this if you use an addon (Icicle, ...) that attaches its own widgets to DragonUI's nameplate health bar."] = true
+L["Nameplate Health Bar Compatibility"] = true
+L["Hides the native health bar by fading its individual textures instead of the whole bar, for addons that attach widgets directly to it."] = true
+
 L["Totem Click Padding"] = true
 L["Extra clickable padding on totem nameplates (easier to click)."] = true
 L["Clamp Target to Screen"] = true

@@ -186,6 +186,7 @@ L["MicroMenu"] = "Micro Menu"
 L["VehicleExitOverlay"] = "Vehicle Exit"
 L["StanceOverlay"] = "Stance Bar"
 L["petbar"] = "Pet Bar"
+L["ExtraBar1"] = "Extra Bar"
 L["boss"] = "Boss Frames"
 L["Boss Frames"] = true
 L["Boss1Frame"] = "Boss Frames"
@@ -274,9 +275,11 @@ L["Resets minimap mask and blip textures. DragonUI re-applies its custom texture
 L["SexyMap modifies the minimap borders, shape, and zone text which conflicts with DragonUI's minimap module."] = true
 L["Nameplate functionality conflicts with DragonUI's nameplate module."] = true
 L["Reads native nameplate alpha to identify the target's plate; conflicts with DragonUI's default anti-dim behavior."] = true
+L["Parents its cooldown icons to the native health bar; conflicts with DragonUI's default health-bar hiding."] = true
 
 -- Nameplate addon compatibility popup
 L["Detected |cFFFFFF00%s|r. Enable Nameplate Addon Compatibility so it works correctly?"] = true
+L["Detected |cFFFFFF00%s|r. Enable Nameplate Health Bar Compatibility so it works correctly?"] = true
 L["Enable"] = true
 
 -- SexyMap compatibility popup
@@ -499,6 +502,7 @@ L["Stance Bar"] = true
 L["Vehicle"] = true
 L["Vehicle interface enhancements"] = true
 L["Pet Bar"] = true
+L["Extra Bar"] = true
 L["Micro Menu"] = true
 L["Main Bars"] = true
 L["Main action bars, status bars, scaling and positioning"] = true
@@ -515,6 +519,8 @@ L["Unit Frame Layers"] = true
 L["Heal prediction, absorb shields, and animated health loss on unit frames"] = true
 L["Stance/shapeshift bar positioning and styling"] = true
 L["Pet action bar positioning and styling"] = true
+L["A standalone action bar, independent of any class bonus bar"] = true
+L["Drag a spell, item or macro here."] = true
 L["Micro menu and bags system styling and positioning"] = true
 L["%s's Inventory"] = true
 L["%s's Bank"] = true

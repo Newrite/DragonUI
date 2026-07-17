@@ -165,6 +165,14 @@ L["Broadcast and detect addon version updates across group members"] = "Detecta 
 L["Auras"] = "Auras"
 -- Nameplate addon compatibility popup
 L["Reads native nameplate alpha to identify the target's plate; conflicts with DragonUI's default anti-dim behavior."] = "Usa a transparência nativa da placa para identificar a placa do alvo; conflita com o comportamento anti-escurecimento padrão do DragonUI."
+L["Parents its cooldown icons to the native health bar; conflicts with DragonUI's default health-bar hiding."] = "Anexa seus ícones de cooldown à barra de vida nativa; conflita com a ocultação padrão dessa barra no DragonUI."
 L["Detected |cFFFFFF00%s|r. Enable Nameplate Addon Compatibility so it works correctly?"] = "|cFFFFFF00%s|r detectado. Ativar a Compatibilidade de Addons de Placas para que funcione corretamente?"
+L["Detected |cFFFFFF00%s|r. Enable Nameplate Health Bar Compatibility so it works correctly?"] = "|cFFFFFF00%s|r detectado. Ativar a Compatibilidade da Barra de Vida das Placas para que funcione corretamente?"
 L["Enable"] = "Ativar"
+
+-- Extra Bar (issue #330)
+L["ExtraBar1"] = "Barra Extra"
+L["Extra Bar"] = "Barra Extra"
+L["A standalone action bar, independent of any class bonus bar"] = "Uma barra de ação independente, não vinculada à barra de bônus de nenhuma classe"
+L["Drag a spell, item or macro here."] = "Arraste uma magia, item ou macro para cá."
 

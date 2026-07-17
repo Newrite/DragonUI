@@ -161,6 +161,14 @@ L["Broadcast and detect addon version updates across group members"] = "檢測�
 L["Auras"] = "光環"
 -- Nameplate addon compatibility popup
 L["Reads native nameplate alpha to identify the target's plate; conflicts with DragonUI's default anti-dim behavior."] = "透過名牌的原生透明度來識別目標名牌，與 DragonUI 預設的防變暗行為衝突。"
+L["Parents its cooldown icons to the native health bar; conflicts with DragonUI's default health-bar hiding."] = "將其冷卻圖示掛到原生生命條上；與 DragonUI 預設隱藏該生命條的行為衝突。"
 L["Detected |cFFFFFF00%s|r. Enable Nameplate Addon Compatibility so it works correctly?"] = "偵測到 |cFFFFFF00%s|r。是否啟用名牌外掛相容性以使其正常運作？"
+L["Detected |cFFFFFF00%s|r. Enable Nameplate Health Bar Compatibility so it works correctly?"] = "偵測到 |cFFFFFF00%s|r。是否啟用名牌生命條相容性以使其正常運作？"
 L["Enable"] = "啟用"
+
+-- Extra Bar (issue #330)
+L["ExtraBar1"] = "額外欄"
+L["Extra Bar"] = "額外欄"
+L["A standalone action bar, independent of any class bonus bar"] = "一個獨立的動作列，不依賴於任何職業特殊列"
+L["Drag a spell, item or macro here."] = "將法術、物品或巨集拖到這裡。"
 
