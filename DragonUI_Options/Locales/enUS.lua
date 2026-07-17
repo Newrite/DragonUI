@@ -1030,11 +1030,22 @@ L["Personal Resource Width"] = true
 L["Horizontal bar width. Set to 0 to inherit the regular nameplate width."] = true
 L["Personal Resource Height"] = true
 L["Horizontal bar height. Set to 0 to inherit the regular nameplate height."] = true
+L["Personal Resource Horizontal Width"] = true
+L["Personal Resource Horizontal Height"] = true
 L["Personal Resource Vertical Order"] = true
 L["Health Left, Power Right"] = true
 L["Power Left, Health Right"] = true
 L["Horizontal"] = true
 L["Vertical"] = true
+L["Configure DragonUI health and resource bars in native-following or fixed-screen mode."] = true
+L["Fix Personal Resource Position to Screen"] = true
+L["Detach the DragonUI personal resource bars from the camera-driven native anchor."] = true
+L["Horizontal offset from the native personal resource anchor."] = true
+L["Vertical offset from the native personal resource anchor."] = true
+L["Personal Resource Screen X"] = true
+L["Fixed horizontal position relative to the center of the screen."] = true
+L["Personal Resource Screen Y"] = true
+L["Fixed vertical position relative to the center of the screen."] = true
 
 -- Party text format values
 L["Current Value Only (2345)"] = true

@@ -206,7 +206,9 @@ function NP.discovery.AttachBarBorder(bar)
     tex:SetAllPoints(br)
     tex:SetTexture(C.MINA_TEX .. "bar-border")
     tex:SetVertexColor(0.5, 0.5, 0.5)
+    br.minaTexture = tex
     bar.minaBr = br
+    bar.minaBrTex = tex
     return br
 end
 

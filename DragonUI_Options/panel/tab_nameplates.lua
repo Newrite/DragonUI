@@ -532,21 +532,56 @@ local function BuildLayoutSubTab(scroll)
 
     local personalResource = C:AddSection(scroll, LO["Personal Resource Display"])
     C:AddDescription(personalResource,
-        LO["Position of DragonUI health and resource bars relative to the native personal resource anchor."])
+        LO["Configure DragonUI health and resource bars in native-following or fixed-screen mode."])
+
+    local function IsPersonalResourceFixed()
+        return C:GetDBValue(DB .. ".personalResourceFixedPosition") == true
+    end
+
+    C:AddToggle(personalResource, {
+        label = LO["Fix Personal Resource Position to Screen"],
+        desc = LO["Detach the DragonUI personal resource bars from the camera-driven native anchor."],
+        dbPath = DB .. ".personalResourceFixedPosition",
+        callback = RefreshAndRebuildNameplates,
+    })
 
     C:AddSlider(personalResource, {
         label = LO["Personal Resource X Offset"],
+        desc = LO["Horizontal offset from the native personal resource anchor."],
         dbPath = DB .. ".personalResourceOffsetX",
         min = -500, max = 500, step = 1,
         width = 200,
+        disabled = IsPersonalResourceFixed,
         callback = RefreshNameplates,
     })
 
     C:AddSlider(personalResource, {
         label = LO["Personal Resource Y Offset"],
+        desc = LO["Vertical offset from the native personal resource anchor."],
         dbPath = DB .. ".personalResourceOffsetY",
         min = -500, max = 500, step = 1,
         width = 200,
+        disabled = IsPersonalResourceFixed,
+        callback = RefreshNameplates,
+    })
+
+    C:AddSlider(personalResource, {
+        label = LO["Personal Resource Screen X"],
+        desc = LO["Fixed horizontal position relative to the center of the screen."],
+        dbPath = DB .. ".personalResourceFixedX",
+        min = -1000, max = 1000, step = 1,
+        width = 200,
+        disabled = function() return not IsPersonalResourceFixed() end,
+        callback = RefreshNameplates,
+    })
+
+    C:AddSlider(personalResource, {
+        label = LO["Personal Resource Screen Y"],
+        desc = LO["Fixed vertical position relative to the center of the screen."],
+        dbPath = DB .. ".personalResourceFixedY",
+        min = -1000, max = 1000, step = 1,
+        width = 200,
+        disabled = function() return not IsPersonalResourceFixed() end,
         callback = RefreshNameplates,
     })
 
@@ -583,26 +618,6 @@ local function BuildLayoutSubTab(scroll)
         callback = RefreshNameplates,
     })
 
-    C:AddSlider(personalResource, {
-        label = LO["Personal Resource Width"],
-        desc = LO["Horizontal bar width. Set to 0 to inherit the regular nameplate width."],
-        dbPath = DB .. ".personalResourceWidth",
-        min = 0, max = 400, step = 1,
-        width = 220,
-        disabled = IsPersonalResourceVertical,
-        callback = RefreshNameplates,
-    })
-
-    C:AddSlider(personalResource, {
-        label = LO["Personal Resource Height"],
-        desc = LO["Horizontal bar height. Set to 0 to inherit the regular nameplate height."],
-        dbPath = DB .. ".personalResourceHeight",
-        min = 0, max = 60, step = 1,
-        width = 220,
-        disabled = IsPersonalResourceVertical,
-        callback = RefreshNameplates,
-    })
-
     C:AddDropdown(personalResource, {
         label = LO["Personal Resource Orientation"],
         desc = LO["Arrange personal health and power as horizontal bars or vertical bars side by side."],
@@ -613,6 +628,26 @@ local function BuildLayoutSubTab(scroll)
         },
         width = 220,
         callback = RefreshAndRebuildNameplates,
+    })
+
+    C:AddSlider(personalResource, {
+        label = LO["Personal Resource Horizontal Width"],
+        desc = LO["Horizontal bar width. Set to 0 to inherit the regular nameplate width."],
+        dbPath = DB .. ".personalResourceWidth",
+        min = 0, max = 400, step = 1,
+        width = 220,
+        disabled = IsPersonalResourceVertical,
+        callback = RefreshNameplates,
+    })
+
+    C:AddSlider(personalResource, {
+        label = LO["Personal Resource Horizontal Height"],
+        desc = LO["Horizontal bar height. Set to 0 to inherit the regular nameplate height."],
+        dbPath = DB .. ".personalResourceHeight",
+        min = 0, max = 60, step = 1,
+        width = 220,
+        disabled = IsPersonalResourceVertical,
+        callback = RefreshNameplates,
     })
 
     C:AddSlider(personalResource, {

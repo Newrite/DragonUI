@@ -1008,6 +1008,24 @@ function NP.layout.GetNameOverlayIconY()
     return base + (cfg.eliteIconOffsetY or 0)
 end
 
+local function SetTextureVertical(texture, vertical)
+    if not texture or not texture.SetTexCoord then return end
+    if vertical then
+        -- Rotate the horizontal artwork clockwise without relying on SetRotation.
+        texture:SetTexCoord(0, 1, 1, 1, 0, 0, 1, 0)
+    else
+        texture:SetTexCoord(0, 1, 0, 1)
+    end
+end
+
+local function SetMinaBarOrientation(bar, vertical)
+    if not bar then return end
+    bar:SetOrientation(vertical and "VERTICAL" or "HORIZONTAL")
+    SetTextureVertical(bar:GetStatusBarTexture(), vertical)
+    SetTextureVertical(bar.minaBg, vertical)
+    SetTextureVertical(bar.minaBrTex or (bar.minaBr and bar.minaBr.minaTexture), vertical)
+end
+
 function NP.layout.LayoutMinaStack(plateData)
     local border = plateData.border
     local hp = plateData.minaHp
@@ -1018,6 +1036,7 @@ function NP.layout.LayoutMinaStack(plateData)
     local visW, barH = NP.config.GetBarRefSize()
     local cfg = NP.config.GetCfg()
     local isPersonalResource = NP.identity.IsPersonalResourcePlate(plateData)
+    local fixedPosition = isPersonalResource and cfg.personalResourceFixedPosition == true
     local isVertical = isPersonalResource and cfg.personalResourceOrientation == "vertical"
     local showHealth = not isPersonalResource or cfg.personalResourceShowHealth ~= false
     local showPower = not isPersonalResource or cfg.personalResourceShowPower ~= false
@@ -1030,7 +1049,9 @@ function NP.layout.LayoutMinaStack(plateData)
     local verticalGap = cfg.personalResourceVerticalGap or 4
     local healthOnRight = cfg.personalResourceVerticalHealthSide == "right"
     local ox, oy
-    if isPersonalResource then
+    if fixedPosition then
+        ox, oy = 0, 0
+    elseif isPersonalResource then
         ox = cfg.personalResourceOffsetX or 0
         oy = cfg.personalResourceOffsetY or 0
     else
@@ -1039,13 +1060,40 @@ function NP.layout.LayoutMinaStack(plateData)
     local visualRoot = plateData.visualRoot or plateData.plate
     local plate = plateData.plate
     if visualRoot and visualRoot.SetPoint then
+        local desiredParent = fixedPosition and UIParent or plate
+        local parentChanged = visualRoot.GetParent and visualRoot:GetParent() ~= desiredParent
+        if parentChanged and visualRoot.SetParent then
+            visualRoot:SetParent(desiredParent)
+        end
         visualRoot:ClearAllPoints()
-        visualRoot:SetPoint("TOP", plate, "TOP", 0, 0)
+        if fixedPosition then
+            visualRoot:SetPoint("CENTER", UIParent, "CENTER",
+                cfg.personalResourceFixedX or 0, cfg.personalResourceFixedY or -160)
+            if visualRoot.SetFrameStrata then visualRoot:SetFrameStrata("MEDIUM") end
+            if visualRoot.SetFrameLevel then visualRoot:SetFrameLevel(20) end
+        else
+            visualRoot:SetPoint("TOP", plate, "TOP", 0, 0)
+            if visualRoot.SetFrameStrata and plate.GetFrameStrata then
+                visualRoot:SetFrameStrata(plate:GetFrameStrata())
+            end
+            if visualRoot.SetFrameLevel and plate.GetFrameLevel then
+                visualRoot:SetFrameLevel(plate:GetFrameLevel())
+            end
+        end
         visualRoot:SetScale(isPersonalResource and (cfg.personalResourceScale or 1) or 1)
+        visualRoot:Show()
+        local previousFixedPosition = plateData._personalResourceFixedApplied == true
+        if parentChanged or previousFixedPosition ~= fixedPosition then
+            plateData._levelsApplied = nil
+            ApplyCreationFrameLevels(plateData)
+        end
+        plateData._personalResourceFixedApplied = fixedPosition
     end
 
     hp:ClearAllPoints()
-    hp:SetOrientation(isVertical and "VERTICAL" or "HORIZONTAL")
+    SetMinaBarOrientation(hp, isVertical)
+    SetTextureVertical(plateData.minaHpAbsorb, isVertical)
+    SetTextureVertical(plateData.minaHpOverAbsorb, isVertical)
     if isVertical then
         hp:SetSize(verticalWidth, verticalHeight)
         if showHealth and showPower then
@@ -1067,7 +1115,7 @@ function NP.layout.LayoutMinaStack(plateData)
     end
 
     po:ClearAllPoints()
-    po:SetOrientation(isVertical and "VERTICAL" or "HORIZONTAL")
+    SetMinaBarOrientation(po, isVertical)
     local stackGap = NP.config.GetStackBarGap()
     if isVertical then
         po:SetSize(verticalWidth, verticalHeight)
