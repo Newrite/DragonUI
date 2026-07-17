@@ -25,7 +25,8 @@ This fork keeps two long-lived branches:
 - Corrected class-color resolution for target, friendly, hostile, and Mercenary nameplates, including custom classes whose colors collide with stock reaction colors.
 - Improved nameplate castbars by suppressing stale native visuals and preserving DragonUI interrupted-cast behavior.
 - Added headline-mode controls for health values, health percentages, and castbars.
-- Isolated Personal Resource Display from regular nameplate behavior so it shows only DragonUI health and resource bars, with independent X/Y position controls.
+- Isolated Personal Resource Display from regular nameplate behavior so it shows only DragonUI health and resource bars, with independent position, value-format, and absorb-shield controls.
+- Restored the framed Combuctor money and tracked-currency rows removed by the vanilla money-layout rewrite.
 - Fixed aura and debuff positioning/refresh behavior, including persistent debuff placement after reloads.
 - Avoided protected unit-frame attribute writes that could trigger blocked secure-function errors.
 - Included compatibility and regression fixes for Ascension inspector, action bars, buffs, and custom class handling.
