@@ -898,6 +898,12 @@ L["Both (Numbers + Percentage)"] = "Оба (Числа + проценты)"
 L["Numbers + %"] = "Числа + %"
 L["Current/Max Values"] = "Текущее/Максимум"
 L["Current / Max"] = "Текущее / Макс"
+L["Personal Resource Health Text"] = "Текст персональной полосы здоровья"
+L["Choose the value format shown on the personal health bar."] = "Выберите формат значений на персональной полосе здоровья."
+L["Personal Resource Power Text"] = "Текст персональной полосы ресурса"
+L["Choose the value format shown on the personal power bar."] = "Выберите формат значений на персональной полосе ресурса."
+L["Show Personal Resource Absorb"] = "Показывать поглощение на персональном ресурсе"
+L["Show the player's active absorb shield over the personal health bar."] = "Показывать активный щит поглощения игрока поверх персональной полосы здоровья."
 
 -- Party text format values
 L["Current Value Only (2345)"] = "Только текущее (2345)"

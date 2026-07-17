@@ -884,6 +884,16 @@ function NP.layout.EnsureMinaStack(plateData)
     plateData.minaPo = NP.discovery.CreateMinaBar(visualRoot, C.MINA_TEX .. "bar-fill", 0, 0.5, 1)
     plateData.minaPo:Hide()
 
+    plateData.minaHpAbsorb = plateData.minaHp:CreateTexture(nil, "ARTWORK")
+    plateData.minaHpAbsorb:SetTexture("Interface\\AddOns\\DragonUI\\Textures\\UnitFrameLayers\\Shield-Fill")
+    plateData.minaHpAbsorb:SetBlendMode("ADD")
+    plateData.minaHpAbsorb:Hide()
+
+    plateData.minaHpOverAbsorb = plateData.minaHp:CreateTexture(nil, "OVERLAY")
+    plateData.minaHpOverAbsorb:SetTexture("Interface\\AddOns\\DragonUI\\Textures\\UnitFrameLayers\\Shield-Overshield")
+    plateData.minaHpOverAbsorb:SetBlendMode("ADD")
+    plateData.minaHpOverAbsorb:Hide()
+
     plateData.minaTarget = CreateFrame("Frame", nil, visualRoot)
     -- Visual only; no mouse capture.
     plateData.minaTarget:EnableMouse(false)
@@ -1007,8 +1017,9 @@ function NP.layout.LayoutMinaStack(plateData)
 
     local visW, barH = NP.config.GetBarRefSize()
     local cfg = NP.config.GetCfg()
+    local isPersonalResource = NP.identity.IsPersonalResourcePlate(plateData)
     local ox, oy
-    if NP.identity.IsPersonalResourcePlate(plateData) then
+    if isPersonalResource then
         ox = cfg.personalResourceOffsetX or 0
         oy = cfg.personalResourceOffsetY or 0
     else
@@ -1117,7 +1128,14 @@ function NP.layout.LayoutMinaStack(plateData)
     end
     if plateData.minaHpNum then
         plateData.minaHpNum:ClearAllPoints()
-        plateData.minaHpNum:SetPoint("LEFT", hp, "LEFT", 4, 0)
+        if isPersonalResource and cfg.personalResourceHealthText ~= "current_percent" then
+            plateData.minaHpNum:SetJustifyH("CENTER")
+            plateData.minaHpNum:SetPoint("LEFT", hp, "LEFT", 2, 0)
+            plateData.minaHpNum:SetPoint("RIGHT", hp, "RIGHT", -2, 0)
+        else
+            plateData.minaHpNum:SetJustifyH("LEFT")
+            plateData.minaHpNum:SetPoint("LEFT", hp, "LEFT", 4, 0)
+        end
     end
     if plateData.minaHpBarPct then
         plateData.minaHpBarPct:ClearAllPoints()
@@ -1131,7 +1149,14 @@ function NP.layout.LayoutMinaStack(plateData)
 
     if plateData.minaPoCur then
         plateData.minaPoCur:ClearAllPoints()
-        plateData.minaPoCur:SetPoint("LEFT", po, "LEFT", 4, 0)
+        if isPersonalResource and cfg.personalResourcePowerText ~= "current_percent" then
+            plateData.minaPoCur:SetJustifyH("CENTER")
+            plateData.minaPoCur:SetPoint("LEFT", po, "LEFT", 2, 0)
+            plateData.minaPoCur:SetPoint("RIGHT", po, "RIGHT", -2, 0)
+        else
+            plateData.minaPoCur:SetJustifyH("LEFT")
+            plateData.minaPoCur:SetPoint("LEFT", po, "LEFT", 4, 0)
+        end
     end
 
     if plateData.minaPoPct then

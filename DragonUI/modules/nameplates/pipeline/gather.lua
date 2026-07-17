@@ -564,12 +564,115 @@ function NP.gather.GetHealthBarColor(plateData)
     return 1, 0.1, 0.1
 end
 
+local AbsorbsMonitor
+
+local function GetPlayerAbsorbAmount()
+    if not AbsorbsMonitor and LibStub then
+        AbsorbsMonitor = LibStub:GetLibrary("AbsorbsMonitor-1.0", true)
+    end
+    local playerGUID = UnitGUID("player")
+    if not AbsorbsMonitor or not playerGUID or not AbsorbsMonitor.Unit_Total then
+        return 0
+    end
+    return tonumber(AbsorbsMonitor.Unit_Total(playerGUID)) or 0
+end
+
+local function FormatResourceValue(value)
+    value = math.floor((tonumber(value) or 0) + 0.5)
+    return addon.TextSystem and addon.TextSystem.AbbreviateLargeNumbers(value) or tostring(value)
+end
+
+local function BuildPersonalResourceText(mode, current, maximum)
+    mode = mode or "current_max"
+    if mode == "none" or not maximum or maximum <= 0 then
+        return nil, nil
+    end
+
+    local currentText = FormatResourceValue(current)
+    local percentText = math.floor(current / maximum * 100 + 0.5) .. "%"
+    if mode == "current" then
+        return currentText, nil
+    elseif mode == "percent" then
+        return percentText, nil
+    elseif mode == "current_percent" then
+        return currentText, percentText
+    end
+    return currentText .. " / " .. FormatResourceValue(maximum), nil
+end
+
+local function SetPersonalResourceText(plateData, primaryKey, secondaryKey, cacheKey, primary, secondary)
+    local primaryText = plateData[primaryKey]
+    local secondaryText = plateData[secondaryKey]
+    if primaryText then
+        if primary then
+            if plateData[cacheKey] ~= primary then
+                plateData[cacheKey] = primary
+                primaryText:SetText(primary)
+            end
+            primaryText:Show()
+        else
+            plateData[cacheKey] = nil
+            primaryText:Hide()
+        end
+    end
+    if secondaryText then
+        local secondaryCacheKey = cacheKey .. "Secondary"
+        if secondary then
+            if plateData[secondaryCacheKey] ~= secondary then
+                plateData[secondaryCacheKey] = secondary
+                secondaryText:SetText(secondary)
+            end
+            secondaryText:Show()
+        else
+            plateData[secondaryCacheKey] = nil
+            secondaryText:Hide()
+        end
+    end
+end
+
+local function SyncPersonalResourceAbsorb(plateData, current, maximum, enabled)
+    local absorb = plateData.minaHpAbsorb
+    local overAbsorb = plateData.minaHpOverAbsorb
+    if not absorb then return end
+
+    local amount = enabled and GetPlayerAbsorbAmount() or 0
+    if amount <= 0 or not maximum or maximum <= 0 then
+        absorb:Hide()
+        if overAbsorb then overAbsorb:Hide() end
+        return
+    end
+
+    local bar = plateData.minaHp
+    local width = math.max(1, math.min(amount / maximum, 1) * bar:GetWidth())
+    absorb:ClearAllPoints()
+    absorb:SetPoint("TOPRIGHT", bar, "TOPRIGHT", -1, -1)
+    absorb:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", -1, 1)
+    absorb:SetWidth(width)
+    absorb:Show()
+
+    if overAbsorb then
+        if current + amount >= maximum then
+            overAbsorb:ClearAllPoints()
+            overAbsorb:SetPoint("TOPRIGHT", bar, "TOPRIGHT", 4, 1)
+            overAbsorb:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 4, -1)
+            overAbsorb:SetWidth(8)
+            overAbsorb:Show()
+        else
+            overAbsorb:Hide()
+        end
+    end
+end
+
 function NP.gather.SyncHealth(plateData, value)
     local src = plateData.healthBar
     local bar = plateData.minaHp
     if not src or not bar then return end
 
     local isPersonalResource = NP.identity.IsPersonalResourcePlate(plateData)
+    if not isPersonalResource then
+        if plateData.minaHpAbsorb then plateData.minaHpAbsorb:Hide() end
+        if plateData.minaHpOverAbsorb then plateData.minaHpOverAbsorb:Hide() end
+    end
     if not isPersonalResource and NP.gather.IsTotemIconOnlyActive(plateData) then
         bar:Hide()
         if plateData.minaHpPct then plateData.minaHpPct:Hide() end
@@ -626,6 +729,15 @@ function NP.gather.SyncHealth(plateData, value)
     bar:Show()
 
     local cfg = NP.config.GetCfg()
+    if isPersonalResource then
+        if plateData.minaHpPct then plateData.minaHpPct:Hide() end
+        local primary, secondary = BuildPersonalResourceText(cfg.personalResourceHealthText, cur, maxVal)
+        SetPersonalResourceText(plateData, "minaHpNum", "minaHpBarPct", "_lastPersonalHealthText",
+            primary, secondary)
+        SyncPersonalResourceAbsorb(plateData, cur, maxVal, cfg.personalResourceShowAbsorb ~= false)
+        return
+    end
+
     local showHpNum = cfg.showHealthNumber == true
     -- Guard SetText on unchanged health values.
     if showHpNum and maxVal and maxVal > 0 then
@@ -734,6 +846,14 @@ function NP.gather.SyncPower(plateData, unit)
     bar:SetMinMaxValues(0, maxVal)
     bar:SetValue(cur)
     bar:Show()
+
+    if isPersonalResource then
+        local primary, secondary = BuildPersonalResourceText(cfg.personalResourcePowerText, cur, maxVal)
+        SetPersonalResourceText(plateData, "minaPoCur", "minaPoPct", "_lastPersonalPowerText",
+            primary, secondary)
+        finish()
+        return
+    end
 
     if plateData.minaPoCur then
         if cfg.showPowerBarText ~= false then

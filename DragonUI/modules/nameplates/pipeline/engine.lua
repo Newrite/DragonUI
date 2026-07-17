@@ -454,6 +454,15 @@ local function EngineOnUpdate(_, elapsed)
     if NP.module._driftElapsed >= DRIFT_INTERVAL then
         NP.module._driftElapsed = 0
         NP.gather.ProcessReactionDrift()
+        if NP.config.GetCfg().personalResourceShowAbsorb ~= false then
+            for _, plateData in pairs(NP.module.plates) do
+                local plate = plateData.plate
+                if plate and plate:IsShown() and NP.identity.IsPersonalResourcePlate(plateData) then
+                    E.QueuePlate(plateData, CB.OnUpdateHealth)
+                    break
+                end
+            end
+        end
     end
 
     if NP.clickbox and NP.clickbox.TickPreview then
@@ -719,6 +728,15 @@ local function EngineOnEvent(_, event, unit, ...)
     if not unit then return end
 
     if event == "UNIT_AURA" then
+        if unit == "player" then
+            for _, plateData in pairs(NP.module.plates) do
+                if NP.identity.IsPersonalResourcePlate(plateData) then
+                    E.QueuePlate(plateData, CB.OnUpdateHealth)
+                    break
+                end
+            end
+            return
+        end
         if unit == "target" or unit == "mouseover" or unit == "focus" then
             local refreshedGUID = NP.auras.DebuffRuntime.UpdateAuraCacheFromUnit(unit)
             local owner

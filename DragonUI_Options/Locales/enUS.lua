@@ -1009,6 +1009,12 @@ L["Both (Numbers + Percentage)"] = true
 L["Numbers + %"] = true
 L["Current/Max Values"] = true
 L["Current / Max"] = true
+L["Personal Resource Health Text"] = true
+L["Choose the value format shown on the personal health bar."] = true
+L["Personal Resource Power Text"] = true
+L["Choose the value format shown on the personal power bar."] = true
+L["Show Personal Resource Absorb"] = true
+L["Show the player's active absorb shield over the personal health bar."] = true
 
 -- Party text format values
 L["Current Value Only (2345)"] = true

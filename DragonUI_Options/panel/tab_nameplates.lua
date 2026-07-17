@@ -550,6 +550,39 @@ local function BuildLayoutSubTab(scroll)
         callback = RefreshNameplates,
     })
 
+    local personalResourceTextFormats = {
+        none = LO["None"],
+        current = LO["Current Value Only"],
+        percent = LO["Percentage Only"],
+        current_max = LO["Current/Max Values"],
+        current_percent = LO["Both (Numbers + Percentage)"],
+    }
+
+    C:AddDropdown(personalResource, {
+        label = LO["Personal Resource Health Text"],
+        desc = LO["Choose the value format shown on the personal health bar."],
+        dbPath = DB .. ".personalResourceHealthText",
+        values = personalResourceTextFormats,
+        width = 220,
+        callback = RefreshNameplates,
+    })
+
+    C:AddDropdown(personalResource, {
+        label = LO["Personal Resource Power Text"],
+        desc = LO["Choose the value format shown on the personal power bar."],
+        dbPath = DB .. ".personalResourcePowerText",
+        values = personalResourceTextFormats,
+        width = 220,
+        callback = RefreshNameplates,
+    })
+
+    C:AddToggle(personalResource, {
+        label = LO["Show Personal Resource Absorb"],
+        desc = LO["Show the player's active absorb shield over the personal health bar."],
+        dbPath = DB .. ".personalResourceShowAbsorb",
+        callback = RefreshNameplates,
+    })
+
     local clickboxSection = C:AddSection(scroll, LO["Clickbox"])
 
     local function OnClickboxSliderChanged()
