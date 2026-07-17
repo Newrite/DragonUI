@@ -88,10 +88,35 @@ local CT = {
     slot_border       = CombuctorAssets .. 'ui-quickslot2',
     tabs              = CombuctorAssets .. 'uiframetabs',
     sidetab           = CombuctorAssets .. 'sidetab',
+    coinbox           = CombuctorAssets .. 'commoncoinbox',
+    currencybox       = CombuctorAssets .. 'commoncurrencybox',
     coinGold          = CombuctorAssets .. 'coingold',
     coinSilver        = CombuctorAssets .. 'coinsilver',
     coinCopper        = CombuctorAssets .. 'coincopper',
 }
+
+local function CombuctorApplyPillChrome(frame, texturePath)
+    if frame._dragonuiPill then return end
+    frame._dragonuiPill = true
+
+    local left = frame:CreateTexture(nil, "BACKGROUND")
+    left:SetSize(8, 19)
+    left:SetPoint("LEFT", frame, "LEFT")
+    left:SetTexture(texturePath)
+    left:SetTexCoord(0.03125, 0.53125, 0.289062, 0.554688)
+
+    local right = frame:CreateTexture(nil, "BACKGROUND")
+    right:SetSize(8, 19)
+    right:SetPoint("RIGHT", frame, "RIGHT")
+    right:SetTexture(texturePath)
+    right:SetTexCoord(0.03125, 0.53125, 0.570312, 0.835938)
+
+    local middle = frame:CreateTexture(nil, "BACKGROUND")
+    middle:SetPoint("TOPLEFT", left, "TOPRIGHT")
+    middle:SetPoint("BOTTOMRIGHT", right, "BOTTOMLEFT")
+    middle:SetTexture(texturePath)
+    middle:SetTexCoord(0, 0.5, 0.0078125, 0.273438)
+end
 
 
 -- Retail-style nineslice border for Combuctor frames
@@ -524,6 +549,7 @@ end
 -- ============================================================================
 
 mod.CT = CT
+mod.CombuctorApplyPillChrome = CombuctorApplyPillChrome
 mod.L = L
 mod.DB = DB
 mod.defaults = defaults

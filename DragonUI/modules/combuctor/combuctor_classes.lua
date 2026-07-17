@@ -1346,12 +1346,13 @@ do
     local TOKEN_ICON_SIZE = 16
     local TOKEN_GAP = 6
 
-    -- The parent box (nineslice) provides the chrome; this bar only lays out token buttons
     function TokenBar:New(parent)
         local bar = self:Bind(CreateFrame("Frame", nil, parent))
         bar:SetHeight(TOKENBAR_HEIGHT)
         bar.tokenButtons = {}
         bar._tokenCount = 0
+
+        mod.CombuctorApplyPillChrome(bar, mod.CT.currencybox)
 
         bar:SetScript("OnEvent", function(self, event)
             if event == "CURRENCY_DISPLAY_UPDATE" then
@@ -1369,6 +1370,7 @@ do
     end
 
     function TokenBar:Refresh()
+        local wasShown = self:IsShown()
         local numTokens = 0
         for i = 1, MAX_WATCHED_TOKENS do
             local name, count, extraCurrencyType, icon, itemID = GetBackpackCurrencyInfo(i)
@@ -1414,7 +1416,7 @@ do
             end
         end
 
-        -- Bare tokens laid left-to-right on the bottom band
+        -- Keep the right edge stable as tracked currencies are added or removed.
         if numTokens > 0 then
             self._tokenCount = numTokens
             local previous
@@ -1423,9 +1425,9 @@ do
                 if btn and btn:IsShown() then
                     btn:ClearAllPoints()
                     if previous then
-                        btn:SetPoint("LEFT", previous, "RIGHT", TOKEN_GAP, 0)
+                        btn:SetPoint("RIGHT", previous, "LEFT", -TOKEN_GAP, 0)
                     else
-                        btn:SetPoint("LEFT", self, "LEFT", 0, 1)
+                        btn:SetPoint("RIGHT", self, "RIGHT", -10, 1)
                     end
                     previous = btn
                 end
@@ -1435,20 +1437,28 @@ do
             self._tokenCount = 0
             self:Hide()
         end
+
+        if wasShown ~= self:IsShown() then
+            local parent = self:GetParent()
+            if parent and parent.UpdateBottomLayout then
+                parent:UpdateBottomLayout()
+                parent:UpdateItemFrameSize()
+                parent:UpdateClampInsets()
+            end
+        end
     end
 
     function TokenBar:_CreateTokenButton(index)
         local btn = CreateFrame("Button", nil, self)
         btn:SetHeight(TOKENBAR_HEIGHT - 2)
 
-        -- Count then icon, like retail's backpack token row
+        btn.count = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        btn.count:SetPoint("RIGHT", btn, "RIGHT", 0, 0)
+        btn.count:SetJustifyH("RIGHT")
+
         btn.icon = btn:CreateTexture(nil, "OVERLAY")
         btn.icon:SetSize(TOKEN_ICON_SIZE, TOKEN_ICON_SIZE)
-        btn.icon:SetPoint("RIGHT", btn, "RIGHT", 0, 0)
-
-        btn.count = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-        btn.count:SetPoint("RIGHT", btn.icon, "LEFT", -3, 0)
-        btn.count:SetJustifyH("RIGHT")
+        btn.icon:SetPoint("RIGHT", btn.count, "LEFT", -3, 0)
 
         -- Set button width based on count text width
         btn.count:SetText("99999")

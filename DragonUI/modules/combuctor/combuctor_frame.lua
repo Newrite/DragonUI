@@ -404,19 +404,20 @@ do
         f.nameFilter = _G[f:GetName() .. "Search"]
 
         f.qualityFilter = mod.QualityFilter:New(f)
-        f.qualityFilter:SetPoint("BOTTOM", 0, 7)
+        f.qualityFilter:SetPoint("BOTTOMLEFT", 14, 10)
 
         f.itemFrame = mod.ItemFrame:New(f)
         f.itemFrame:SetPoint("TOPLEFT", 14, -62)
 
-        -- Bottom band: bare money bottom-right, bare currency tokens bottom-left
+        f.coinFrame = CreateFrame("Frame", nil, f)
+        f.coinFrame:SetSize(180, 19)
+        mod.CombuctorApplyPillChrome(f.coinFrame, mod.CT.coinbox)
+
         f.moneyFrame = mod.MoneyFrame:New(f)
-        f.moneyFrame:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -14, 8)
 
         if not isBank then
             f.tokenBar = mod.TokenBar:New(f)
-            f.tokenBar:SetSize(220, 19)
-            f.tokenBar:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 14, 8)
+            f.tokenBar:SetSize(180, 19)
             f.tokenBar:Refresh()
         end
 
@@ -722,6 +723,9 @@ do
             newW = newW - 36
         end
         local newH = self:GetHeight() + ITEM_FRAME_HEIGHT_OFFSET
+        if not self.isBank and self.tokenBar and self.tokenBar:IsShown() then
+            newH = newH - 25
+        end
         if not (prevW == newW and prevH == newH) then
             self.itemFrame:SetWidth(newW)
             self.itemFrame:SetHeight(newH)
@@ -729,7 +733,6 @@ do
         end
     end
 
-    -- Quality filter (off by default) sits bottom-center on the bottom band
     function InventoryFrame:UpdateBottomLayout()
         local cfg = mod.GetModuleConfig()
         if cfg and cfg.show_quality_filter then
@@ -737,11 +740,30 @@ do
         else
             self.qualityFilter:Hide()
         end
+
+        local tokenBarVisible = not self.isBank and self.tokenBar and self.tokenBar:IsShown()
+        local coinY = tokenBarVisible and 32 or 10
+
+        if self.tokenBar then
+            self.tokenBar:ClearAllPoints()
+            self.tokenBar:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -9, 10)
+        end
+        if self.coinFrame then
+            self.coinFrame:ClearAllPoints()
+            self.coinFrame:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -9, coinY)
+        end
+        if self.moneyFrame then
+            self.moneyFrame:ClearAllPoints()
+            self.moneyFrame:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -12, coinY)
+        end
     end
 
     function InventoryFrame:UpdateClampInsets()
         local l, r, t, b
         local bottomBase = self.bottomFilter:IsShown() and 35 or 65
+        if not self.isBank and self.tokenBar and self.tokenBar:IsShown() then
+            bottomBase = bottomBase + 25
+        end
         t, b = -15, bottomBase
         if self.sideFilter:IsShown() then
             if self.sideFilter:Reversed() then
