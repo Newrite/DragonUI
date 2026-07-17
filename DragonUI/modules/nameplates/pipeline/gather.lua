@@ -549,8 +549,9 @@ function NP.gather.GetHealthBarColor(plateData)
             local token = ResolvePlateToken(plateData)
             if token and UnitExists(token) and UnitIsPlayer(token) then
                 local _, class = UnitClass(token)
-                if class and RAID_CLASS_COLORS[class] then
-                    return RAID_CLASS_COLORS[class].r, RAID_CLASS_COLORS[class].g, RAID_CLASS_COLORS[class].b
+                local color = addon.GetClassColor(class)
+                if color then
+                    return color.r, color.g, color.b
                 end
             end
         end
