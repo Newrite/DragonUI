@@ -9,7 +9,26 @@
 |--------|------|
 | **Latest stable release** | [Download](https://github.com/PentSec/DragonUI/releases/latest/download/DragonUI.zip) |
 | **Cutting-edge (main branch)** | [Download](https://github.com/PentSec/DragonUI/archive/refs/heads/main.zip) |
+| **Newrite Edge fork** | [Download](https://github.com/Newrite/DragonUI/archive/refs/heads/Edge.zip) |
 
+### Newrite Edge Branch
+
+This fork keeps two long-lived branches:
+
+- `main` mirrors the original [PentSec/DragonUI](https://github.com/PentSec/DragonUI) main branch.
+- `Edge` is the integration branch for the Ascension Conquest of Azeroth fixes maintained in this fork.
+- New work starts from `Edge` in a dedicated feature or fix branch and is merged back only after verification.
+
+#### Edge Changes
+
+- Unified custom Conquest of Azeroth class colors across unit frames, nameplates, tooltips, party frames, alerts, and related UI components using the live Ascension class palette.
+- Corrected class-color resolution for target, friendly, hostile, and Mercenary nameplates, including custom classes whose colors collide with stock reaction colors.
+- Improved nameplate castbars by suppressing stale native visuals and preserving DragonUI interrupted-cast behavior.
+- Added headline-mode controls for health values, health percentages, and castbars.
+- Isolated Personal Resource Display from regular nameplate behavior so it shows only DragonUI health and resource bars, with independent X/Y position controls.
+- Fixed aura and debuff positioning/refresh behavior, including persistent debuff placement after reloads.
+- Avoided protected unit-frame attribute writes that could trigger blocked secure-function errors.
+- Included compatibility and regression fixes for Ascension inspector, action bars, buffs, and custom class handling.
 
 <div align="center">
 
