@@ -578,6 +578,14 @@ local function BuildLayoutSubTab(scroll)
     })
 
     C:AddToggle(personalResource, {
+        label = LO["Personal Resource Class Color"],
+        desc = LO["Use the player's class color only for the personal resource health bar."],
+        dbPath = DB .. ".personalResourceClassColor",
+        disabled = IsPersonalHealthHidden,
+        callback = RefreshNameplates,
+    })
+
+    C:AddToggle(personalResource, {
         label = LO["Show Personal Resource Power Bar"],
         dbPath = DB .. ".personalResourceShowPower",
         callback = RefreshAndRebuildNameplates,
@@ -703,7 +711,7 @@ local function BuildLayoutSubTab(scroll)
 
     C:AddButton(personalResource, {
         label = LO["Test Personal Resource Absorb"],
-        desc = LO["Show a simulated absorb shield for 5 seconds and report the all-source amount tracked by AbsorbsMonitor."],
+        desc = LO["Show a simulated absorb shield for 5 seconds and report the currently tracked all-source amount."],
         width = 220,
         disabled = function()
             return IsPersonalHealthHidden() or not C:GetDBValue(DB .. ".personalResourceShowAbsorb")
@@ -713,7 +721,7 @@ local function BuildLayoutSubTab(scroll)
             if not gather then return end
             local tracked = gather.GetTrackedPlayerAbsorbAmount and gather.GetTrackedPlayerAbsorbAmount() or 0
             print("|cFF00FF00[DragonUI]|r " .. string.format(
-                LO["AbsorbsMonitor tracked absorb: %s. Showing a simulated shield for 5 seconds."],
+                LO["Tracked player absorb: %s. Showing a simulated shield for 5 seconds."],
                 tostring(tracked)))
             if gather.StartPersonalResourceAbsorbPreview then
                 gather.StartPersonalResourceAbsorbPreview()
@@ -827,6 +835,22 @@ local function BuildHealthSubTab(scroll)
         label = LO["Show Health Number"],
         desc = LO["Shows HP as a number (e.g. 22k) and percent on the health bar."],
         dbPath = DB .. ".showHealthNumber",
+        callback = RefreshNameplates,
+    })
+
+    C:AddDropdown(health, {
+        label = LO["Player Health Text"],
+        desc = LO["Choose the health text format used only on player nameplates."],
+        dbPath = DB .. ".playerHealthText",
+        values = {
+            inherit = LO["Use General Settings"],
+            none = LO["None"],
+            current = LO["Current Value Only"],
+            percent = LO["Percentage Only"],
+            current_max = LO["Current/Max Values"],
+            current_percent = LO["Both (Numbers + Percentage)"],
+        },
+        width = 220,
         callback = RefreshNameplates,
     })
 

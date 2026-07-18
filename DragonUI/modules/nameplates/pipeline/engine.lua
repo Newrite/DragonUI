@@ -785,7 +785,8 @@ local function EngineOnEvent(_, event, unit, ...)
     end
 
     -- Health / power: prefer GUID map over full scan.
-    if event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" or POWER_EVENTS[event] then
+    if event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH"
+        or event == "UNIT_ABSORB_AMOUNT_CHANGED" or POWER_EVENTS[event] then
         local unitGUID = UnitGUID(unit)
         local plateData = unitGUID and NP.state.GUIDToPlate[unitGUID]
         if unit == "player" and plateData
@@ -803,7 +804,8 @@ local function EngineOnEvent(_, event, unit, ...)
             end
         end
         if plateData then
-            if event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" then
+            if event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH"
+                or event == "UNIT_ABSORB_AMOUNT_CHANGED" then
                 E.QueuePlate(plateData, CB.OnUpdateHealth)
             else
                 E.QueuePlate(plateData, CB.OnUpdatePower)
@@ -869,6 +871,7 @@ local function RunNameplatesApply()
         f:RegisterEvent("UNIT_TARGET")
         f:RegisterEvent("UNIT_HEALTH")
         f:RegisterEvent("UNIT_MAXHEALTH")
+        pcall(f.RegisterEvent, f, "UNIT_ABSORB_AMOUNT_CHANGED")
         for i = 1, #POWER_EVENT_NAMES do
             -- Ascension exposes a mixed 3.3.5/modern event set; ignore unavailable events.
             pcall(f.RegisterEvent, f, POWER_EVENT_NAMES[i])

@@ -1071,6 +1071,12 @@ function NP.layout.LayoutMinaStack(plateData)
     local visW, barH = NP.config.GetBarRefSize()
     local cfg = NP.config.GetCfg()
     local isPersonalResource = NP.identity.IsPersonalResourcePlate(plateData)
+    local isPlayer = not isPersonalResource and NP.gather and NP.gather.IsPlayerPlate
+        and NP.gather.IsPlayerPlate(plateData)
+    local playerHealthText = isPlayer and (cfg.playerHealthText or "inherit") or "inherit"
+    local healthTextMode = isPersonalResource and (cfg.personalResourceHealthText or "current_max")
+        or playerHealthText
+    local usesCustomHealthText = isPersonalResource or playerHealthText ~= "inherit"
     local stabilizePosition = isPersonalResource and cfg.personalResourceFixedPosition == true
     local isVertical = isPersonalResource and cfg.personalResourceOrientation == "vertical"
     local showHealth = not isPersonalResource or cfg.personalResourceShowHealth ~= false
@@ -1220,7 +1226,8 @@ function NP.layout.LayoutMinaStack(plateData)
             plateData.minaName:SetPoint("LEFT", plateData.minaNameRow, "LEFT", 0, 0)
             plateData._nameBossShift = nil
             -- showHealthNumber moves the percent text into the bar, hiding minaHpPct here.
-            local reserveForPct = cfg.showHealthPercent ~= false and cfg.showHealthNumber ~= true
+            local reserveForPct = not usesCustomHealthText
+                and cfg.showHealthPercent ~= false and cfg.showHealthNumber ~= true
             local nameWidth = reserveForPct and visW * 0.68 or visW
             plateData.minaName:SetWidth(nameWidth)
         end
@@ -1255,7 +1262,7 @@ function NP.layout.LayoutMinaStack(plateData)
     local healthTextAnchor = isVertical and plateData.minaHpTextRow or hp
     if plateData.minaHpNum then
         plateData.minaHpNum:ClearAllPoints()
-        if isPersonalResource and cfg.personalResourceHealthText ~= "current_percent" then
+        if usesCustomHealthText and healthTextMode ~= "current_percent" then
             plateData.minaHpNum:SetJustifyH("CENTER")
             plateData.minaHpNum:SetPoint("LEFT", healthTextAnchor, "LEFT", 2, 0)
             plateData.minaHpNum:SetPoint("RIGHT", healthTextAnchor, "RIGHT", -2, 0)

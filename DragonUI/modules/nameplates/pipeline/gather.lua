@@ -455,6 +455,17 @@ end
 -- Health color: tap denied > raid marker tint > aggro tint > friendly overrides > native bar.
 function NP.gather.GetHealthBarColor(plateData)
     local cfg = NP.config.GetCfg()
+    if NP.identity.IsPersonalResourcePlate(plateData) then
+        if cfg.personalResourceClassColor == true then
+            local _, class = UnitClass("player")
+            local color = addon.GetClassColor(class)
+            if color then
+                return color.r, color.g, color.b
+            end
+        end
+        return 1, 0.1, 0.1
+    end
+
     -- cfg gate first: disabled = zero tap work on the SyncHealth hot path.
     if cfg.tapDeniedGray ~= false and NP.tap and NP.tap.IsTapDenied(plateData) then
         return NP.tap.GetTapDeniedColor()
@@ -567,6 +578,13 @@ end
 local AbsorbsMonitor
 
 local function GetPlayerAbsorbAmount()
+    if type(UnitGetTotalAbsorbs) == "function" then
+        local ok, amount = pcall(UnitGetTotalAbsorbs, "player")
+        if ok and amount ~= nil then
+            return math.max(0, tonumber(amount) or 0)
+        end
+    end
+
     if not AbsorbsMonitor and LibStub then
         AbsorbsMonitor = LibStub:GetLibrary("AbsorbsMonitor-1.0", true)
     end
@@ -773,6 +791,25 @@ function NP.gather.SyncHealth(plateData, value)
         SyncPersonalResourceAbsorb(plateData, cur, maxVal, cfg.personalResourceShowAbsorb ~= false,
             cfg.personalResourceOrientation == "vertical")
         return
+    end
+
+    if NP.gather.IsPlayerPlate(plateData) then
+        local playerHealthText = cfg.playerHealthText or "inherit"
+        if plateData._activePlayerHealthText ~= playerHealthText then
+            plateData._activePlayerHealthText = playerHealthText
+            plateData._lastHpNumValue = nil
+            plateData._lastHpBarPct = nil
+            plateData._lastHpPct = nil
+            plateData._lastPlayerHealthText = nil
+            plateData._lastPlayerHealthTextSecondary = nil
+        end
+        if playerHealthText ~= "inherit" then
+            if plateData.minaHpPct then plateData.minaHpPct:Hide() end
+            local primary, secondary = BuildPersonalResourceText(playerHealthText, cur, maxVal)
+            SetPersonalResourceText(plateData, "minaHpNum", "minaHpBarPct", "_lastPlayerHealthText",
+                primary, secondary)
+            return
+        end
     end
 
     local showHpNum = cfg.showHealthNumber == true
