@@ -571,6 +571,10 @@ local function BuildLayoutSubTab(scroll)
         return not C:GetDBValue(DB .. ".personalResourceShowPower")
     end
 
+    local function IsPersonalHealthColorDisabled()
+        return IsPersonalHealthHidden() or C:GetDBValue(DB .. ".personalResourceClassColor") == true
+    end
+
     C:AddToggle(personalResource, {
         label = LO["Show Personal Resource Health Bar"],
         dbPath = DB .. ".personalResourceShowHealth",
@@ -582,6 +586,14 @@ local function BuildLayoutSubTab(scroll)
         desc = LO["Use the player's class color only for the personal resource health bar."],
         dbPath = DB .. ".personalResourceClassColor",
         disabled = IsPersonalHealthHidden,
+        callback = RefreshAndRebuildNameplates,
+    })
+
+    C:AddColorPicker(personalResource, {
+        label = LO["Personal Resource Health Color"],
+        desc = LO["Choose the personal resource health color used when class color is disabled."],
+        dbPath = DB .. ".personalResourceHealthColor",
+        disabled = IsPersonalHealthColorDisabled,
         callback = RefreshNameplates,
     })
 

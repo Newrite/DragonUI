@@ -970,6 +970,7 @@ local defaults = {
                 personalResourceFixedPosition = false, -- track the native PRD anchor with screen-space offsets
                 personalResourceShowHealth = true, -- show the PRD health bar
                 personalResourceClassColor = false, -- independently class-color the PRD health bar
+                personalResourceHealthColor = { r = 1, g = 0.1, b = 0.1 }, -- PRD health color when class color is disabled
                 personalResourceShowPower = true, -- show the PRD power bar
                 personalResourceScale = 1, -- independent scale for the complete PRD stack
                 personalResourceWidth = 0, -- horizontal width; 0 inherits nameplate width

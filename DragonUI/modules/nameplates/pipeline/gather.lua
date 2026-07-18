@@ -463,6 +463,10 @@ function NP.gather.GetHealthBarColor(plateData)
                 return color.r, color.g, color.b
             end
         end
+        local color = cfg.personalResourceHealthColor
+        if color and color.r and color.g and color.b then
+            return color.r, color.g, color.b
+        end
         return 1, 0.1, 0.1
     end
 
