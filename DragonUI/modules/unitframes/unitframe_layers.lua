@@ -93,17 +93,16 @@ end
 
 local function UFL_UnitGetTotalAbsorbs(unit)
 	if not unit then return end
-	if unit ~= "player" and UnitIsUnit and UnitExists(unit) and UnitIsUnit(unit, "player") then
-		unit = "player";
-	end
+	local nativeAmount = 0;
 	if type(UnitGetTotalAbsorbs) == "function" then
 		local ok, amount = pcall(UnitGetTotalAbsorbs, unit);
 		if ok and amount ~= nil then
-			return math.max(0, tonumber(amount) or 0);
+			nativeAmount = math.max(0, tonumber(amount) or 0);
 		end
 	end
-	if not (LibAbsorb and LibAbsorb.Unit_Total) then return end
-	return LibAbsorb.Unit_Total(UnitGUID(unit));
+	if not (LibAbsorb and LibAbsorb.Unit_Total) then return nativeAmount end
+	local trackedAmount = math.max(0, tonumber(LibAbsorb.Unit_Total(UnitGUID(unit))) or 0);
+	return math.max(nativeAmount, trackedAmount);
 end
 
 -- Export for AnimatedHealthLossMixin
@@ -178,41 +177,6 @@ local function UnitFrameUtil_UpdateFillBarBase(frame, realbar, previousTexture, 
 	return bar;
 end
 
-local function UnitFrameUtil_UpdateOverlayBar(frame, bar, amount)
-	local realbar = frame.healthbar;
-	if amount <= 0 then
-		bar:Hide();
-		if bar.overlay then bar.overlay:Hide(); end
-		return
-	end
-
-	local totalWidth, totalHeight = realbar:GetSize();
-	local _, totalMax = realbar:GetMinMaxValues();
-	local unitMax = frame.unit and UnitHealthMax(frame.unit);
-	if unitMax and unitMax > 0 then
-		totalMax = unitMax;
-	end
-	if not totalMax or totalMax <= 0 then
-		bar:Hide();
-		if bar.overlay then bar.overlay:Hide(); end
-		return
-	end
-
-	local barSize = math.min(amount / totalMax, 1) * totalWidth;
-	SetFillMode(bar, "overlay");
-	bar:SetPoint("TOPRIGHT", realbar, "TOPRIGHT", 0, 0);
-	bar:SetPoint("BOTTOMRIGHT", realbar, "BOTTOMRIGHT", 0, 0);
-	bar:SetWidth(math.max(1, barSize));
-	bar:Show();
-	if bar.overlay then
-		local tileSize = bar.overlay.tileSize or 1;
-		if tileSize <= 0 then tileSize = 1; end
-		bar.overlay:SetTexCoord(0, math.min(barSize / tileSize, 1), 0,
-			math.min(totalHeight / tileSize, 1));
-		bar.overlay:Show();
-	end
-end
-
 local function UnitFrameUtil_UpdateFillBar(frame, previousTexture, bar, amount, barOffsetXPercent)
 	local unitMax = frame.unit and UnitHealthMax(frame.unit);
 	return UnitFrameUtil_UpdateFillBarBase(frame, frame.healthbar, previousTexture, bar, amount, barOffsetXPercent,
@@ -223,6 +187,51 @@ local function UnitFrameUtil_UpdateManaFillBar(frame, previousTexture, bar, amou
 	return UnitFrameUtil_UpdateFillBarBase(frame, frame.manabar, previousTexture, bar, amount, barOffsetXPercent);
 end
 
+local function UnitFrameUtil_SyncAbsorbFrameLevels(frame)
+	if not (frame and frame.healthbar and frame.overAbsorbGlow) then return end
+	local healthLevel = frame.healthbar:GetFrameLevel();
+	local data = frame.__DragonUI_UFL;
+	if data and data.absorbHealthLevel == healthLevel then return end
+
+	local overAbsorbFrame = frame.overAbsorbGlow:GetParent();
+	if overAbsorbFrame then
+		overAbsorbFrame:SetFrameLevel(healthLevel + 9);
+	end
+	if data then
+		data.absorbHealthLevel = healthLevel;
+	end
+end
+
+local function UnitFrameUtil_UpdateAbsorbOverlay(frame, amount, health, maximum)
+	local texture = frame.absorbShieldTexture;
+	if not texture then return end
+	if not amount or amount <= 0 or not maximum or maximum <= 0 then
+		texture:Hide();
+		return
+	end
+
+	local totalWidth, totalHeight = frame.healthbar:GetSize();
+	if not totalWidth or totalWidth <= 0 or not totalHeight or totalHeight <= 0 then
+		texture:Hide();
+		return
+	end
+
+	health = tonumber(health) or 0;
+	local healthFraction = math.max(0, math.min(health / maximum, 1));
+	local absorbFraction = math.max(0, math.min(amount / maximum, 1));
+	local overflowsHealth = health + amount >= maximum;
+
+	texture:ClearAllPoints();
+	texture:SetSize(math.max(1, absorbFraction * totalWidth), math.max(1, totalHeight - 2));
+	if overflowsHealth then
+		texture:SetPoint("RIGHT", frame.healthbar, "RIGHT", -1, 0);
+	else
+		texture:SetPoint("LEFT", frame.healthbar, "LEFT", healthFraction * totalWidth + 1, 0);
+	end
+	UnitFrameUtil_SyncAbsorbFrameLevels(frame);
+	texture:Show();
+end
+
 -- ============================================================================
 -- HEAL PREDICTION BAR UPDATE
 -- ============================================================================
@@ -231,6 +240,7 @@ local MAX_INCOMING_HEAL_OVERFLOW = 1.0;
 
 local function UnitFrameHealPredictionBars_Update(frame)
 	if ( not frame.myHealPredictionBar ) then return end
+	UnitFrameUtil_SyncAbsorbFrameLevels(frame);
 	local _, maxHealth = frame.healthbar:GetMinMaxValues();
 	local health = frame.healthbar:GetValue();
 	if frame.unit and UnitExists(frame.unit) then
@@ -356,12 +366,7 @@ local function UnitFrameHealPredictionBars_Update(frame)
 		incomingHealTexture = UnitFrameUtil_UpdateFillBar(frame, healthTexture, frame.otherHealPredictionBar, otherIncomingHeal, -myCurrentHealAbsorbPercent);
 	end
 
-	local appendTexture = healAbsorbTexture or incomingHealTexture;
-	if overAbsorb then
-		UnitFrameUtil_UpdateOverlayBar(frame, frame.totalAbsorbBar, totalAbsorb);
-	else
-		UnitFrameUtil_UpdateFillBar(frame, appendTexture, frame.totalAbsorbBar, totalAbsorb);
-	end
+	UnitFrameUtil_UpdateAbsorbOverlay(frame, totalAbsorb, health, maxHealth);
 end
 
 local function UnitFrameHealPredictionBars_UpdateMax(self)
@@ -521,27 +526,26 @@ local function UnitFrameLayer_Initialize(self, myHealPredictionBar, otherHealPre
 	self.totalAbsorbBar:ClearAllPoints();
 
 	self.totalAbsorbBar.overlay = self.totalAbsorbBarOverlay;
+	self.totalAbsorbBarOverlay:ClearAllPoints();
 	self.totalAbsorbBarOverlay:SetAllPoints(self.totalAbsorbBar);
 	self.totalAbsorbBarOverlay.tileSize = 32;
-	local isSmallCompanionFrame = (self == _G.TargetFrameToT or self == _G.FocusFrameToT);
-	local absorbFrame = self.totalAbsorbBar and self.totalAbsorbBar:GetParent();
-	local overAbsorbFrame = self.overAbsorbGlow and self.overAbsorbGlow:GetParent();
-	if isSmallCompanionFrame then
-		if absorbFrame and self.healthbar then
-			absorbFrame:SetFrameStrata(self.healthbar:GetFrameStrata());
-			absorbFrame:SetFrameLevel(self.healthbar:GetFrameLevel() + 1);
-		end
-		if overAbsorbFrame and self.healthbar then
-			overAbsorbFrame:SetFrameStrata(self.healthbar:GetFrameStrata());
-			overAbsorbFrame:SetFrameLevel(self.healthbar:GetFrameLevel() + 4);
-		end
-		self.totalAbsorbBar:SetDrawLayer("ARTWORK", 0);
-		self.totalAbsorbBarOverlay:SetDrawLayer("OVERLAY", 0);
-		self.overAbsorbGlow:SetDrawLayer("OVERLAY", 2);
-	else
-		self.totalAbsorbBar:SetDrawLayer("ARTWORK", 0);
-		self.totalAbsorbBarOverlay:SetDrawLayer("OVERLAY", 1);
+	self.totalAbsorbBar:Hide();
+	self.totalAbsorbBarOverlay:Hide();
+
+	-- Create the texture directly on the StatusBar, matching the working PRD
+	-- and nameplate renderer. A child Frame is drawn below the special status
+	-- fill on this client and therefore clips shields to missing health.
+	if not self.absorbShieldTexture then
+		local shieldTexture = self.healthbar:CreateTexture(nil, "OVERLAY");
+		shieldTexture:SetDrawLayer("OVERLAY", 7);
+		shieldTexture:SetTexture("Interface\\AddOns\\DragonUI\\Textures\\UnitFrameLayers\\Shield-Fill");
+		shieldTexture:SetBlendMode("ADD");
+		shieldTexture:SetTexCoord(0, 1, 0, 1);
+		shieldTexture:Hide();
+		self.absorbShieldTexture = shieldTexture;
 	end
+	self.overAbsorbGlow:SetDrawLayer("OVERLAY", 3);
+	UnitFrameUtil_SyncAbsorbFrameLevels(self);
 
 	self.overAbsorbGlow:ClearAllPoints();
 	self.overAbsorbGlow:SetWidth(16);
@@ -671,49 +675,68 @@ local function InitializeSingleUnitFrame(frame)
 	end
 
 	if not (frame.healthbar and frame.unit) then
+		UnitFrameLayersModule.initFailures = UnitFrameLayersModule.initFailures or {};
+		UnitFrameLayersModule.initFailures[frameName] = "missing healthbar or unit";
 		return
 	end
 
-	if not frame.myHealPredictionBar then
-		CreateFrame("Frame", nil, frame, "DragonUI_StatusBarHealPredictionTemplate");
+	local layerFrameName = frameName .. "DragonUIHealPrediction";
+	local layerFrame = frame.__DragonUI_UFLTemplateFrame or _G[layerFrameName];
+	if not layerFrame then
+		layerFrame = CreateFrame("Frame", layerFrameName, frame, "DragonUI_StatusBarHealPredictionTemplate");
+	end
+	frame.__DragonUI_UFLTemplateFrame = layerFrame;
+
+	local myHealPredictionBar = _G[layerFrameName .. "FrameMyHealPredictionBar"];
+	local otherHealPredictionBar = _G[layerFrameName .. "FrameOtherHealPredictionBar"];
+	local totalAbsorbBar = _G[layerFrameName .. "TotalAbsorbBar"];
+	local totalAbsorbBarOverlay = _G[layerFrameName .. "TotalAbsorbBarOverlay"];
+	local overAbsorbGlow = _G[layerFrameName .. "FrameOverAbsorbGlow"];
+	local overHealAbsorbGlow = _G[layerFrameName .. "OverHealAbsorbGlow"];
+	local healAbsorbBar = _G[layerFrameName .. "HealAbsorbBar"];
+	local healAbsorbBarLeftShadow = _G[layerFrameName .. "HealAbsorbBarLeftShadow"];
+	local healAbsorbBarRightShadow = _G[layerFrameName .. "HealAbsorbBarRightShadow"];
+	local myManaCostPredictionBar = _G[layerFrameName .. "FrameManaCostPredictionBar"];
+
+	if not (myHealPredictionBar and otherHealPredictionBar and totalAbsorbBar
+		and totalAbsorbBarOverlay and overAbsorbGlow and overHealAbsorbGlow and healAbsorbBar
+		and healAbsorbBarLeftShadow and healAbsorbBarRightShadow and myManaCostPredictionBar) then
+		UnitFrameLayersModule.initFailures = UnitFrameLayersModule.initFailures or {};
+		UnitFrameLayersModule.initFailures[frameName] = "named prediction template regions missing";
+		return
 	end
 
 	UnitFrameLayer_Initialize(frame,
-		_G[frameName .. "FrameMyHealPredictionBar"],
-		_G[frameName .. "FrameOtherHealPredictionBar"],
-		_G[frameName .. "TotalAbsorbBar"],
-		_G[frameName .. "TotalAbsorbBarOverlay"],
-		_G[frameName .. "FrameOverAbsorbGlow"],
-		_G[frameName .. "OverHealAbsorbGlow"],
-		_G[frameName .. "HealAbsorbBar"],
-		_G[frameName .. "HealAbsorbBarLeftShadow"],
-		_G[frameName .. "HealAbsorbBarRightShadow"],
-		_G[frameName .. "FrameManaCostPredictionBar"]
+		myHealPredictionBar,
+		otherHealPredictionBar,
+		totalAbsorbBar,
+		totalAbsorbBarOverlay,
+		overAbsorbGlow,
+		overHealAbsorbGlow,
+		healAbsorbBar,
+		healAbsorbBarLeftShadow,
+		healAbsorbBarRightShadow,
+		myManaCostPredictionBar
 	);
+	if UnitFrameLayersModule.initFailures then
+		UnitFrameLayersModule.initFailures[frameName] = nil;
+	end
 end
 
 local function InitializeExistingUnitFrames()
-	-- Named Blizzard frames we support in 3.3.5a.
-	local candidates = {
-		_G.PlayerFrame,
-		_G.TargetFrame,
-		_G.FocusFrame,
-		_G.PetFrame,
-		_G.TargetFrameToT,
-		_G.FocusFrameToT,
+	-- Resolve by name one at a time so a missing optional frame cannot terminate
+	-- iteration through a sparse array.
+	local candidateNames = {
+		"PlayerFrame", "TargetFrame", "FocusFrame", "PetFrame",
+		"TargetFrameToT", "FocusFrameToT",
 	};
-
-	for i = 1, 4 do
-		table.insert(candidates, _G["PartyMemberFrame" .. i]);
-		table.insert(candidates, _G["PartyMemberFrame" .. i .. "PetFrame"]);
-		local bossFrame = _G["Boss" .. i .. "TargetFrame"];
-		if bossFrame then
-			table.insert(candidates, bossFrame);
-		end
+	for i = 1, #candidateNames do
+		InitializeSingleUnitFrame(_G[candidateNames[i]]);
 	end
-
-	for _, frame in ipairs(candidates) do
-		InitializeSingleUnitFrame(frame);
+	for i = 1, 4 do
+		InitializeSingleUnitFrame(_G["PartyMemberFrame" .. i]);
+		InitializeSingleUnitFrame(_G["PartyMemberFrame" .. i .. "PetFrame"]);
+		InitializeSingleUnitFrame(_G["Boss" .. i .. "TargetFrame"]);
 	end
 end
 
@@ -925,7 +948,7 @@ local function HideFrameChildren(frame)
 		"myHealPredictionBar", "otherHealPredictionBar", "totalAbsorbBar",
 		"totalAbsorbBarOverlay", "overAbsorbGlow", "overHealAbsorbGlow",
 		"healAbsorbBar", "healAbsorbBarLeftShadow", "healAbsorbBarRightShadow",
-		"myManaCostPredictionBar",
+		"myManaCostPredictionBar", "absorbShieldTexture",
 	};
 	for _, key in ipairs(bars) do
 		if frame[key] and frame[key].Hide then
@@ -1052,6 +1075,9 @@ addon.DiagnoseUnitFrameLayers = function()
 	P("Module enabled: " .. (IsModuleEnabled() and OK or FAIL))
 	P("Module applied: " .. (UnitFrameLayersModule.applied and OK or FAIL))
 	P("Module initialized: " .. (UnitFrameLayersModule.initialized and OK or FAIL))
+	if IsModuleEnabled() then
+		InitializeExistingUnitFrames();
+	end
 	P("Config table: " .. (cfg and OK or FAIL))
 	if cfg then
 		P("  animated_loss: " .. tostring(cfg.animated_loss))
@@ -1060,6 +1086,7 @@ addon.DiagnoseUnitFrameLayers = function()
 
 	-- 2. Libraries
 	EnsureLibs()
+	P("Absorb renderer: direct-texture-v2")
 	P("Native absorb API: " .. (type(UnitGetTotalAbsorbs) == "function" and OK or WARN))
 	P("LibHealComm-4.0: " .. (HealComm and OK or FAIL))
 	P("AbsorbsMonitor-1.0: " .. (LibAbsorb and OK or FAIL))
@@ -1067,6 +1094,12 @@ addon.DiagnoseUnitFrameLayers = function()
 		P("  HealComm.ALL_HEALS: " .. tostring(HealComm.ALL_HEALS))
 		P("  HealComm.CASTED_HEALS: " .. tostring(HealComm.CASTED_HEALS))
 		P("  HealComm.HOT_HEALS: " .. tostring(HealComm.HOT_HEALS))
+	end
+	if UnitFrameLayersModule.initFailures and next(UnitFrameLayersModule.initFailures) then
+		P("Initialization failures:")
+		for frameName, reason in pairs(UnitFrameLayersModule.initFailures) do
+			P("  " .. tostring(frameName) .. ": " .. tostring(reason))
+		end
 	end
 
 	-- 3. Hooks installed
@@ -1116,6 +1149,19 @@ addon.DiagnoseUnitFrameLayers = function()
 			P("  allIncomingHeal (ALL): " .. tostring(allHeal))
 			P("  HoT amount (all-my): " .. tostring(allHeal - myHeal))
 			P("  totalAbsorb: " .. tostring(absorb))
+			if (frame.unit == "player" or frame.unit == "target") and frame.absorbShieldTexture then
+				local shieldWidth, shieldHeight = frame.absorbShieldTexture:GetSize()
+				local barWidth, barHeight = frame.healthbar:GetSize()
+				local layer, sublevel
+				if frame.absorbShieldTexture.GetDrawLayer then
+					layer, sublevel = frame.absorbShieldTexture:GetDrawLayer()
+				end
+				P("  absorb texture size: " .. tostring(shieldWidth) .. " x " .. tostring(shieldHeight))
+				P("  healthbar size: " .. tostring(barWidth) .. " x " .. tostring(barHeight))
+				P("  absorb parent is healthbar: "
+					.. tostring(frame.absorbShieldTexture:GetParent() == frame.healthbar))
+				P("  absorb draw layer: " .. tostring(layer) .. " / " .. tostring(sublevel))
+			end
 
 			-- Visibility check
 			if frame.myHealPredictionBar then
@@ -1124,8 +1170,8 @@ addon.DiagnoseUnitFrameLayers = function()
 			if frame.otherHealPredictionBar then
 				P("  otherHealBar visible: " .. (frame.otherHealPredictionBar:IsShown() and "YES" or "no"))
 			end
-			if frame.totalAbsorbBar then
-				P("  absorbBar visible: " .. (frame.totalAbsorbBar:IsShown() and "YES" or "no"))
+			if frame.absorbShieldTexture then
+				P("  absorbBar visible: " .. (frame.absorbShieldTexture:IsShown() and "YES" or "no"))
 			end
 		end
 	end

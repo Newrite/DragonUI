@@ -378,6 +378,17 @@ SubtitleScanTip:SetOwner(UIParent, "ANCHOR_NONE")
 
 -- Best-effort unit token for a plate, preferring the most stable source.
 local function ResolvePlateToken(plateData)
+    -- Ascension can expose different data for aliases of the same GUID. Prefer
+    -- the live priority tokens because absorb values are reliable on them.
+    if NP.identity.IsTargetPlate(plateData) and UnitExists("target") then
+        return "target"
+    end
+    if NP.identity.IsFocusPlate(plateData) and UnitExists("focus") then
+        return "focus"
+    end
+    if NP.identity.IsMouseoverPlate(plateData) and UnitExists("mouseover") then
+        return "mouseover"
+    end
     local groupUnit = NP.gather.GetGroupUnitForPlate(plateData)
     if groupUnit then
         return groupUnit
@@ -587,13 +598,11 @@ local function GetUnitAbsorbAmount(unit)
     if not unit or not UnitExists(unit) then
         return 0
     end
-    if unit ~= "player" and UnitIsUnit and UnitIsUnit(unit, "player") then
-        unit = "player"
-    end
+    local nativeAmount = 0
     if type(UnitGetTotalAbsorbs) == "function" then
         local ok, amount = pcall(UnitGetTotalAbsorbs, unit)
         if ok and amount ~= nil then
-            return math.max(0, tonumber(amount) or 0)
+            nativeAmount = math.max(0, tonumber(amount) or 0)
         end
     end
 
@@ -602,9 +611,10 @@ local function GetUnitAbsorbAmount(unit)
     end
     local unitGUID = UnitGUID(unit)
     if not AbsorbsMonitor or not unitGUID or not AbsorbsMonitor.Unit_Total then
-        return 0
+        return nativeAmount
     end
-    return math.max(0, tonumber(AbsorbsMonitor.Unit_Total(unitGUID)) or 0)
+    local trackedAmount = math.max(0, tonumber(AbsorbsMonitor.Unit_Total(unitGUID)) or 0)
+    return math.max(nativeAmount, trackedAmount)
 end
 
 function NP.gather.GetTrackedPlayerAbsorbAmount()
@@ -703,20 +713,34 @@ local function SyncHealthAbsorb(plateData, current, maximum, unit, enabled, isVe
     end
 
     local bar = plateData.minaHp
+    current = tonumber(current) or 0
+    local currentFraction = math.max(0, math.min(current / maximum, 1))
+    local absorbFraction = math.max(0, math.min(amount / maximum, 1))
+    local overflowsHealth = current + amount >= maximum
     absorb:ClearAllPoints()
     if isVertical then
         absorb:SetSize(math.max(1, bar:GetWidth() - 2),
-            math.max(1, math.min(amount / maximum, 1) * bar:GetHeight()))
-        absorb:SetPoint("TOP", bar, "TOP", 0, -1)
+            math.max(1, absorbFraction * bar:GetHeight()))
+        if overflowsHealth then
+            -- Reverse fill keeps the full shield visible even at full health.
+            absorb:SetPoint("TOP", bar, "TOP", 0, -1)
+        else
+            absorb:SetPoint("BOTTOM", bar, "BOTTOM", 0, currentFraction * bar:GetHeight() + 1)
+        end
     else
-        absorb:SetSize(math.max(1, math.min(amount / maximum, 1) * bar:GetWidth()),
+        absorb:SetSize(math.max(1, absorbFraction * bar:GetWidth()),
             math.max(1, bar:GetHeight() - 2))
-        absorb:SetPoint("RIGHT", bar, "RIGHT", -1, 0)
+        if overflowsHealth then
+            -- Reverse fill keeps the full shield visible even at full health.
+            absorb:SetPoint("RIGHT", bar, "RIGHT", -1, 0)
+        else
+            absorb:SetPoint("LEFT", bar, "LEFT", currentFraction * bar:GetWidth() + 1, 0)
+        end
     end
     absorb:Show()
 
     if overAbsorb then
-        if current + amount >= maximum then
+        if overflowsHealth then
             overAbsorb:ClearAllPoints()
             if isVertical then
                 overAbsorb:SetSize(bar:GetWidth() + 2, 8)

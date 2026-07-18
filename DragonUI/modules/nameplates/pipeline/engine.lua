@@ -744,9 +744,11 @@ local function EngineOnEvent(_, event, unit, ...)
         end
         if unit == "target" or unit == "mouseover" or unit == "focus" then
             local refreshedGUID = NP.auras.DebuffRuntime.UpdateAuraCacheFromUnit(unit)
-            local owner
+            local owner = (unit == "target" and NP.module.targetPlate)
+                or (unit == "focus" and NP.module.focusPlate)
+                or (unit == "mouseover" and NP.module.mouseoverPlate)
             if unit == "target" or unit == "mouseover" then
-                owner = NP.identity.FindUniquePlateForUnit(unit)
+                owner = owner or NP.identity.FindUniquePlateForUnit(unit)
                 if owner and refreshedGUID and not NP.state.GetPlateGUID(owner) then
                     NP.state.SetPlateGUID(owner, refreshedGUID, {
                         source = "AURA_HINT",
@@ -760,6 +762,15 @@ local function EngineOnEvent(_, event, unit, ...)
             end
             if owner then
                 E.QueuePlate(owner, CB.OnUpdateAuras)
+                -- Ascension does not consistently emit UNIT_ABSORB_AMOUNT_CHANGED
+                -- for every unit token; shields can still change on UNIT_AURA.
+                E.QueuePlate(owner, CB.OnUpdateHealth)
+            end
+        else
+            local unitGUID = UnitGUID(unit)
+            local owner = unitGUID and NP.state.GUIDToPlate[unitGUID]
+            if owner then
+                E.QueuePlate(owner, CB.OnUpdateHealth)
             end
         end
         return

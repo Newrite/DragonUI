@@ -884,12 +884,16 @@ function NP.layout.EnsureMinaStack(plateData)
     plateData.minaPo = NP.discovery.CreateMinaBar(visualRoot, C.MINA_TEX .. "bar-fill", 0, 0.5, 1)
     plateData.minaPo:Hide()
 
-    plateData.minaHpAbsorb = plateData.minaHp:CreateTexture(nil, "ARTWORK")
+    -- OVERLAY is required here: an ARTWORK region on a StatusBar is rendered
+    -- below its fill texture and made valid absorb data look invisible.
+    plateData.minaHpAbsorb = plateData.minaHp:CreateTexture(nil, "OVERLAY")
+    plateData.minaHpAbsorb:SetDrawLayer("OVERLAY", 2)
     plateData.minaHpAbsorb:SetTexture("Interface\\AddOns\\DragonUI\\Textures\\UnitFrameLayers\\Shield-Fill")
     plateData.minaHpAbsorb:SetBlendMode("ADD")
     plateData.minaHpAbsorb:Hide()
 
     plateData.minaHpOverAbsorb = plateData.minaHp:CreateTexture(nil, "OVERLAY")
+    plateData.minaHpOverAbsorb:SetDrawLayer("OVERLAY", 3)
     plateData.minaHpOverAbsorb:SetTexture("Interface\\AddOns\\DragonUI\\Textures\\UnitFrameLayers\\Shield-Overshield")
     plateData.minaHpOverAbsorb:SetBlendMode("ADD")
     plateData.minaHpOverAbsorb:Hide()
