@@ -886,6 +886,8 @@ local defaults = {
                 fontSize = 2, -- Scale 1-10, maps to name/HP font px
                 nameFont = "primary", -- font for name/level text (primary, actionbar, narrow, arial, system)
                 showHealthPercent = true,
+                showFriendlyAbsorb = true, -- show all-source absorb shields on friendly nameplates
+                showEnemyAbsorb = true, -- show all-source absorb shields on enemy nameplates
                 playerHealthText = "inherit", -- inherit | none | current | percent | current_max | current_percent
                 nameOverlayHealthBar = false, -- anchor name/level/percent/elite icon centered on the health bar instead of above it
                 nameOverlayOffsetY = 0, -- vertical (Y) offset applied when nameOverlayHealthBar is enabled
@@ -1067,7 +1069,7 @@ local defaults = {
                 reverse_stack = false, -- Stack items from the end so new loot appears at the top
             },
             unitframe_layers = {
-                enabled = false, -- Heal prediction, absorb shields, animated health loss overlays on unit frames
+                enabled = true, -- Heal prediction, absorb shields, animated health loss overlays on unit frames
                 animated_loss = true, -- Animated red health loss bar on player frame
                 builder_spender = false, -- Mana gain/loss glow feedback (experimental)
                 missing_health = false -- Show missing health deficit text on health bars

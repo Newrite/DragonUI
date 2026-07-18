@@ -378,6 +378,17 @@ SubtitleScanTip:SetOwner(UIParent, "ANCHOR_NONE")
 
 -- Best-effort unit token for a plate, preferring the most stable source.
 local function ResolvePlateToken(plateData)
+    -- Ascension can expose different data for aliases of the same GUID. Prefer
+    -- the live priority tokens because absorb values are reliable on them.
+    if NP.identity.IsTargetPlate(plateData) and UnitExists("target") then
+        return "target"
+    end
+    if NP.identity.IsFocusPlate(plateData) and UnitExists("focus") then
+        return "focus"
+    end
+    if NP.identity.IsMouseoverPlate(plateData) and UnitExists("mouseover") then
+        return "mouseover"
+    end
     local groupUnit = NP.gather.GetGroupUnitForPlate(plateData)
     if groupUnit then
         return groupUnit
@@ -392,6 +403,8 @@ local function ResolvePlateToken(plateData)
     end
     return nil
 end
+
+NP.gather.ResolvePlateToken = ResolvePlateToken
 
 -- Static subtitle (guild/title); nil until resolvable, then cached.
 function NP.gather.GetPlateSubtitleText(plateData, unit)
@@ -581,26 +594,31 @@ end
 
 local AbsorbsMonitor
 
-local function GetPlayerAbsorbAmount()
+local function GetUnitAbsorbAmount(unit)
+    if not unit or not UnitExists(unit) then
+        return 0
+    end
+    local nativeAmount = 0
     if type(UnitGetTotalAbsorbs) == "function" then
-        local ok, amount = pcall(UnitGetTotalAbsorbs, "player")
+        local ok, amount = pcall(UnitGetTotalAbsorbs, unit)
         if ok and amount ~= nil then
-            return math.max(0, tonumber(amount) or 0)
+            nativeAmount = math.max(0, tonumber(amount) or 0)
         end
     end
 
     if not AbsorbsMonitor and LibStub then
         AbsorbsMonitor = LibStub:GetLibrary("AbsorbsMonitor-1.0", true)
     end
-    local playerGUID = UnitGUID("player")
-    if not AbsorbsMonitor or not playerGUID or not AbsorbsMonitor.Unit_Total then
-        return 0
+    local unitGUID = UnitGUID(unit)
+    if not AbsorbsMonitor or not unitGUID or not AbsorbsMonitor.Unit_Total then
+        return nativeAmount
     end
-    return tonumber(AbsorbsMonitor.Unit_Total(playerGUID)) or 0
+    local trackedAmount = math.max(0, tonumber(AbsorbsMonitor.Unit_Total(unitGUID)) or 0)
+    return math.max(nativeAmount, trackedAmount)
 end
 
 function NP.gather.GetTrackedPlayerAbsorbAmount()
-    return GetPlayerAbsorbAmount()
+    return GetUnitAbsorbAmount("player")
 end
 
 function NP.gather.StartPersonalResourceAbsorbPreview()
@@ -663,40 +681,66 @@ local function SetPersonalResourceText(plateData, primaryKey, secondaryKey, cach
     end
 end
 
-local function SyncPersonalResourceAbsorb(plateData, current, maximum, enabled, isVertical)
+local function HideHealthAbsorb(plateData)
+    if plateData.minaHpAbsorb then plateData.minaHpAbsorb:Hide() end
+    if plateData.minaHpOverAbsorb then plateData.minaHpOverAbsorb:Hide() end
+end
+
+local function SyncHealthAbsorb(plateData, current, maximum, unit, enabled, isVertical, allowPreview)
     local absorb = plateData.minaHpAbsorb
     local overAbsorb = plateData.minaHpOverAbsorb
     if not absorb then return end
 
-    local amount = enabled and GetPlayerAbsorbAmount() or 0
+    if unit and UnitExists(unit) then
+        local unitMaximum = UnitHealthMax(unit)
+        if unitMaximum and unitMaximum > 0 then
+            current = UnitHealth(unit)
+            maximum = unitMaximum
+        end
+    end
+
+    local amount = enabled and GetUnitAbsorbAmount(unit) or 0
     local now = GetTime and GetTime() or 0
     local previewUntil = NP.module._personalAbsorbPreviewUntil
-    if enabled and previewUntil and now < previewUntil then
+    if allowPreview and enabled and previewUntil and now < previewUntil then
         amount = maximum * 0.35
-    elseif previewUntil then
+    elseif allowPreview and previewUntil then
         NP.module._personalAbsorbPreviewUntil = nil
     end
     if amount <= 0 or not maximum or maximum <= 0 then
-        absorb:Hide()
-        if overAbsorb then overAbsorb:Hide() end
+        HideHealthAbsorb(plateData)
         return
     end
 
     local bar = plateData.minaHp
+    current = tonumber(current) or 0
+    local currentFraction = math.max(0, math.min(current / maximum, 1))
+    local absorbFraction = math.max(0, math.min(amount / maximum, 1))
+    local overflowsHealth = current + amount >= maximum
     absorb:ClearAllPoints()
     if isVertical then
         absorb:SetSize(math.max(1, bar:GetWidth() - 2),
-            math.max(1, math.min(amount / maximum, 1) * bar:GetHeight()))
-        absorb:SetPoint("TOP", bar, "TOP", 0, -1)
+            math.max(1, absorbFraction * bar:GetHeight()))
+        if overflowsHealth then
+            -- Reverse fill keeps the full shield visible even at full health.
+            absorb:SetPoint("TOP", bar, "TOP", 0, -1)
+        else
+            absorb:SetPoint("BOTTOM", bar, "BOTTOM", 0, currentFraction * bar:GetHeight() + 1)
+        end
     else
-        absorb:SetSize(math.max(1, math.min(amount / maximum, 1) * bar:GetWidth()),
+        absorb:SetSize(math.max(1, absorbFraction * bar:GetWidth()),
             math.max(1, bar:GetHeight() - 2))
-        absorb:SetPoint("RIGHT", bar, "RIGHT", -1, 0)
+        if overflowsHealth then
+            -- Reverse fill keeps the full shield visible even at full health.
+            absorb:SetPoint("RIGHT", bar, "RIGHT", -1, 0)
+        else
+            absorb:SetPoint("LEFT", bar, "LEFT", currentFraction * bar:GetWidth() + 1, 0)
+        end
     end
     absorb:Show()
 
     if overAbsorb then
-        if current + amount >= maximum then
+        if overflowsHealth then
             overAbsorb:ClearAllPoints()
             if isVertical then
                 overAbsorb:SetSize(bar:GetWidth() + 2, 8)
@@ -712,30 +756,38 @@ local function SyncPersonalResourceAbsorb(plateData, current, maximum, enabled, 
     end
 end
 
+local function IsNameplateAbsorbEnabled(plateData, unit, cfg)
+    if not unit or not UnitExists(unit) then
+        return false
+    end
+    local reaction = NP.native_style.GetPlateReaction(plateData)
+    if reaction == "FRIENDLY" then
+        return cfg.showFriendlyAbsorb ~= false
+    end
+    return cfg.showEnemyAbsorb ~= false
+end
+
 function NP.gather.SyncHealth(plateData, value)
     local src = plateData.healthBar
     local bar = plateData.minaHp
     if not src or not bar then return end
 
     local isPersonalResource = NP.identity.IsPersonalResourcePlate(plateData)
-    if isPersonalResource and NP.config.GetCfg().personalResourceShowHealth == false then
+    local cfg = NP.config.GetCfg()
+    if isPersonalResource and cfg.personalResourceShowHealth == false then
         bar:Hide()
         if plateData.minaHpPct then plateData.minaHpPct:Hide() end
         if plateData.minaHpNum then plateData.minaHpNum:Hide() end
         if plateData.minaHpBarPct then plateData.minaHpBarPct:Hide() end
-        if plateData.minaHpAbsorb then plateData.minaHpAbsorb:Hide() end
-        if plateData.minaHpOverAbsorb then plateData.minaHpOverAbsorb:Hide() end
+        HideHealthAbsorb(plateData)
         return
-    end
-    if not isPersonalResource then
-        if plateData.minaHpAbsorb then plateData.minaHpAbsorb:Hide() end
-        if plateData.minaHpOverAbsorb then plateData.minaHpOverAbsorb:Hide() end
     end
     if not isPersonalResource and NP.gather.IsTotemIconOnlyActive(plateData) then
         bar:Hide()
         if plateData.minaHpPct then plateData.minaHpPct:Hide() end
         if plateData.minaHpNum then plateData.minaHpNum:Hide() end
         if plateData.minaHpBarPct then plateData.minaHpBarPct:Hide() end
+        HideHealthAbsorb(plateData)
         return
     end
 
@@ -744,9 +796,9 @@ function NP.gather.SyncHealth(plateData, value)
         local _, maxVal = src:GetMinMaxValues()
         local cur = tonumber(value or src:GetValue()) or 0
         maxVal = tonumber(maxVal) or 0
-        local cfg = NP.config.GetCfg()
         bar:Hide()
         if plateData.minaHpPct then plateData.minaHpPct:Hide() end
+        HideHealthAbsorb(plateData)
 
         if cfg.headlineShowHealthNumber == true and maxVal and maxVal > 0 then
             if plateData.minaHpNum then
@@ -786,16 +838,19 @@ function NP.gather.SyncHealth(plateData, value)
     bar:SetStatusBarColor(r, g, b, 1)
     bar:Show()
 
-    local cfg = NP.config.GetCfg()
     if isPersonalResource then
         if plateData.minaHpPct then plateData.minaHpPct:Hide() end
         local primary, secondary = BuildPersonalResourceText(cfg.personalResourceHealthText, cur, maxVal)
         SetPersonalResourceText(plateData, "minaHpNum", "minaHpBarPct", "_lastPersonalHealthText",
             primary, secondary)
-        SyncPersonalResourceAbsorb(plateData, cur, maxVal, cfg.personalResourceShowAbsorb ~= false,
-            cfg.personalResourceOrientation == "vertical")
+        SyncHealthAbsorb(plateData, cur, maxVal, "player", cfg.personalResourceShowAbsorb ~= false,
+            cfg.personalResourceOrientation == "vertical", true)
         return
     end
+
+    local absorbUnit = ResolvePlateToken(plateData)
+    SyncHealthAbsorb(plateData, cur, maxVal, absorbUnit,
+        IsNameplateAbsorbEnabled(plateData, absorbUnit, cfg), false, false)
 
     if NP.gather.IsPlayerPlate(plateData) then
         local playerHealthText = cfg.playerHealthText or "inherit"

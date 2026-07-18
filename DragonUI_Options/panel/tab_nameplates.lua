@@ -875,6 +875,20 @@ local function BuildHealthSubTab(scroll)
         callback = RefreshNameplates,
     })
 
+    C:AddToggle(health, {
+        label = LO["Show Absorb on Friendly Nameplates"],
+        desc = LO["Show all-source absorb shields on friendly nameplate health bars when the full plate is visible."],
+        dbPath = DB .. ".showFriendlyAbsorb",
+        callback = RefreshNameplates,
+    })
+
+    C:AddToggle(health, {
+        label = LO["Show Absorb on Enemy Nameplates"],
+        desc = LO["Show all-source absorb shields on enemy nameplate health bars when the full plate is visible."],
+        dbPath = DB .. ".showEnemyAbsorb",
+        callback = RefreshNameplates,
+    })
+
     C:AddSpacer(health)
 
     C:AddToggle(health, {
