@@ -93,6 +93,9 @@ end
 
 local function UFL_UnitGetTotalAbsorbs(unit)
 	if not unit then return end
+	if unit ~= "player" and UnitIsUnit and UnitExists(unit) and UnitIsUnit(unit, "player") then
+		unit = "player";
+	end
 	if type(UnitGetTotalAbsorbs) == "function" then
 		local ok, amount = pcall(UnitGetTotalAbsorbs, unit);
 		if ok and amount ~= nil then
@@ -126,7 +129,8 @@ local function SetFillMode(bar, mode)
 	end
 end
 
-local function UnitFrameUtil_UpdateFillBarBase(frame, realbar, previousTexture, bar, amount, barOffsetXPercent)
+local function UnitFrameUtil_UpdateFillBarBase(frame, realbar, previousTexture, bar, amount, barOffsetXPercent,
+	amountMaximum)
 	if ( amount <= 0 ) then
 		bar:Hide();
 		if ( bar.overlay ) then
@@ -144,6 +148,9 @@ local function UnitFrameUtil_UpdateFillBarBase(frame, realbar, previousTexture, 
 	bar:SetPoint("BOTTOMLEFT", previousTexture, "BOTTOMRIGHT", barOffsetX, 0);
 	local totalWidth, totalHeight = realbar:GetSize();
 	local _, totalMax = realbar:GetMinMaxValues();
+	if amountMaximum and amountMaximum > 0 then
+		totalMax = amountMaximum;
+	end
 	if ( not totalMax or totalMax <= 0 ) then
 		bar:Hide();
 		if ( bar.overlay ) then
@@ -181,6 +188,10 @@ local function UnitFrameUtil_UpdateOverlayBar(frame, bar, amount)
 
 	local totalWidth, totalHeight = realbar:GetSize();
 	local _, totalMax = realbar:GetMinMaxValues();
+	local unitMax = frame.unit and UnitHealthMax(frame.unit);
+	if unitMax and unitMax > 0 then
+		totalMax = unitMax;
+	end
 	if not totalMax or totalMax <= 0 then
 		bar:Hide();
 		if bar.overlay then bar.overlay:Hide(); end
@@ -203,7 +214,9 @@ local function UnitFrameUtil_UpdateOverlayBar(frame, bar, amount)
 end
 
 local function UnitFrameUtil_UpdateFillBar(frame, previousTexture, bar, amount, barOffsetXPercent)
-	return UnitFrameUtil_UpdateFillBarBase(frame, frame.healthbar, previousTexture, bar, amount, barOffsetXPercent);
+	local unitMax = frame.unit and UnitHealthMax(frame.unit);
+	return UnitFrameUtil_UpdateFillBarBase(frame, frame.healthbar, previousTexture, bar, amount, barOffsetXPercent,
+		unitMax);
 end
 
 local function UnitFrameUtil_UpdateManaFillBar(frame, previousTexture, bar, amount, barOffsetXPercent)
@@ -220,6 +233,13 @@ local function UnitFrameHealPredictionBars_Update(frame)
 	if ( not frame.myHealPredictionBar ) then return end
 	local _, maxHealth = frame.healthbar:GetMinMaxValues();
 	local health = frame.healthbar:GetValue();
+	if frame.unit and UnitExists(frame.unit) then
+		local unitMax = UnitHealthMax(frame.unit);
+		if unitMax and unitMax > 0 then
+			maxHealth = unitMax;
+			health = UnitHealth(frame.unit);
+		end
+	end
 	if ( maxHealth <= 0 ) then return end
 
 	-- Missing health deficit text

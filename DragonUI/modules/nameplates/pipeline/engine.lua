@@ -803,6 +803,18 @@ local function EngineOnEvent(_, event, unit, ...)
                 end
             end
         end
+        if not plateData and event == "UNIT_ABSORB_AMOUNT_CHANGED"
+            and NP.gather.ResolvePlateToken then
+            for _, candidate in pairs(NP.module.plates) do
+                local candidateUnit = NP.gather.ResolvePlateToken(candidate)
+                if candidateUnit and (candidateUnit == unit
+                    or (UnitExists(candidateUnit) and UnitExists(unit)
+                        and UnitIsUnit(candidateUnit, unit))) then
+                    plateData = candidate
+                    break
+                end
+            end
+        end
         if plateData then
             if event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH"
                 or event == "UNIT_ABSORB_AMOUNT_CHANGED" then
