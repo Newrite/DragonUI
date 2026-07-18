@@ -92,7 +92,14 @@ local function UFL_UnitGetIncomingHeals(unit, healer)
 end
 
 local function UFL_UnitGetTotalAbsorbs(unit)
-	if not (unit and LibAbsorb) then return end
+	if not unit then return end
+	if type(UnitGetTotalAbsorbs) == "function" then
+		local ok, amount = pcall(UnitGetTotalAbsorbs, unit);
+		if ok and amount ~= nil then
+			return math.max(0, tonumber(amount) or 0);
+		end
+	end
+	if not (LibAbsorb and LibAbsorb.Unit_Total) then return end
 	return LibAbsorb.Unit_Total(UnitGUID(unit));
 end
 
@@ -112,8 +119,15 @@ local FULL_POWER_ANIM_POWER_TYPES = {
 -- CORE BAR UPDATE FUNCTIONS
 -- ============================================================================
 
+local function SetFillMode(bar, mode)
+	if bar.__DragonUI_UFLFillMode ~= mode then
+		bar:ClearAllPoints();
+		bar.__DragonUI_UFLFillMode = mode;
+	end
+end
+
 local function UnitFrameUtil_UpdateFillBarBase(frame, realbar, previousTexture, bar, amount, barOffsetXPercent)
-	if ( amount == 0 ) then
+	if ( amount <= 0 ) then
 		bar:Hide();
 		if ( bar.overlay ) then
 			bar.overlay:Hide();
@@ -125,6 +139,7 @@ local function UnitFrameUtil_UpdateFillBarBase(frame, realbar, previousTexture, 
 		local realbarSizeX = realbar:GetWidth();
 		barOffsetX = realbarSizeX * barOffsetXPercent;
 	end
+	SetFillMode(bar, "append");
 	bar:SetPoint("TOPLEFT", previousTexture, "TOPRIGHT", barOffsetX, 0);
 	bar:SetPoint("BOTTOMLEFT", previousTexture, "BOTTOMRIGHT", barOffsetX, 0);
 	local totalWidth, totalHeight = realbar:GetSize();
@@ -154,6 +169,37 @@ local function UnitFrameUtil_UpdateFillBarBase(frame, realbar, previousTexture, 
 		bar.overlay:Show();
 	end
 	return bar;
+end
+
+local function UnitFrameUtil_UpdateOverlayBar(frame, bar, amount)
+	local realbar = frame.healthbar;
+	if amount <= 0 then
+		bar:Hide();
+		if bar.overlay then bar.overlay:Hide(); end
+		return
+	end
+
+	local totalWidth, totalHeight = realbar:GetSize();
+	local _, totalMax = realbar:GetMinMaxValues();
+	if not totalMax or totalMax <= 0 then
+		bar:Hide();
+		if bar.overlay then bar.overlay:Hide(); end
+		return
+	end
+
+	local barSize = math.min(amount / totalMax, 1) * totalWidth;
+	SetFillMode(bar, "overlay");
+	bar:SetPoint("TOPRIGHT", realbar, "TOPRIGHT", 0, 0);
+	bar:SetPoint("BOTTOMRIGHT", realbar, "BOTTOMRIGHT", 0, 0);
+	bar:SetWidth(math.max(1, barSize));
+	bar:Show();
+	if bar.overlay then
+		local tileSize = bar.overlay.tileSize or 1;
+		if tileSize <= 0 then tileSize = 1; end
+		bar.overlay:SetTexCoord(0, math.min(barSize / tileSize, 1), 0,
+			math.min(totalHeight / tileSize, 1));
+		bar.overlay:Show();
+	end
 end
 
 local function UnitFrameUtil_UpdateFillBar(frame, previousTexture, bar, amount, barOffsetXPercent)
@@ -245,11 +291,6 @@ local function UnitFrameHealPredictionBars_Update(frame)
 		if ( totalAbsorb > 0 ) then
 			overAbsorb = true;
 		end
-		if ( allIncomingHeal > myCurrentHealAbsorb ) then
-			totalAbsorb = max(0, maxHealth - (health - myCurrentHealAbsorb + allIncomingHeal));
-		else
-			totalAbsorb = max(0, maxHealth - health);
-		end
 	end
 
 	if ( overAbsorb ) then
@@ -296,7 +337,11 @@ local function UnitFrameHealPredictionBars_Update(frame)
 	end
 
 	local appendTexture = healAbsorbTexture or incomingHealTexture;
-	UnitFrameUtil_UpdateFillBar(frame, appendTexture, frame.totalAbsorbBar, totalAbsorb);
+	if overAbsorb then
+		UnitFrameUtil_UpdateOverlayBar(frame, frame.totalAbsorbBar, totalAbsorb);
+	else
+		UnitFrameUtil_UpdateFillBar(frame, appendTexture, frame.totalAbsorbBar, totalAbsorb);
+	end
 end
 
 local function UnitFrameHealPredictionBars_UpdateMax(self)
@@ -328,7 +373,7 @@ local function UnitFrameManaCostPredictionBars_Update(frame, isStarting, startTi
 		for _, costInfo in pairs(costTable) do
 			if (costInfo.type == frame.manabar.powerType) then
 				cost = costInfo.cost;
-				break;
+				break
 			end
 		end
 		frame.predictedPowerCost = cost;
@@ -641,11 +686,36 @@ local function InitializeExistingUnitFrames()
 	for i = 1, 4 do
 		table.insert(candidates, _G["PartyMemberFrame" .. i]);
 		table.insert(candidates, _G["PartyMemberFrame" .. i .. "PetFrame"]);
+		local bossFrame = _G["Boss" .. i .. "TargetFrame"];
+		if bossFrame then
+			table.insert(candidates, bossFrame);
+		end
 	end
 
 	for _, frame in ipairs(candidates) do
 		InitializeSingleUnitFrame(frame);
 	end
+end
+
+local function EnsureNativeAbsorbEvents()
+	local frame = UnitFrameLayersModule.absorbEventFrame;
+	if not frame then
+		frame = CreateFrame("Frame");
+		frame:SetScript("OnEvent", function(_, event, unit)
+			if event ~= "UNIT_ABSORB_AMOUNT_CHANGED" or not IsModuleEnabled() or not unit then
+				return
+			end
+			for _, unitFrame in pairs(UnitFrameLayersModule.frames) do
+				local frameUnit = unitFrame and unitFrame.unit;
+				if frameUnit and (frameUnit == unit
+					or (UnitExists(frameUnit) and UnitExists(unit) and UnitIsUnit(frameUnit, unit))) then
+					UnitFrameHealPredictionBars_Update(unitFrame);
+				end
+			end
+		end);
+		UnitFrameLayersModule.absorbEventFrame = frame;
+	end
+	pcall(frame.RegisterEvent, frame, "UNIT_ABSORB_AMOUNT_CHANGED");
 end
 
 -- ============================================================================
@@ -823,6 +893,7 @@ local function ApplyUnitFrameLayersSystem()
 	-- Reload-safe bootstrap: initialize currently existing frames immediately,
 	-- instead of waiting for a future UnitFrame_OnEvent call.
 	InitializeExistingUnitFrames();
+	EnsureNativeAbsorbEvents();
 
 	UnitFrameLayersModule.applied = true;
 	UnitFrameLayersModule.initialized = true;
@@ -881,6 +952,9 @@ local function RestoreUnitFrameLayersSystem()
 
 	-- Note: hooksecurefunc cannot be unhooked, but the IsModuleEnabled() guard
 	-- inside each hook will prevent any work from being done when disabled.
+	if UnitFrameLayersModule.absorbEventFrame then
+		UnitFrameLayersModule.absorbEventFrame:UnregisterEvent("UNIT_ABSORB_AMOUNT_CHANGED");
+	end
 
 	UnitFrameLayersModule.applied = false;
 end
@@ -966,6 +1040,7 @@ addon.DiagnoseUnitFrameLayers = function()
 
 	-- 2. Libraries
 	EnsureLibs()
+	P("Native absorb API: " .. (type(UnitGetTotalAbsorbs) == "function" and OK or WARN))
 	P("LibHealComm-4.0: " .. (HealComm and OK or FAIL))
 	P("AbsorbsMonitor-1.0: " .. (LibAbsorb and OK or FAIL))
 	if HealComm then
