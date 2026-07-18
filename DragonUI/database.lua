@@ -228,6 +228,7 @@ local defaults = {
                 rows = 1,
                 columns = 12,
                 buttons_shown = 12,
+                button_spacing = 7,
                 change_button_order = false,
                 button_order = "top_left"
             },
@@ -236,6 +237,7 @@ local defaults = {
                 rows = 12,
                 columns = 1,
                 buttons_shown = 12,
+                button_spacing = 7,
                 change_button_order = false,
                 button_order = "top_left"
             },
@@ -244,6 +246,7 @@ local defaults = {
                 rows = 12,
                 columns = 1,
                 buttons_shown = 12,
+                button_spacing = 7,
                 change_button_order = false,
                 button_order = "top_left"
             },
@@ -251,6 +254,7 @@ local defaults = {
                 rows = 1,
                 columns = 12,
                 buttons_shown = 12,
+                button_spacing = 7,
                 change_button_order = false,
                 button_order = "top_left"
             },
@@ -258,12 +262,14 @@ local defaults = {
                 rows = 1,
                 columns = 12,
                 buttons_shown = 12,
+                button_spacing = 7,
                 change_button_order = false,
                 button_order = "top_left"
             },
 
-            -- Global button spacing (gap between buttons in pixels)
+            -- Legacy global spacing; kept as migration source for per-bar button_spacing
             button_spacing = 7,
+            spacing_migrated = false,
 
             -- Per-bar scales
             scale_actionbar = 0.9,
@@ -484,10 +490,11 @@ local defaults = {
             extrabar1 = {
                 x_position = 0,
                 y_position = 260,
-                scale = 0.9, -- baked into button pixels (GetSizeAndSpacing); matches mainbars.scale_actionbar
+                scale = 0.9, -- container SetScale, like mainbars scale_actionbar
                 size = 36,
-                spacing = 6,
+                spacing = 7, -- match mainbars.button_spacing / per-bar default
                 columns = 12, -- 12 = single row
+                buttons_shown = 12,
                 change_button_order = false,
                 button_order = "bottom_left",
                 show_hotkey = true, -- default on: no well-known native binds like pet/stance
