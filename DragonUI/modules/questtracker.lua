@@ -2,7 +2,7 @@ local addon = select(2, ...);
 local L = addon.L
 
 -- =============================================================================
--- DRAGONUI QUEST TRACKER MODULE 
+-- DRAGONUI QUEST TRACKER MODULE
 -- =============================================================================
 
 local QuestTrackerModule = {
@@ -101,26 +101,11 @@ end
 -- =============================================================================
 local watchFrameAttached = false
 
-local MIN_TRACKER_WIDTH = 320
-local MIN_TRACKER_HEIGHT = 100
-
 -- Height for quest display — must be set explicitly because SetUserPlaced(true)
 -- prevents Blizzard's UIParent_ManageFramePositions from managing WatchFrame size.
 -- Without this, WatchFrame_Update calculates maxHeight from tiny/stale bounds
 -- and only shows 1-2 quests.
-local function GetQuestTrackerHeight()
-    if addon.db and addon.db.profile and addon.db.profile.questtracker and addon.db.profile.questtracker.height then
-        return addon.db.profile.questtracker.height
-    end
-    return 600
-end
-
-local function GetQuestTrackerWidth()
-    if addon.db and addon.db.profile and addon.db.profile.questtracker and addon.db.profile.questtracker.width then
-        return addon.db.profile.questtracker.width
-    end
-    return WATCHFRAME_EXPANDEDWIDTH or 204
-end
+local QUESTTRACKER_MAX_HEIGHT = 600
 
 local function ReplaceBlizzardFrame(frame)
     local watchFrame = WatchFrame
@@ -134,8 +119,7 @@ local function ReplaceBlizzardFrame(frame)
         watchFrame:SetUserPlaced(true)
         watchFrame:ClearAllPoints()
         watchFrame:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
-        watchFrame:SetHeight(GetQuestTrackerHeight())
-        watchFrame:SetWidth(GetQuestTrackerWidth())
+        watchFrame:SetHeight(QUESTTRACKER_MAX_HEIGHT)
 
         -- Reposition WatchFrameLines below header (RetailUI pattern)
         -- This ensures quest lines render below the header background
@@ -157,8 +141,7 @@ local function ReplaceBlizzardFrame(frame)
         watchFrame:SetUserPlaced(true)
         watchFrame:ClearAllPoints()
         watchFrame:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
-        watchFrame:SetHeight(GetQuestTrackerHeight())
-        watchFrame:SetWidth(GetQuestTrackerWidth())
+        watchFrame:SetHeight(QUESTTRACKER_MAX_HEIGHT)
     end
 end
 
@@ -199,11 +182,11 @@ local function ApplyQuestTrackerStyling()
     if not success then
         return
     end
-    
+
     -- Fixed header positioning (RetailUI pattern)
     -- NOTE: SetSize MUST come AFTER set_atlas(name, true) because it overwrites size
-    -- Use WatchFrame actual width so header follows live resize
-    local headerWidth = watchFrame:GetWidth() or GetQuestTrackerWidth()
+    -- Use WatchFrame width to match quest tracker, maintain 8:1 aspect ratio
+    local headerWidth = watchFrame:GetWidth() or 230
     local headerHeight = headerWidth / 8  -- Maintain aspect ratio (560/70 = 8)
     background:ClearAllPoints()
     background:SetPoint('RIGHT', WatchFrameCollapseExpandButton, 'RIGHT', 0, 0)
@@ -232,19 +215,18 @@ local lastUpdateTime = 0
 
 local function ForceUpdateQuestTracker()
     if updateInProgress then return end
-    
+
     local now = GetTime()
     if now - lastUpdateTime < 0.05 then return end -- Faster updates (20/sec max)
-    
+
     updateInProgress = true
     lastUpdateTime = now
-    
+
     -- Ensure WatchFrame has sufficient height BEFORE Blizzard's update runs.
     -- This is critical: WatchFrame_Update calculates maxHeight from GetTop()-GetBottom(),
     -- and without explicit height, the frame shrinks to content → circular limitation.
     if WatchFrame then
-        WatchFrame:SetHeight(GetQuestTrackerHeight())
-        WatchFrame:SetWidth(GetQuestTrackerWidth())
+        WatchFrame:SetHeight(QUESTTRACKER_MAX_HEIGHT)
     end
 
     -- Never call WatchFrame_Update directly from addon code: that taints
@@ -255,7 +237,7 @@ local function ForceUpdateQuestTracker()
 
     ApplyQuestTrackerFonts()
     pcall(ApplyQuestTrackerStyling)
-    
+
     updateInProgress = false
 end
 
@@ -275,7 +257,7 @@ end
 -- =============================================================================
 function addon.RefreshQuestTracker()
     if not IsModuleEnabled() then return end
-    
+
     UpdateQuestTrackerPosition()
     ForceUpdateQuestTracker()
     -- A second update after a short delay stabilises font layout:
@@ -313,19 +295,19 @@ local watchFrameContentHoverProxy = {
 -- =============================================================================
 function QuestTrackerModule:Initialize()
     if self.initialized then return end
-    
+
     -- Check if module is enabled
     if not IsModuleEnabled() then
         return
     end
 
     self.questTrackerFrame = CreateFrame('Frame', 'DragonUI_QuestTrackerFrame', UIParent)
-    self.questTrackerFrame:SetSize(GetQuestTrackerWidth(), GetQuestTrackerHeight())  -- Anchor frame, WatchFrame sizes itself
+    self.questTrackerFrame:SetSize(230, 32)  -- Anchor frame: minimal height, WatchFrame manages its own size
     self.questTrackerFrame:SetFrameLevel(100)
     self.questTrackerFrame:SetFrameStrata('FULLSCREEN')
     self.questTrackerFrame:EnableMouse(false)
     self.questTrackerFrame:SetMovable(false)
-    
+
     -- Add nineslice overlay for editor mode (DragonflightUI style)
     if addon.AddNineslice then
         addon.AddNineslice(self.questTrackerFrame)
@@ -334,7 +316,7 @@ function QuestTrackerModule:Initialize()
         -- Legacy editorTexture reference for compatibility
         self.questTrackerFrame.editorTexture = self.questTrackerFrame.NineSlice and self.questTrackerFrame.NineSlice.Center
     end
-    
+
     -- Create text label for editor mode
     do
         local L = addon.L
@@ -345,53 +327,6 @@ function QuestTrackerModule:Initialize()
         self.questTrackerFrame.editorText = fontString
     end
 
-    -- Resize grip (subtle by default, highlight on hover)
-    do
-        local grip = CreateFrame("Button", nil, self.questTrackerFrame)
-        grip:SetSize(16, 16)
-        grip:SetPoint("BOTTOMRIGHT", self.questTrackerFrame, "BOTTOMRIGHT", -2, 2)
-        grip:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
-        grip:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
-        grip:SetAlpha(0.3)
-        self.resizeGrip = grip
-
-        self.questTrackerFrame:SetResizable(true)
-
-        grip:SetScript("OnEnter", function(self)
-            self:SetAlpha(1)
-        end)
-        grip:SetScript("OnLeave", function(self)
-            self:SetAlpha(0.3)
-        end)
-
-        grip:SetScript("OnMouseDown", function()
-            self.questTrackerFrame:StartSizing("BOTTOMRIGHT")
-        end)
-
-        grip:SetScript("OnMouseUp", function()
-            self.questTrackerFrame:StopMovingOrSizing()
-            local w = math.max(self.questTrackerFrame:GetWidth() or 0, MIN_TRACKER_WIDTH)
-            local h = math.max(self.questTrackerFrame:GetHeight() or 0, MIN_TRACKER_HEIGHT)
-            if addon.db and addon.db.profile and addon.db.profile.questtracker then
-                addon.db.profile.questtracker.width = math.floor(w + 0.5)
-                addon.db.profile.questtracker.height = math.floor(h + 0.5)
-            end
-        end)
-
-        self.questTrackerFrame:SetScript("OnSizeChanged", function(_, newWidth, newHeight)
-            local w = math.max(newWidth, MIN_TRACKER_WIDTH)
-            local h = math.max(newHeight, MIN_TRACKER_HEIGHT)
-            if w ~= newWidth or h ~= newHeight then
-                self.questTrackerFrame:SetSize(w, h)
-                return
-            end
-            if WatchFrame then
-                WatchFrame:SetWidth(w)
-                WatchFrame:SetHeight(h)
-            end
-        end)
-    end
-
     -- Save original WatchFrame position for restore
     if WatchFrame then
         local point, relativeTo, relativePoint, x, y = WatchFrame:GetPoint()
@@ -400,7 +335,7 @@ function QuestTrackerModule:Initialize()
 
     -- Position the frame
     UpdateQuestTrackerPosition()
-    
+
     -- Replace the frame immediately upon initialization
     ReplaceBlizzardFrame(self.questTrackerFrame)
 
@@ -529,12 +464,12 @@ end
 -- =============================================================================
 function QuestTrackerModule:ApplySystem()
     if self.applied then return end
-    
+
     if not self.initialized then
         self:Initialize()
         return
     end
-    
+
     if self.questTrackerFrame then
         ReplaceBlizzardFrame(self.questTrackerFrame)
         UpdateQuestTrackerPosition()
@@ -568,7 +503,7 @@ function QuestTrackerModule:RestoreSystem()
     if WatchFrame and WatchFrame.background then
         WatchFrame.background:Hide()
     end
-    
+
     self.applied = false
 end
 
@@ -585,7 +520,7 @@ local function InstallQuestTrackerHooks()
     if WatchFrame_Collapse then
         hooksecurefunc('WatchFrame_Collapse', function(self)
             if self then
-                self:SetWidth(GetQuestTrackerWidth())
+                self:SetWidth(WATCHFRAME_EXPANDEDWIDTH or 204)
             end
         end)
     end
@@ -605,9 +540,8 @@ local function InstallQuestTrackerHooks()
             local lineFrame = WatchFrameLines
             if not lineFrame then return end
 
-            -- Re-assert explicit height/width (Blizzard may have shrunk them)
-            watchFrame:SetHeight(GetQuestTrackerHeight())
-            watchFrame:SetWidth(GetQuestTrackerWidth())
+            -- Re-assert explicit height (Blizzard may have shrunk it to content)
+            watchFrame:SetHeight(QUESTTRACKER_MAX_HEIGHT)
 
             -- Re-assert WatchFrameLines position (Blizzard may reset it)
             if WatchFrameHeader then
@@ -650,21 +584,21 @@ local function InstallQuestTrackerHooks()
             ScheduleTimer(0.05, ForceUpdateQuestTracker)
         end)
     end
-    
+
     -- Add hook for abandoning quests
     if AbandonQuest then
         hooksecurefunc('AbandonQuest', function()
             ScheduleTimer(0.05, ForceUpdateQuestTracker)
         end)
     end
-    
+
     -- Add hook for quest log updates
     if QuestLog_Update then
         hooksecurefunc('QuestLog_Update', function()
             ScheduleTimer(0.05, ForceUpdateQuestTracker)
         end)
     end
-    
+
     -- Hook SetCVar for wide/narrow quest tracker toggle (Interface > Display option)
     hooksecurefunc("SetCVar", function(name)
         if name == "watchFrameWidth" then
@@ -689,10 +623,9 @@ local function InstallQuestTrackerHooks()
             if QuestTrackerModule.questTrackerFrame then
                 ReplaceBlizzardFrame(QuestTrackerModule.questTrackerFrame)
             end
-            -- Re-assert height/width in case Blizzard touched it
+            -- Re-assert height in case Blizzard touched it
             if WatchFrame then
-                WatchFrame:SetHeight(GetQuestTrackerHeight())
-                WatchFrame:SetWidth(GetQuestTrackerWidth())
+                WatchFrame:SetHeight(QUESTTRACKER_MAX_HEIGHT)
             end
         end)
     end
@@ -719,20 +652,20 @@ function QuestTrackerModule:ShowEditorTest()
         self.questTrackerFrame:SetMovable(true)
         self.questTrackerFrame:EnableMouse(true)
         self.questTrackerFrame:RegisterForDrag("LeftButton")
-        
+
         -- Update frame size to match WatchFrame dimensions
         if WatchFrame then
             local watchWidth = WatchFrame:GetWidth() or 230
             local watchHeight = WatchFrame:GetHeight() or 200
             self.questTrackerFrame:SetSize(watchWidth, watchHeight)
         end
-        
+
         -- Show nineslice overlay
         if self.questTrackerFrame.NineSlice and addon.ShowNineslice then
             addon.SetNinesliceState(self.questTrackerFrame, false)
             addon.ShowNineslice(self.questTrackerFrame)
         end
-        
+
         -- Show text
         if self.questTrackerFrame.editorText then
             self.questTrackerFrame.editorText:Show()
@@ -801,7 +734,7 @@ function QuestTrackerModule:HideEditorTest(savePosition)
         self.questTrackerFrame:SetScript("OnDragStart", nil)
         self.questTrackerFrame:SetScript("OnDragStop", nil)
         self.questTrackerFrame:SetScript("OnMouseDown", nil)
-        
+
         -- Hide nineslice overlay
         if self.questTrackerFrame.NineSlice and addon.HideNineslice then
             addon.HideNineslice(self.questTrackerFrame)
@@ -837,7 +770,7 @@ local function OnPlayerEnteringWorld()
             ReplaceBlizzardFrame(QuestTrackerModule.questTrackerFrame)
         end
     end)
-    
+
     -- Set up hooks after world load completion with delay (critical fix)
     if not hooksInstalled then
         ScheduleTimer(1.0, function()
@@ -854,11 +787,11 @@ local previousQuestCount = 0
 local function OnQuestLogUpdate()
     -- Check if module is enabled
     if not IsModuleEnabled() then return end
-    
+
     local now = GetTime()
     if now - lastQuestUpdate < 0.05 then return end
     lastQuestUpdate = now
-    
+
     -- Only update when quest count actually changes
     local currentQuestCount = GetTrackedQuestsCount()
     if currentQuestCount ~= previousQuestCount then
@@ -874,7 +807,7 @@ addon.package:RegisterEvents(function()
     end
 end, 'PLAYER_LOGIN')
 
--- Register PLAYER_ENTERING_WORLD 
+-- Register PLAYER_ENTERING_WORLD
 addon.package:RegisterEvents(OnPlayerEnteringWorld, 'PLAYER_ENTERING_WORLD')
 
 -- Register quest log update event
