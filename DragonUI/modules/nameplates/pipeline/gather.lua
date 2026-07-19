@@ -523,7 +523,6 @@ function NP.gather.GetHealthBarColor(plateData, skipFriendlyClass)
         if cfg.friendlyPlayerColor then
             return cfg.friendlyPlayerColor.r, cfg.friendlyPlayerColor.g, cfg.friendlyPlayerColor.b
         end
-    end
     if reaction == "FRIENDLY" and unitType == "NPC" and cfg.friendlyNPCColor then
         return cfg.friendlyNPCColor.r, cfg.friendlyNPCColor.g, cfg.friendlyNPCColor.b
     end
