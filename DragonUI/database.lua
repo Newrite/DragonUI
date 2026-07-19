@@ -333,10 +333,12 @@ local defaults = {
 
 
             -- Micro menu and bag bar visibility
+            micro_always_hidden = false,
             micro_show_on_hover = false,
             micro_show_in_combat = false,
             micro_hide_in_combat = false,
             micro_visibility_logic = "and",
+            bag_always_hidden = false,
             bag_show_on_hover = false,
             bag_show_in_combat = false,
             bag_hide_in_combat = false,
@@ -429,7 +431,9 @@ local defaults = {
                 show = true,
                 range = true,
                 shadow = {0, 0, 0, 1},
-                font = {_arialn, 12, "OUTLINE"}
+                color = {0.6, 0.6, 0.6, 1},
+                font = {_arialn, 12, "OUTLINE"},
+                font_size = 12,
             },
             macros = {
                 show = true,
