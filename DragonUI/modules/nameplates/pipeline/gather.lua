@@ -427,8 +427,49 @@ function NP.gather.IsPlayerPlate(plateData)
     return classKey == "FRIENDLY_PLAYER"
 end
 
+-- Friendly player class color when bar is still native blue; nil if unresolved / not applicable.
+function NP.gather.GetFriendlyPlayerClassColor(plateData)
+    local cfg = NP.config.GetCfg()
+    local reaction, unitType = NP.native_style.GetPlateReaction(plateData)
+    if reaction ~= "FRIENDLY" or unitType ~= "PLAYER" then
+        return nil
+    end
+    if not (plateData.barB and plateData.barB > 0.5
+        and (plateData.barR or 0) < 0.3 and (plateData.barG or 0) < 0.3) then
+        return nil
+    end
+    if cfg.friendlyClassColors then
+        if not plateData._friendlyHealthClass then
+            local token = ResolvePlateToken(plateData)
+            if token and UnitExists(token) and UnitIsPlayer(token) then
+                local _, class = UnitClass(token)
+                if class then
+                    plateData._friendlyHealthClass = class
+                end
+            end
+        end
+        local cc = plateData._friendlyHealthClass and RAID_CLASS_COLORS
+            and RAID_CLASS_COLORS[plateData._friendlyHealthClass]
+        if cc then
+            return cc.r, cc.g, cc.b
+        end
+    end
+    if cfg.partyClassColors then
+        local partyUnit = GetPartyUnitForPlate(plateData)
+        if partyUnit then
+            local _, class = UnitClass(partyUnit)
+            local cc = class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[class]
+            if cc then
+                return cc.r, cc.g, cc.b
+            end
+        end
+    end
+    return nil
+end
+
 -- Health color: tap denied > raid marker tint > aggro tint > friendly overrides > native bar.
-function NP.gather.GetHealthBarColor(plateData)
+-- skipFriendlyClass: reaction/custom friendly colors only (name text without class tint).
+function NP.gather.GetHealthBarColor(plateData, skipFriendlyClass)
     local cfg = NP.config.GetCfg()
     -- cfg gate first: disabled = zero tap work on the SyncHealth hot path.
     if cfg.tapDeniedGray ~= false and NP.tap and NP.tap.IsTapDenied(plateData) then
@@ -448,32 +489,34 @@ function NP.gather.GetHealthBarColor(plateData)
     end
 
     local reaction, unitType = NP.native_style.GetPlateReaction(plateData)
-    -- Ascension: GetPlateReaction already corrects attackability under Mercenary;
-    -- trust the reaction directly instead of requiring a blue-ish bar color.
-    if reaction == "FRIENDLY" and unitType == "PLAYER" then
-        -- Friendly class color from any resolved token; cached, fills in on hover/target in stock.
-        if cfg.friendlyClassColors then
-            if not plateData._friendlyHealthClass then
-                local token = ResolvePlateToken(plateData)
-                if token and UnitExists(token) and UnitIsPlayer(token) then
-                    local _, class = UnitClass(token)
-                    if class then
-                        plateData._friendlyHealthClass = class
+        -- Ascension: GetPlateReaction already corrects attackability under Mercenary;
+        -- trust the reaction directly instead of requiring a blue-ish bar color.
+        if reaction == "FRIENDLY" and unitType == "PLAYER" then
+            if not skipFriendlyClass then
+                if cfg.friendlyClassColors then
+                    if not plateData._friendlyHealthClass then
+                        local token = ResolvePlateToken(plateData)
+                        if token and UnitExists(token) and UnitIsPlayer(token) then
+                            local _, class = UnitClass(token)
+                            if class then
+                                plateData._friendlyHealthClass = class
+                            end
+                        end
+                    end
+                    local cc = plateData._friendlyHealthClass and RAID_CLASS_COLORS
+                        and RAID_CLASS_COLORS[plateData._friendlyHealthClass]
+                    if cc then
+                        return cc.r, cc.g, cc.b
                     end
                 end
-            end
-            local cc = plateData._friendlyHealthClass and RAID_CLASS_COLORS
-                and RAID_CLASS_COLORS[plateData._friendlyHealthClass]
-            if cc then
-                return cc.r, cc.g, cc.b
-            end
-        end
-        if cfg.partyClassColors then
-            local partyUnit = GetPartyUnitForPlate(plateData)
-            if partyUnit then
-                local _, class = UnitClass(partyUnit)
-                if class and RAID_CLASS_COLORS[class] then
-                    return RAID_CLASS_COLORS[class].r, RAID_CLASS_COLORS[class].g, RAID_CLASS_COLORS[class].b
+                if cfg.partyClassColors then
+                    local partyUnit = GetPartyUnitForPlate(plateData)
+                    if partyUnit then
+                        local _, class = UnitClass(partyUnit)
+                        if class and RAID_CLASS_COLORS[class] then
+                            return RAID_CLASS_COLORS[class].r, RAID_CLASS_COLORS[class].g, RAID_CLASS_COLORS[class].b
+                        end
+                    end
                 end
             end
         end
@@ -773,9 +816,14 @@ function NP.gather.SyncName(plateData, unit)
     local classKey = plateData.classKey
     local classColor = classKey and RAID_CLASS_COLORS and RAID_CLASS_COLORS[classKey]
     local isEnemyPlayer = classColor and classKey ~= "FRIENDLY_PLAYER"
+    local nameReaction, nameUnitType = NP.native_style.GetPlateReaction(plateData)
+    local isFriendlyPlayer = nameReaction == "FRIENDLY" and nameUnitType == "PLAYER"
     local allowEnemyNameClass = cfg.enemyPlayerClassColors ~= false and cfg.enemyNameClassColors == true
+    local allowFriendlyNameClass = cfg.friendlyNameClassColors == true
+        and (cfg.friendlyClassColors == true or cfg.partyClassColors == true)
     if cfg.nameReactionColors then
-        r, g, b = NP.gather.GetHealthBarColor(plateData)
+        local skipFriendlyClass = isFriendlyPlayer and not allowFriendlyNameClass
+        r, g, b = NP.gather.GetHealthBarColor(plateData, skipFriendlyClass)
         if isEnemyPlayer then
             if allowEnemyNameClass then
                 r, g, b = classColor.r, classColor.g, classColor.b
@@ -785,6 +833,11 @@ function NP.gather.SyncName(plateData, unit)
         end
     elseif isEnemyPlayer and allowEnemyNameClass then
         r, g, b = classColor.r, classColor.g, classColor.b
+    elseif isFriendlyPlayer and allowFriendlyNameClass then
+        local cr, cg, cb = NP.gather.GetFriendlyPlayerClassColor(plateData)
+        if cr then
+            r, g, b = cr, cg, cb
+        end
     end
     -- Headline mode base name color (white by default); class color overrides it
     -- below when enabled and resolved.
