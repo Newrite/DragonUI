@@ -560,3 +560,20 @@ L["Scale of the BNet toast frame."] = "战网提示框的缩放比例。"
 L["Horizontal position of the BNet toast from the screen center. Negative values move left, positive values move right."] = "战网提示距屏幕中心的水平位置。负值向左移动，正值向右移动。"
 L["Vertical offset of the BNet toast frame. Negative values move down, positive values move up."] = "战网提示框的垂直偏移。负值向下移动，正值向上移动。"
 
+
+-- ============================================================================
+-- Added missing translations
+-- ============================================================================
+L["Minimap Decorations"] = "小地图装饰"
+L["Native animated minimap decoration effects for DragonUI."] = "DragonUI 的原生动画小地图装饰效果。"
+L["Nameplate functionality conflicts with DragonUI's nameplate module."] = "姓名板功能与 DragonUI 的姓名板模块冲突。"
+L["Aura Borders"] = "光环边框"
+L["Modern borders on buff and debuff icons."] = "为增益和减益图标添加现代风格边框。"
+L["%s any bag slot (item or empty) to lock or unlock it."] = "%s任意背包格子（有物品或空格）以锁定或解锁。"
+L["Alt"] = "Alt"
+L["Ctrl"] = "Ctrl"
+L["Shift"] = "Shift"
+L["Left Click"] = "左键单击"
+L["Right Click"] = "右键单击"
+L["Middle Click"] = "中键单击"
+L["Retail-style textures for bags (Combuctor + default)"] = "背包的正式服风格纹理（Combuctor + 默认）"
