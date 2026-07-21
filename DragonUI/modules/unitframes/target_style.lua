@@ -247,6 +247,20 @@ function UF.TargetStyle.Create(opts)
         local config = GetConfig()
         if not config then return end
 
+        -- 3D model portrait takes over the portrait region when enabled.
+        if UF.UpdatePortraitModel({
+            config      = config,
+            unitToken   = unitToken,
+            portrait    = Portrait,
+            parentFrame = BlizzFrame,
+            owner       = BlizzFrame,
+            aboveFrames = { frameElements.borderFrame, frameElements.eliteFrame },
+        }) then
+            updateCache.lastPortraitClass = nil
+            updateCache.lastPortraitAlt   = nil
+            return
+        end
+
         local useAlternative = config.alternativeClassIcons and true or false
 
         if config.classPortrait and UnitExists(unitToken) and UnitIsPlayer(unitToken) then
@@ -1318,6 +1332,7 @@ function UF.TargetStyle.Create(opts)
             UpdateThreat()
             UpdateHealthBarColor()
             ForceUpdatePowerBar()
+            UpdateClassPortrait()
             if Module.textSystem then Module.textSystem.update() end
         end
 
