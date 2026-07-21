@@ -904,6 +904,9 @@ function addon.RefreshButtons()
     end
 
     RefreshAdditionalBarHotkeys()
+    if addon.RefreshExtrabarMacroNames then
+        addon.RefreshExtrabarMacroNames()
+    end
 end
 
 -- ============================================================================
