@@ -215,13 +215,19 @@ local function SetupExtraActionButtonMover()
         showTest = function()
             local cfg = GetWidgetConfig("extraActionButton")
             local blizz = GetExtraActionFrame()
+            local anchor = (cfg and cfg.anchor) or "CENTER"
+            local posX = (cfg and cfg.posX) or 0
+            local posY = (cfg and cfg.posY) or 0
             extraActionMover:ClearAllPoints()
             if cfg and cfg.custom_position then
-                extraActionMover:SetPoint(cfg.anchor or "CENTER", UIParent, cfg.anchor or "CENTER", cfg.posX or 0, cfg.posY or 0)
-            elseif blizz then
+                extraActionMover:SetPoint(anchor, UIParent, anchor, posX, posY)
+            elseif blizz and blizz:IsShown() and blizz:GetCenter() then
+                -- Frame is active (e.g. a quest with an extra button): snap onto it.
                 extraActionMover:SetPoint("CENTER", blizz, "CENTER", 0, 0)
             else
-                extraActionMover:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+                -- Frame is inactive (no quest/zone extra button right now). Show the
+                -- box at its configured default so it is always draggable in editor mode.
+                extraActionMover:SetPoint(anchor, UIParent, anchor, posX, posY)
             end
             extraActionMover:Show()
         end,
