@@ -64,6 +64,7 @@ L["Left"] = "Esquerda"
 L["Right"] = "Direita"
 L["Error Messages"] = "Mensagens de erro"
 L["ErrorMessages"] = "Mensagens de erro"
+L["ExtraActionButton"] = "Botão de ação extra"
 
 -- Bag Sort (Sell Scrap)
 L["Sell Scrap"] = "Vender Sucata"

@@ -218,6 +218,7 @@ L["Left"] = "Links"
 L["Right"] = "Rechts"
 L["Error Messages"] = "Fehlermeldungen"
 L["ErrorMessages"] = "Fehlermeldungen"
+L["ExtraActionButton"] = "Extra-Aktionsschaltfläche"
 
 -- Editor mode system messages
 L["All editable frames shown for editing"] = "Alle bearbeitbaren Frames zum Bearbeiten angezeigt"

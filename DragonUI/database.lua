@@ -168,6 +168,12 @@ local defaults = {
                 posY = 160,
                 custom_position = false
             },
+            extraActionButton = {
+                anchor = "CENTER",
+                posX = 0,
+                posY = 0,
+                custom_position = false
+            },
             positionPresetPanel = {
                 anchor = "TOP",
                 posX = 0,

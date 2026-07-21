@@ -64,6 +64,7 @@ L["Left"] = "左"
 L["Right"] = "右"
 L["Error Messages"] = "錯誤訊息"
 L["ErrorMessages"] = "錯誤訊息"
+L["ExtraActionButton"] = "額外動作按鈕"
 
 -- Bag Sort (Sell Scrap)
 L["Sell Scrap"] = "出售垃圾"
