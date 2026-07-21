@@ -208,6 +208,18 @@ function UF.SmallFrame.Create(opts)
         local portrait = frames.portrait
         if not portrait or not frames.main then return end
 
+        -- 3D model portrait takes over the portrait region when enabled.
+        if UF.UpdatePortraitModel({
+            config      = config,
+            unitToken   = opts.unitToken,
+            portrait    = portrait,
+            parentFrame = frames.main,
+            owner       = frames.main,
+            aboveFrames = { frameElements.borderFrame, frameElements.eliteFrame },
+        }) then
+            return
+        end
+
         if not enabled then
             UF.UpdateClassPortrait(opts.unitToken, portrait, frames.main, frameElements, false)
             RestoreSmallFramePortrait(portrait)
@@ -985,6 +997,7 @@ function UF.SmallFrame.Create(opts)
 
         if ShouldShow() then
             UpdateClassification()
+            UpdateSmallFrameClassPortrait()
         end
     end
 

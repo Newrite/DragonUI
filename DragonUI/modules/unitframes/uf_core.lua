@@ -373,6 +373,105 @@ end
 
 
 -- ============================================================================
+-- 3D PORTRAIT MODEL
+-- ============================================================================
+-- Optional animated 3D model shown in place of the 2D portrait texture when
+-- <config>.portrait3D is enabled (and the class-icon portrait is off).
+-- Shared by every unit frame (target, focus, pet, ToT, ToF, party, boss).
+
+-- Reset the camera OnShow so only the head/shoulders are framed (WotLK quirk:
+-- without this the model shows the entire body).
+local function ResetPortraitModelCamera(self)
+    self:SetCamera(0)
+end
+
+-- Updates the 3D portrait model for a single unit frame.
+--   opts.config       : the frame's config table (needs .portrait3D / .classPortrait)
+--   opts.unitToken    : unit id ("target", "pet", "boss1", ...)
+--   opts.portrait     : the 2D portrait texture to hide/show
+--   opts.parentFrame  : frame the model is parented to (sized against the portrait)
+--   opts.owner        : table that stores the lazily-created model (usually the frame)
+--   opts.storeKey     : field name on owner for the model (default "DragonUIPortraitModel")
+--   opts.aboveFrames  : optional list of frames kept rendering above the model
+--   opts.force        : force SetUnit even if the unit GUID is unchanged
+-- Returns true when the 3D model is active (the 2D portrait is hidden).
+function UF.UpdatePortraitModel(opts)
+    local config      = opts.config
+    local unitToken   = opts.unitToken
+    local portrait    = opts.portrait
+    local parentFrame = opts.parentFrame
+    local owner       = opts.owner
+    local storeKey    = opts.storeKey or "DragonUIPortraitModel"
+
+    local use3D = config and config.portrait3D and not config.classPortrait
+        and unitToken and UnitExists(unitToken) and UnitIsVisible(unitToken)
+
+    if not use3D then
+        local model = owner and owner[storeKey]
+        if model then
+            model:Hide()
+            model.guid = nil
+        end
+        if portrait then portrait:SetAlpha(1) end
+        return false
+    end
+
+    if not (owner and parentFrame and portrait) then
+        if portrait then portrait:SetAlpha(1) end
+        return false
+    end
+
+    local model = owner[storeKey]
+    if not model then
+        model = CreateFrame("PlayerModel", nil, parentFrame)
+        model:SetScript("OnShow", ResetPortraitModelCamera)
+        model:Hide()
+        owner[storeKey] = model
+    end
+
+    -- Hide the 2D portrait texture so only the 3D model shows
+    portrait:SetAlpha(0)
+
+    -- Keep the model square and centered so it isn't distorted or pushed high,
+    -- and inset it a little so it sits inside the round portrait ring instead of
+    -- bleeding past the border. (WoW scales model content to the frame, so an
+    -- even inset keeps the head centered.)
+    model:ClearAllPoints()
+    local inset = opts.inset or 0.10
+    local offsetY = opts.offsetY or -1  -- nudge down a pixel
+    local pw = portrait:GetWidth() or 0
+    local ph = portrait:GetHeight() or 0
+    if pw > 0 and ph > 0 then
+        model:SetPoint("TOPLEFT", portrait, "TOPLEFT", pw * inset, -ph * inset + offsetY)
+        model:SetPoint("BOTTOMRIGHT", portrait, "BOTTOMRIGHT", -pw * inset, ph * inset + offsetY)
+    else
+        model:SetAllPoints(portrait)
+    end
+    local baseLevel = parentFrame:GetFrameLevel()
+    model:SetFrameLevel(baseLevel)
+
+    -- Keep decorative border/elite frames rendering above the model
+    if opts.aboveFrames then
+        for _, f in ipairs(opts.aboveFrames) do
+            if f and f.GetFrameLevel and f:GetFrameLevel() <= baseLevel then
+                f:SetFrameLevel(baseLevel + 1)
+            end
+        end
+    end
+
+    -- Only re-apply the unit when needed to avoid the idle animation jumping
+    local guid = UnitGUID(unitToken)
+    if opts.force or model.guid ~= guid then
+        model:SetUnit(unitToken)
+        model:SetCamera(0)
+        model.guid = guid
+    end
+    model:Show()
+    return true
+end
+
+
+-- ============================================================================
 -- BAR HOOK HELPERS
 -- ============================================================================
 
