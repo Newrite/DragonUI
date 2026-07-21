@@ -221,6 +221,7 @@ L["Left"] = true
 L["Right"] = true
 L["Error Messages"] = true
 L["ErrorMessages"] = true
+L["ExtraActionButton"] = "Extra Action Button"
 
 -- Editor mode system messages
 L["All editable frames shown for editing"] = true

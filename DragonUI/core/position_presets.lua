@@ -650,6 +650,10 @@ function PositionPresets:ApplyStoredPositions()
             addon.ApplyErrorMessagesPosition()
         end
 
+        if addon.ApplyExtraActionButtonPosition then
+            addon.ApplyExtraActionButtonPosition()
+        end
+
         if addon.RefreshBuffFrame then
             addon:RefreshBuffFrame()
         end
