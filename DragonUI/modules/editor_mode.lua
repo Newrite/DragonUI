@@ -14,6 +14,8 @@ local exitEditorButton = nil;
 local resetAllButton = nil;
 local errorMessagesMover = nil;
 local errorMessagesPositionHooked = false;
+local extraActionMover = nil;
+local extraActionPositionHooked = false;
 
 local function GetWidgetConfig(widgetName)
     return addon.db and addon.db.profile and addon.db.profile.widgets and addon.db.profile.widgets[widgetName]
@@ -108,6 +110,144 @@ local function SetupErrorMessagesMover()
         if UIParent_ManageFramePositions then
             hooksecurefunc("UIParent_ManageFramePositions", function()
                 ApplyErrorMessagesPosition()
+            end)
+        end
+    end
+end
+
+-- ============================================================================
+-- EXTRA ACTION BUTTON (quest/zone special action button) MOVER
+-- In /fstack this frame is named "ExtraActionBar" (holds ExtraActionButton1).
+-- ============================================================================
+
+local function GetExtraActionFrame()
+    return _G.ExtraActionBarFrame or _G.ExtraActionBar
+end
+
+local function ApplyExtraActionButtonPosition()
+    -- While editing, the mover overlay drives the frame (see showTest anchoring),
+    -- so skip here to avoid detaching it from the mover mid-drag.
+    if addon.EditorMode and addon.EditorMode.IsActive and addon.EditorMode:IsActive() then
+        return
+    end
+
+    local cfg = GetWidgetConfig("extraActionButton")
+    local frame = GetExtraActionFrame()
+    if not frame or not cfg or not cfg.custom_position then
+        return
+    end
+
+    local frameName = frame:GetName()
+    if UIPARENT_MANAGED_FRAME_POSITIONS and frameName and UIPARENT_MANAGED_FRAME_POSITIONS[frameName] then
+        frame.ignoreFramePositionManager = true
+    end
+
+    if frame.SetUserPlaced and (frame:IsMovable() or frame:IsResizable()) then
+        frame:SetUserPlaced(nil)
+    end
+
+    frame:ClearAllPoints()
+    frame:SetPoint(cfg.anchor or "CENTER", UIParent, cfg.anchor or "CENTER", cfg.posX or 0, cfg.posY or 0)
+end
+
+addon.ApplyExtraActionButtonPosition = ApplyExtraActionButtonPosition
+
+local function PersistExtraActionButtonMoverPosition()
+    if not extraActionMover or not addon.db or not addon.db.profile then
+        return
+    end
+
+    addon.db.profile.widgets = addon.db.profile.widgets or {}
+    addon.db.profile.widgets.extraActionButton = addon.db.profile.widgets.extraActionButton or {}
+
+    local cx, cy = extraActionMover:GetCenter()
+    local ux, uy = UIParent:GetCenter()
+    if not (cx and cy and ux and uy) then
+        return
+    end
+
+    local cfg = addon.db.profile.widgets.extraActionButton
+    cfg.anchor = "CENTER"
+    cfg.posX = math.floor((cx - ux) + 0.5)
+    cfg.posY = math.floor((cy - uy) + 0.5)
+    cfg.custom_position = true
+end
+
+local function SetupExtraActionButtonMover()
+    if extraActionMover or not addon.CreateUIFrame then
+        return
+    end
+
+    local frame = GetExtraActionFrame()
+    local w = (frame and frame:GetWidth()) or 0
+    local h = (frame and frame:GetHeight()) or 0
+    if not w or w < 10 then w = 120 end
+    if not h or h < 10 then h = 120 end
+
+    extraActionMover = addon.CreateUIFrame(w, h, "ExtraActionButton")
+
+    extraActionMover:HookScript("OnDragStop", function(self)
+        self.DragonUI_WasDragged = true
+        PersistExtraActionButtonMoverPosition()
+        ApplyExtraActionButtonPosition()
+    end)
+
+    -- Real-time follow: while editor mode is active, keep the real frame pinned to
+    -- the mover every frame so it tracks the drag live (anchoring alone does not
+    -- hold because the frame is repositioned by its own show/update logic).
+    extraActionMover:SetScript("OnUpdate", function(self)
+        if not (addon.EditorMode and addon.EditorMode.IsActive and addon.EditorMode:IsActive()) then
+            return
+        end
+        local blizz = GetExtraActionFrame()
+        if not blizz then return end
+        if blizz.SetUserPlaced and (blizz:IsMovable() or blizz:IsResizable()) then
+            blizz:SetUserPlaced(nil)
+        end
+        blizz:ClearAllPoints()
+        blizz:SetPoint("CENTER", self, "CENTER", 0, 0)
+    end)
+
+    addon:RegisterEditableFrame({
+        name = "extraActionButton",
+        frame = extraActionMover,
+        blizzardFrame = GetExtraActionFrame(),
+        showTest = function()
+            local cfg = GetWidgetConfig("extraActionButton")
+            local blizz = GetExtraActionFrame()
+            extraActionMover:ClearAllPoints()
+            if cfg and cfg.custom_position then
+                extraActionMover:SetPoint(cfg.anchor or "CENTER", UIParent, cfg.anchor or "CENTER", cfg.posX or 0, cfg.posY or 0)
+            elseif blizz then
+                extraActionMover:SetPoint("CENTER", blizz, "CENTER", 0, 0)
+            else
+                extraActionMover:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+            end
+            extraActionMover:Show()
+        end,
+        onHide = function()
+            if extraActionMover.DragonUI_WasDragged or extraActionMover.DragonUI_WasAdjustedByEditor then
+                PersistExtraActionButtonMoverPosition()
+                extraActionMover.DragonUI_WasDragged = nil
+                extraActionMover.DragonUI_WasAdjustedByEditor = nil
+            end
+            ApplyExtraActionButtonPosition()
+        end,
+        module = EditorMode
+    })
+
+    if not extraActionPositionHooked then
+        extraActionPositionHooked = true
+        if UIParent_ManageFramePositions then
+            hooksecurefunc("UIParent_ManageFramePositions", function()
+                ApplyExtraActionButtonPosition()
+            end)
+        end
+        -- The extra action button shows/hides dynamically; reapply when it appears.
+        local blizz = GetExtraActionFrame()
+        if blizz and blizz.HookScript then
+            blizz:HookScript("OnShow", function()
+                ApplyExtraActionButtonPosition()
             end)
         end
     end
@@ -340,6 +480,7 @@ function EditorMode:Show()
     createExitButton()
     createResetAllButton()
     SetupErrorMessagesMover()
+    SetupExtraActionButtonMover()
     EnsureStaticPopupEditorHook()
     gridOverlay:Show()
     exitEditorButton:Show()
@@ -375,6 +516,8 @@ errorFrameInit:RegisterEvent("PLAYER_ENTERING_WORLD")
 errorFrameInit:SetScript("OnEvent", function()
     SetupErrorMessagesMover()
     ApplyErrorMessagesPosition()
+    SetupExtraActionButtonMover()
+    ApplyExtraActionButtonPosition()
 end)
 
 
