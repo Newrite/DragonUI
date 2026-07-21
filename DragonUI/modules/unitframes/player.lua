@@ -2046,8 +2046,20 @@ local function UpdatePlayerPortraitModel(forceRefresh)
 
     -- Match the model to the current portrait region (works for normal & fat modes).
     -- Keep it at the base frame level so the metal ring border still frames it.
+    -- Keep the model square and centered (no distortion / not pushed high) and
+    -- inset it a little so it sits inside the round portrait ring.
+    -- Player frame only: nudge a few pixels down and to the right.
     model:ClearAllPoints()
-    model:SetAllPoints(PlayerPortrait)
+    local inset = 0.10
+    local offsetX, offsetY = 5, -5
+    local pw = PlayerPortrait:GetWidth() or 0
+    local ph = PlayerPortrait:GetHeight() or 0
+    if pw > 0 and ph > 0 then
+        model:SetPoint("TOPLEFT", PlayerPortrait, "TOPLEFT", pw * inset + offsetX, -ph * inset + offsetY)
+        model:SetPoint("BOTTOMRIGHT", PlayerPortrait, "BOTTOMRIGHT", -pw * inset + offsetX, ph * inset + offsetY)
+    else
+        model:SetAllPoints(PlayerPortrait)
+    end
     model:SetFrameLevel(PlayerFrame:GetFrameLevel())
 
     -- Only re-apply the unit when needed to avoid the idle animation jumping.

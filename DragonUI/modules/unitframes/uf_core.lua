@@ -432,9 +432,21 @@ function UF.UpdatePortraitModel(opts)
     -- Hide the 2D portrait texture so only the 3D model shows
     portrait:SetAlpha(0)
 
-    -- Match the model to the current portrait region
+    -- Keep the model square and centered so it isn't distorted or pushed high,
+    -- and inset it a little so it sits inside the round portrait ring instead of
+    -- bleeding past the border. (WoW scales model content to the frame, so an
+    -- even inset keeps the head centered.)
     model:ClearAllPoints()
-    model:SetAllPoints(portrait)
+    local inset = opts.inset or 0.10
+    local offsetY = opts.offsetY or -1  -- nudge down a pixel
+    local pw = portrait:GetWidth() or 0
+    local ph = portrait:GetHeight() or 0
+    if pw > 0 and ph > 0 then
+        model:SetPoint("TOPLEFT", portrait, "TOPLEFT", pw * inset, -ph * inset + offsetY)
+        model:SetPoint("BOTTOMRIGHT", portrait, "BOTTOMRIGHT", -pw * inset, ph * inset + offsetY)
+    else
+        model:SetAllPoints(portrait)
+    end
     local baseLevel = parentFrame:GetFrameLevel()
     model:SetFrameLevel(baseLevel)
 
