@@ -157,18 +157,6 @@ local function AddCommonControls(parent, unitKey, refreshFunc, opts)
         })
     end
 
-    if opts.has3DPortrait then
-        C:AddToggle(parent, {
-            label = LO["3D Portrait"],
-            desc = LO["Show an animated 3D model of your character instead of the 2D portrait."],
-            dbPath = "unitframe." .. unitKey .. ".portrait3D",
-            disabled = function()
-                return C:GetDBValue("unitframe." .. unitKey .. ".classPortrait")
-            end,
-            callback = refreshFunc,
-        })
-    end
-
     C:AddToggle(parent, {
         label = LO["Format Large Numbers"],
         dbPath = "unitframe." .. unitKey .. ".breakUpLargeNumbers",
@@ -217,7 +205,6 @@ local function BuildPlayerSection(scroll)
     local s = C:AddSection(scroll, LO["Player Frame"])
     AddCommonControls(s, "player", refreshPlayer, {
         hasClassPortrait = true,
-        has3DPortrait = true,
     })
 
     C:AddDropdown(s, {
@@ -412,7 +399,6 @@ local function BuildTargetSection(scroll)
     local s = C:AddSection(scroll, LO["Target Frame"])
     AddCommonControls(s, "target", refreshTarget, {
         hasClassPortrait = true,
-        has3DPortrait = true,
     })
 
     C:AddToggle(s, {
@@ -440,7 +426,6 @@ local function BuildFocusSection(scroll)
     local s = C:AddSection(scroll, LO["Focus Frame"])
     AddCommonControls(s, "focus", refreshFocus, {
         hasClassPortrait = true,
-        has3DPortrait = true,
     })
 
     C:AddToggle(s, {
@@ -510,13 +495,6 @@ local function BuildPetSection(scroll)
     C:AddToggle(s, {
         label = LO["Threat Glow"],
         dbPath = "unitframe.pet.enableThreatGlow",
-        callback = refreshPet,
-    })
-
-    C:AddToggle(s, {
-        label = LO["3D Portrait"],
-        desc = LO["Show an animated 3D model of your character instead of the 2D portrait."],
-        dbPath = "unitframe.pet.portrait3D",
         callback = refreshPet,
     })
 
@@ -619,16 +597,6 @@ local function BuildToTSection(scroll)
         callback = refreshToT,
     })
 
-    C:AddToggle(tot, {
-        label = LO["3D Portrait"],
-        desc = LO["Show an animated 3D model of your character instead of the 2D portrait."],
-        dbPath = "unitframe.tot.portrait3D",
-        disabled = function()
-            return C:GetDBValue("unitframe.tot.classPortrait")
-        end,
-        callback = refreshToT,
-    })
-
     -- Attachment status indicator
     local totOverride = C:GetDBValue("unitframe.tot.override")
     if totOverride then
@@ -692,16 +660,6 @@ local function BuildToTSection(scroll)
         callback = refreshToF,
     })
 
-    C:AddToggle(fot, {
-        label = LO["3D Portrait"],
-        desc = LO["Show an animated 3D model of your character instead of the 2D portrait."],
-        dbPath = "unitframe.fot.portrait3D",
-        disabled = function()
-            return C:GetDBValue("unitframe.fot.classPortrait")
-        end,
-        callback = refreshToF,
-    })
-
     -- Attachment status indicator
     local fotOverride = C:GetDBValue("unitframe.fot.override")
     if fotOverride then
@@ -739,13 +697,6 @@ local function BuildPartySection(scroll)
     C:AddToggle(s, {
         label = LO["Class Color Health"],
         dbPath = "unitframe.party.classcolor",
-        callback = refreshParty,
-    })
-
-    C:AddToggle(s, {
-        label = LO["3D Portrait"],
-        desc = LO["Show an animated 3D model of your character instead of the 2D portrait."],
-        dbPath = "unitframe.party.portrait3D",
         callback = refreshParty,
     })
 
@@ -820,13 +771,6 @@ local function BuildBossSection(scroll)
         dbPath = "unitframe.boss.scale",
         min = 0.5, max = 2.0, step = 0.01,
         width = 200,
-        callback = refreshBoss,
-    })
-
-    C:AddToggle(s, {
-        label = LO["3D Portrait"],
-        desc = LO["Show an animated 3D model of your character instead of the 2D portrait."],
-        dbPath = "unitframe.boss.portrait3D",
         callback = refreshBoss,
     })
 

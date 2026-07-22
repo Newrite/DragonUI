@@ -1985,93 +1985,6 @@ end
 -- Class icon texture coordinates (matches WoW's CLASS_ICON_TCOORDS)
 -- NOTE: CLASS_ICON_TEXTURE is declared at top of file (before UpdatePlayerDragonDecoration)
 
--- ----------------------------------------------------------------------------
--- 3D PORTRAIT MODEL
--- Optional animated 3D model of the player character (like ShadowedUnitFrames),
--- shown in place of the 2D portrait texture when unitframe.player.portrait3D is on.
--- ----------------------------------------------------------------------------
-
--- Reset the camera OnShow so only the head/shoulders are framed (WotLK quirk:
--- without this the model shows the entire body).
-local function ResetPlayerPortraitModelCamera(self)
-    self:SetCamera(0)
-end
-
-local function GetPlayerPortraitModel()
-    local dragonFrame = _G["DragonUIUnitframeFrame"]
-    if not dragonFrame then return nil end
-    if not dragonFrame.PlayerPortraitModel then
-        local model = CreateFrame("PlayerModel", "DragonUIPlayerPortraitModel", PlayerFrame)
-        model:SetSize(56, 56)
-        model:SetScript("OnShow", ResetPlayerPortraitModelCamera)
-        model:Hide()
-        dragonFrame.PlayerPortraitModel = model
-    end
-    return dragonFrame.PlayerPortraitModel
-end
-
--- Show/hide the 3D model and toggle the 2D portrait textures accordingly.
--- forceRefresh re-applies SetUnit even if the unit GUID is unchanged (used when
--- the model itself changes, e.g. shapeshift/transmog via UNIT_MODEL_CHANGED).
-local function UpdatePlayerPortraitModel(forceRefresh)
-    local config = GetPlayerConfig()
-    local dragonFrame = _G["DragonUIUnitframeFrame"]
-
-    -- 3D model only when explicitly enabled, class portrait disabled, and not in a vehicle
-    local use3D = config and config.portrait3D and not config.classPortrait and not IsInVehicle()
-
-    if not use3D then
-        if dragonFrame and dragonFrame.PlayerPortraitModel then
-            dragonFrame.PlayerPortraitModel:Hide()
-            dragonFrame.PlayerPortraitModel.guid = nil
-        end
-        -- Restore the 2D portrait unless the class-portrait path manages it or we're in a vehicle
-        if not (config and config.classPortrait) and not IsInVehicle() then
-            PlayerPortrait:SetAlpha(1)
-        end
-        if dragonFrame and dragonFrame.PortraitOverlayTexture then
-            dragonFrame.PortraitOverlayTexture:SetAlpha(1)
-        end
-        return
-    end
-
-    local model = GetPlayerPortraitModel()
-    if not model then return end
-
-    -- Hide the 2D portrait texture(s) so only the 3D model shows
-    PlayerPortrait:SetAlpha(0)
-    if dragonFrame and dragonFrame.PortraitOverlayTexture then
-        dragonFrame.PortraitOverlayTexture:SetAlpha(0)
-    end
-
-    -- Match the model to the current portrait region (works for normal & fat modes).
-    -- Keep it at the base frame level so the metal ring border still frames it.
-    -- Keep the model square and centered (no distortion / not pushed high) and
-    -- inset it a little so it sits inside the round portrait ring.
-    -- Player frame only: nudge a few pixels down and to the right.
-    model:ClearAllPoints()
-    local inset = 0.10
-    local offsetX, offsetY = 5, -5
-    local pw = PlayerPortrait:GetWidth() or 0
-    local ph = PlayerPortrait:GetHeight() or 0
-    if pw > 0 and ph > 0 then
-        model:SetPoint("TOPLEFT", PlayerPortrait, "TOPLEFT", pw * inset + offsetX, -ph * inset + offsetY)
-        model:SetPoint("BOTTOMRIGHT", PlayerPortrait, "BOTTOMRIGHT", -pw * inset + offsetX, ph * inset + offsetY)
-    else
-        model:SetAllPoints(PlayerPortrait)
-    end
-    model:SetFrameLevel(PlayerFrame:GetFrameLevel())
-
-    -- Only re-apply the unit when needed to avoid the idle animation jumping.
-    local guid = UnitGUID("player")
-    if forceRefresh or model.guid ~= guid then
-        model:SetUnit("player")
-        model:SetCamera(0)
-        model.guid = guid
-    end
-    model:Show()
-end
-
 local function RestorePlayerPortraitTexture()
     -- Skip in vehicle mode: Blizzard controls the vehicle portrait texture.
     if not IsInVehicle() then
@@ -2097,7 +2010,6 @@ local function UpdatePlayerClassPortrait()
         if dragonFrame and dragonFrame.ClassPortraitOverlay then
             dragonFrame.ClassPortraitOverlay:Hide()
         end
-        UpdatePlayerPortraitModel()
         return
     end
 
@@ -2107,8 +2019,6 @@ local function UpdatePlayerClassPortrait()
     if dragonFrame and dragonFrame.ClassPortraitOverlay then
         dragonFrame.ClassPortraitOverlay:Hide()
     end
-
-    UpdatePlayerPortraitModel()
 end
 
 local function RefreshPlayerPortraitState(unit)
@@ -2133,9 +2043,6 @@ local function RefreshPlayerPortraitState(unit)
             SetPortraitTexture(dragonFrame.PortraitOverlayTexture, portraitUnit)
         end
     end
-
-    -- Re-assert the 3D model state after the overlay texture is (re)applied above
-    UpdatePlayerPortraitModel()
 end
 
 -- Main frame configuration function
@@ -2464,9 +2371,6 @@ local function RefreshPlayerFrame()
 
     --  UPDATE DRAGON DECORATION (important for scale)
     UpdatePlayerDragonDecoration()
-
-    --  RE-ASSERT 3D PORTRAIT MODEL (decoration rebuild re-shows the 2D overlay)
-    UpdatePlayerPortraitModel()
 
     --  UPDATE TEXT SYSTEM
     if Module.textSystem then
@@ -2863,8 +2767,6 @@ local function SetupPlayerEvents()
         UNIT_MODEL_CHANGED = function(unit)
             if unit == "player" or unit == "vehicle" then
                 RefreshPlayerPortraitState(unit)
-                -- Force the 3D model to rebuild (shapeshift/transmog changed the model)
-                UpdatePlayerPortraitModel(true)
             end
         end,
 

@@ -1158,23 +1158,6 @@ end
 -- FRAME STYLING FUNCTIONS
 -- ===============================================================
 
--- 3D portrait model (shows each member's animated model when enabled)
-local function UpdatePartyMemberModel(frame)
-    if not frame then return end
-    local name = frame:GetName()
-    if not name then return end
-    local portrait = _G[name .. 'Portrait']
-    if not portrait then return end
-    UF.UpdatePortraitModel({
-        config      = UF.GetConfig("party"),
-        unitToken   = "party" .. frame:GetID(),
-        portrait    = portrait,
-        parentFrame = frame,
-        owner       = frame,
-        aboveFrames = { frame.DragonUI_BorderFrame },
-    })
-end
-
 -- Main styling function for party frames
 local function StylePartyFrames()
     -- Skip all restyling during editor mode (prevents texture/layer race conditions on fake frames)
@@ -1250,9 +1233,6 @@ local function StylePartyFrames()
                 end)
                 portrait.DragonUI_SetPointHooked = true
             end
-
-            -- 3D portrait model (shows each member's animated model when enabled)
-            UpdatePartyMemberModel(frame)
 
             -- Health bar
             local healthbar = _G[frame:GetName() .. 'HealthBar']
@@ -1688,9 +1668,6 @@ local function SetupPartyHooks()
             UpdateManaBarTexture(frame)
             -- Disconnected state
             UpdateDisconnectedState(frame)
-
-            -- 3D portrait model
-            UpdatePartyMemberModel(frame)
             
             -- Always hide Blizzard texts and ensure our custom texts exist
             HideBlizzardTexts(frame)

@@ -646,7 +646,6 @@ local defaults = {
                 classcolor = false,
                 classPortrait = false, -- Show class icon instead of character portrait
                 alternativeClassIcons = false, -- Use DragonUI alternative class icons for class portraits
-                portrait3D = false, -- Show an animated 3D model of the character instead of the 2D portrait
                 textFormat = "both",
                 showHealthTextAlways = false,
                 showManaTextAlways = false,
@@ -680,7 +679,6 @@ local defaults = {
                 classcolor = false,
                 classPortrait = false, -- Show class icon instead of character portrait
                 alternativeClassIcons = false, -- Use DragonUI alternative class icons for class portraits
-                portrait3D = false, -- Show an animated 3D model of the unit instead of the 2D portrait
                 breakUpLargeNumbers = true,
                 textFormat = 'both',
                 showHealthTextAlways = false,
@@ -698,7 +696,6 @@ local defaults = {
                 classcolor = false,
                 classPortrait = false, -- Show class icon instead of character portrait
                 alternativeClassIcons = false, -- Use DragonUI alternative class icons for class portraits
-                portrait3D = false, -- Show an animated 3D model of the unit instead of the 2D portrait
                 breakUpLargeNumbers = true,
                 textFormat = 'both',
                 showHealthTextAlways = false,
@@ -717,7 +714,6 @@ local defaults = {
                 showHealthTextAlways = false,
                 showManaTextAlways = false,
                 enableThreatGlow = false,
-                portrait3D = false, -- Show an animated 3D model of the pet instead of the 2D portrait
                 scale = 1.0,
                 override = false,
                 x = 18,
@@ -729,7 +725,6 @@ local defaults = {
             party = {
                 enabled = true,
                 classcolor = false,
-                portrait3D = false, -- Show an animated 3D model of each member instead of the 2D portrait
                 breakUpLargeNumbers = true,
                 textFormat = 'both',
                 showHealthTextAlways = false,
@@ -751,7 +746,6 @@ local defaults = {
                 classcolor = false,
                 classPortrait = false, -- Show class icon instead of character portrait
                 alternativeClassIcons = false, -- Use DragonUI alternative class icons for class portraits
-                portrait3D = false, -- Show an animated 3D model of the unit instead of the 2D portrait
                 scale = 1.0,
                 x = -27,
                 y = -14,
@@ -768,7 +762,6 @@ local defaults = {
                 classcolor = false,
                 classPortrait = false, -- Show class icon instead of character portrait
                 alternativeClassIcons = false, -- Use DragonUI alternative class icons for class portraits
-                portrait3D = false, -- Show an animated 3D model of the unit instead of the 2D portrait
                 scale = 1.0,
                 x = -27,
                 y = -14,
@@ -785,7 +778,6 @@ local defaults = {
                 enabled = true,
                 scale = 1.0,
                 classcolor = false,
-                portrait3D = false, -- Show an animated 3D model of the boss instead of the 2D portrait
                 override = false,
                 anchor = 'TOPRIGHT',
                 anchorParent = 'TOPRIGHT',
@@ -882,8 +874,10 @@ local defaults = {
             },
             auraborders = {
                 enabled = true, -- Modern DF-style borders on buff/debuff icons (player/target/focus)
-                buff_color = { r = 0.2, g = 0.2, b = 0.2 }, -- grayish neutral for buff borders; debuffs use dispel-type color
-                custom_border = true -- border style: true = rounded (custom texture overlay), false = square (solid lines)
+                buff_color = { r = 0.2, g = 0.2, b = 0.2 }, -- neutral buff chrome over white mask; debuffs use dispel-type color
+                custom_border = true, -- border style: true = rounded (custom texture overlay), false = square (solid lines)
+                -- When true, login ApplyDarkMode must not overwrite buff_color (user set it in Auras).
+                buff_color_user_override = false,
             },
             keybinding = {
                 enabled = true, -- Enable LibKeyBound integration for intuitive keybinding (hover + key press)

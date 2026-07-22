@@ -450,19 +450,6 @@ end
 -- ===============================================================
 -- UPDATE HANDLER
 -- ===============================================================
-local function UpdatePetPortraitModel()
-    local petFrame = PetFrame
-    if not petFrame or not PetPortrait then return end
-    UF.UpdatePortraitModel({
-        config      = UF.GetConfig("pet"),
-        unitToken   = "pet",
-        portrait    = PetPortrait,
-        parentFrame = petFrame,
-        owner       = petFrame,
-        aboveFrames = { PetFrameHealthBar },
-    })
-end
-
 local function OnPetFrameUpdate()
     -- Refresh textures
     if moduleState.frame.background then
@@ -483,9 +470,6 @@ local function OnPetFrameUpdate()
     if moduleState.textSystem and moduleState.textSystem.update then
         moduleState.textSystem.update()
     end
-
-    -- 3D portrait model (shows the pet's animated model when enabled)
-    UpdatePetPortraitModel()
 
     -- Ensure vanilla texts remain hidden
     HideBlizzardPetTexts()

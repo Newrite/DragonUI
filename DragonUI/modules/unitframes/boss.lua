@@ -32,24 +32,6 @@ local function IsEnabled()
     return UF.IsEnabled("boss")
 end
 
--- 3D portrait model (shows the boss's animated model when enabled)
-local function UpdateBossPortraitModel(bossFrame)
-    if not bossFrame then return end
-    local frameName = bossFrame:GetName()
-    if not frameName then return end
-    local portrait = _G[frameName .. "Portrait"]
-    if not portrait then return end
-    local unit = bossFrame.unit or bossFrame:GetAttribute("unit")
-    UF.UpdatePortraitModel({
-        config      = GetConfig(),
-        unitToken   = unit,
-        portrait    = portrait,
-        parentFrame = bossFrame,
-        owner       = bossFrame,
-        aboveFrames = { bossFrame.DragonUI_BorderFrame, bossFrame.DragonUI_DecoFrame },
-    })
-end
-
 -- ============================================================================
 -- CONSTANTS
 -- ============================================================================
@@ -295,9 +277,6 @@ local function ReskinBossFrame(wrapperFrame, bossFrame, bossIndex)
             SetPortraitTexture(portrait, unit)
         end
     end
-
-    -- 3D portrait model (shows the boss's animated model when enabled)
-    UpdateBossPortraitModel(bossFrame)
 
     -- ---- Portrait mask (circular dark background) ----
     if portrait and not bossFrame.DragonUI_PortraitMask then
@@ -814,9 +793,6 @@ local function HookTargetFrameUpdate()
             end
         end
 
-        -- 3D portrait model
-        UpdateBossPortraitModel(self)
-
         -- Re-enforce health bar sizing and position
         local healthBar = _G[frameName .. "HealthBar"]
         if healthBar and portrait then
@@ -1032,8 +1008,6 @@ local function InitializeBossFrames()
                             SetPortraitTexture(portrait, unit)
                         end
                     end
-                    -- 3D portrait model
-                    UpdateBossPortraitModel(self)
                     -- Re-enforce flash on show
                     local flashTex = _G[fn .. "Flash"]
                     EnforceFlashStyle(flashTex, self)
