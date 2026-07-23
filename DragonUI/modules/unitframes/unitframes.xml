@@ -17,6 +17,7 @@
         
     <!-- Individual frame modules -->
     <Script file="player.lua"/>
+    <Script file="energy_bar.lua"/>
     <Script file="target.lua"/>
     <Script file="text_system.lua"/>
     <Script file="focus.lua"/>
