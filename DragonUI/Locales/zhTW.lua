@@ -65,6 +65,8 @@ L["Right"] = "右"
 L["Error Messages"] = "錯誤訊息"
 L["ErrorMessages"] = "錯誤訊息"
 L["ExtraActionButton"] = "額外動作按鈕"
+L["PlayerPrimaryStat"] = "主屬性"
+L["Primary stat icon movability widget"] = "主屬性圖示可移動元件"
 
 -- Bag Sort (Sell Scrap)
 L["Sell Scrap"] = "出售垃圾"

@@ -219,6 +219,8 @@ L["Right"] = "Rechts"
 L["Error Messages"] = "Fehlermeldungen"
 L["ErrorMessages"] = "Fehlermeldungen"
 L["ExtraActionButton"] = "Extra-Aktionsschaltfläche"
+L["PlayerPrimaryStat"] = "Hauptstatistik"
+L["Primary stat icon movability widget"] = "Widget zur Beweglichkeit des Primärstatistik-Symbols"
 
 -- Editor mode system messages
 L["All editable frames shown for editing"] = "Alle bearbeitbaren Frames zum Bearbeiten angezeigt"

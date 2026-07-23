@@ -219,6 +219,8 @@ L["Right"] = "Справа"
 L["Error Messages"] = "Сообщения об ошибках"
 L["ErrorMessages"] = "Сообщения об ошибках"
 L["ExtraActionButton"] = "Дополнительная кнопка действия"
+L["PlayerPrimaryStat"] = "Основной показатель"
+L["Primary stat icon movability widget"] = "Виджет перемещения иконки основного показателя"
 
 -- Editor mode system messages
 L["All editable frames shown for editing"] = "Все редактируемые фреймы показаны для редактирования"

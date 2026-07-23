@@ -208,6 +208,12 @@ local defaults = {
                 posY = 200,
                 custom_position = false,
             },
+            playerPrimaryStat = {
+                anchor = "TOPLEFT",
+                posX = 80,
+                posY = -6,
+                custom_position = false,
+            },
         },
         -- Quest Tracker
         questtracker = {

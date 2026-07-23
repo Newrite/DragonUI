@@ -47,6 +47,9 @@
     <!-- Editor Mode module -->
     <Script file="editor_mode.lua"/>
 
+    <!-- Player Primary Stat movability widget -->
+    <Script file="player_primary_stat.lua"/>
+
     <!-- Dark Mode module -->
     <Script file="darkmode.lua"/>
 

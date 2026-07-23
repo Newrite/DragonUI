@@ -222,6 +222,8 @@ L["Right"] = true
 L["Error Messages"] = true
 L["ErrorMessages"] = true
 L["ExtraActionButton"] = "Extra Action Button"
+L["PlayerPrimaryStat"] = "Primary Stat"
+L["Primary stat icon movability widget"] = true
 
 -- Editor mode system messages
 L["All editable frames shown for editing"] = true

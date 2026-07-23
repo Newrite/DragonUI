@@ -219,6 +219,8 @@ L["Right"] = "ì˜¤ë¥¸ìª½"
 L["Error Messages"] = "ì˜¤ë¥˜ ë©”ì‹œì§€"
 L["ErrorMessages"] = "ì˜¤ë¥˜ ë©”ì‹œì§€"
 L["ExtraActionButton"] = "추가 행동 버튼"
+L["PlayerPrimaryStat"] = "주스탯"
+L["Primary stat icon movability widget"] = "주스탯 아이콘 이동 위젯"
 
 -- Editor mode system messages
 L["All editable frames shown for editing"] = "íŽ¸ì§‘ì„ ìœ„í•´ ëª¨ë“  í”„ë ˆìž„ì„ í‘œì‹œí•©ë‹ˆë‹¤."

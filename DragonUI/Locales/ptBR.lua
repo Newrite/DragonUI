@@ -65,6 +65,8 @@ L["Right"] = "Direita"
 L["Error Messages"] = "Mensagens de erro"
 L["ErrorMessages"] = "Mensagens de erro"
 L["ExtraActionButton"] = "Botão de ação extra"
+L["PlayerPrimaryStat"] = "Atributo Principal"
+L["Primary stat icon movability widget"] = "Widget de mobilidade do ícone de atributo principal"
 
 -- Bag Sort (Sell Scrap)
 L["Sell Scrap"] = "Vender Sucata"
