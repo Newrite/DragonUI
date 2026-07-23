@@ -153,7 +153,7 @@ local function ApplyBarStyling(barDef)
         -- Vertical bar: adjust size and position
         local origW = bar:GetWidth() or 20
         local origH = bar:GetHeight() or 60
-        bar:SetSize(origW * 0.7, origH * 0.95)
+        bar:SetSize(origW * 0.7, origH * 0.68)
 
         local point, relTo, relPoint, xOfs, yOfs = bar:GetPoint()
         bar:ClearAllPoints()
