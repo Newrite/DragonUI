@@ -1470,3 +1470,12 @@ L["DragonflightUI: fully custom bars with rested XP background.\nRetailUI: atlas
 L["Display a translucent bar showing the total available rested XP range.\n(DragonflightUI style only)"] = "Afficher une barre translucide indiquant la plage totale d'XP de repos disponible.\n(style DragonflightUI uniquement)"
 L["All changes will be lost and the UI will be reloaded.\nAre you sure you want to reset your profile?"] = "Toutes les modifications seront perdues et l'interface sera rechargée.\nVoulez-vous vraiment réinitialiser votre profil ?"
 L["Commands: /dragonui, /dui, /pi \226\128\148 /dragonui edit (editor) \226\128\148 /dragonui help"] = "Commandes : /dragonui, /dui, /pi \226\128\148 /dragonui edit (éditeur) \226\128\148 /dragonui help"
+-- Quest nameplate icons (loot providers + Questie coexistence)
+L["Resolve By Name"] = "Résoudre par nom"
+L["Match plate names to your active objectives so icons show on every plate without awesome_wotlk. Kill objectives work on their own; loot needs a quest addon below."] = "Associe les noms des plaques à vos objectifs actifs pour afficher les icônes sur chaque plaque sans awesome_wotlk. Les objectifs de meurtre fonctionnent seuls ; le butin nécessite un addon de quête (ci-dessous)."
+L["Loot Database"] = "Base de données de butin"
+L["Which quest addon supplies loot data (which mob drops a quest item). Auto picks the best loaded one."] = "Quel addon de quête fournit les données de butin (quel monstre lâche un objet de quête). Auto choisit le meilleur chargé."
+L["Auto"] = "Auto"
+L["Icons With Questie"] = "Icônes avec Questie"
+L["Who draws quest icons on plates when Questie is loaded with its own nameplate icons on. DragonUI disables Questie's (needs reload); Questie hides DragonUI's."] = "Qui dessine les icônes de quête sur les plaques quand Questie est chargé avec ses propres icônes activées. DragonUI désactive celles de Questie (rechargement requis) ; Questie masque celles de DragonUI."
+L["Ask"] = "Demander"

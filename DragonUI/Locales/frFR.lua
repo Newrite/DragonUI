@@ -502,3 +502,12 @@ L["Bank already sorted!"] = "Banque déjà triée !"
 L["Reputation: "] = "Réputation : "
 L["Error in SafeCall:"] = "Erreur dans SafeCall :"
 L["Double-Click to Copy"] = "Double-cliquez pour copier"
+-- Quest nameplate icons wizard (Questie coexistence)
+L["Quest Icons on Nameplates"] = "Icônes de quête sur les plaques"
+L["Which quest icons do you want on your nameplates?"] = "Quelles icônes de quête voulez-vous sur vos plaques ?"
+L["Kill"] = "Tuer"
+L["Loot"] = "Butin"
+L['Pointer mode (just "!")'] = 'Mode pointeur (juste "!")'
+L["Use Questie"] = "Utiliser Questie"
+L["Applying quest icon settings needs a UI reload."] = "Appliquer les réglages des icônes de quête nécessite un rechargement de l'interface."
+L["Reload"] = "Recharger"

@@ -499,3 +499,12 @@ L["Bank already sorted!"] = "銀行已整理完畢！"
 L["Reputation: "] = "聲望："
 L["Error in SafeCall:"] = "SafeCall 發生錯誤："
 L["Double-Click to Copy"] = "雙擊以複製"
+-- Quest nameplate icons wizard (Questie coexistence)
+L["Quest Icons on Nameplates"] = "姓名板任務圖示"
+L["Which quest icons do you want on your nameplates?"] = "你想在姓名板上顯示哪種任務圖示？"
+L["Kill"] = "擊殺"
+L["Loot"] = "拾取"
+L['Pointer mode (just "!")'] = '指標模式（僅"!"）'
+L["Use Questie"] = "使用 Questie"
+L["Applying quest icon settings needs a UI reload."] = "套用任務圖示設定需要重新載入介面。"
+L["Reload"] = "重新載入"

@@ -565,3 +565,12 @@ L["|cff00ff00Alt+Right-Click|r to reset position"] = "|cff00ff00Alt+Clic derecho
 L["Toggle Inventory"] = "Alternar inventario"
 L["Toggle Bank"] = "Alternar banco"
 L["Double-Click to Copy"] = "Doble clic para copiar"
+-- Quest nameplate icons wizard (Questie coexistence)
+L["Quest Icons on Nameplates"] = "Iconos de misión en las placas"
+L["Which quest icons do you want on your nameplates?"] = "¿Qué iconos de misión quieres en tus placas?"
+L["Kill"] = "Matar"
+L["Loot"] = "Botín"
+L['Pointer mode (just "!")'] = 'Modo puntero (solo "!")'
+L["Use Questie"] = "Usar Questie"
+L["Applying quest icon settings needs a UI reload."] = "Aplicar los ajustes de iconos de misión requiere recargar la interfaz."
+L["Reload"] = "Recargar"
