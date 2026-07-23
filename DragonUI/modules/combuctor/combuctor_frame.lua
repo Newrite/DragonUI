@@ -274,7 +274,7 @@ local function CreateInventoryFrame(name, parent)
     end)
 
     -- Header: one row right of the portrait, buttons trailing the search box
-    bagToggleBtn:SetPoint("TOPRIGHT", f, "TOPRIGHT", -12, -30)
+    bagToggleBtn:SetPoint("TOPRIGHT", f, "TOPRIGHT", -18, -30)
 
     searchEb:SetPoint("TOPLEFT", f, "TOPLEFT", 60, -31)
     searchEb:SetWidth(200)
@@ -375,9 +375,12 @@ do
     local FrameEvents = mod("FrameEvents")
 
     local BASE_WIDTH = 384
-    local ITEM_FRAME_WIDTH_OFFSET = 354 - BASE_WIDTH
+    -- Right inset slightly tighter: last cell pitch already leaves spacing after the icon.
+    local ITEM_FRAME_LEFT_INSET = 16
+    local ITEM_FRAME_RIGHT_INSET = 12
+    local ITEM_FRAME_WIDTH_OFFSET = -(ITEM_FRAME_LEFT_INSET + ITEM_FRAME_RIGHT_INSET)
     local BASE_HEIGHT = 512
-    local ITEM_FRAME_HEIGHT_OFFSET = 420 - BASE_HEIGHT
+    local ITEM_FRAME_HEIGHT_OFFSET = 417 - BASE_HEIGHT
 
     local lastID = 1
     function InventoryFrame:New(titleText, settings, isBank, key)
@@ -407,7 +410,7 @@ do
         f.qualityFilter:SetPoint("BOTTOM", 0, 9)
 
         f.itemFrame = mod.ItemFrame:New(f)
-        f.itemFrame:SetPoint("TOPLEFT", 14, -62)
+        f.itemFrame:SetPoint("TOPLEFT", ITEM_FRAME_LEFT_INSET, -65)
 
         -- Bottom band: bare money bottom-right, bare currency tokens bottom-left
         f.moneyFrame = mod.MoneyFrame:New(f)
@@ -540,11 +543,9 @@ do
         end
         if self.sets.showBags then
             for _, bagID in ipairs(self.sets.bags) do
-                if bagID ~= KEYRING_CONTAINER then
-                    local bag = mod.Bag:Get()
-                    bag:Set(self, bagID)
-                    tinsert(self.bagButtons, bag)
-                end
+                local bag = mod.Bag:Get()
+                bag:Set(self, bagID)
+                tinsert(self.bagButtons, bag)
             end
             for i, bag in ipairs(self.bagButtons) do
                 bag:ClearAllPoints()
@@ -555,6 +556,9 @@ do
                     bag:SetPoint("TOP", _G[self:GetName() .. "BagToggle"], "BOTTOM", 0, -10)
                 end
                 bag:Show()
+                if bag.UpdateToggle then
+                    bag:UpdateToggle()
+                end
             end
         end
         self:UpdateItemFrameSize()
@@ -565,6 +569,36 @@ do
             _G[self:GetName() .. "BagToggle"]:LockHighlight()
         else
             _G[self:GetName() .. "BagToggle"]:UnlockHighlight()
+        end
+    end
+
+    -- hiddenBags[bag] omits that bag from the item grid
+    function InventoryFrame:IsShowingBag(bag)
+        local hidden = self.sets.hiddenBags
+        return not (hidden and hidden[bag])
+    end
+
+    function InventoryFrame:ToggleBagFilter(bag)
+        self.sets.hiddenBags = self.sets.hiddenBags or {}
+        if self.sets.hiddenBags[bag] then
+            self.sets.hiddenBags[bag] = nil
+            PlaySound("igMainMenuOptionCheckBoxOn")
+        else
+            self.sets.hiddenBags[bag] = true
+            PlaySound("igMainMenuOptionCheckBoxOff")
+        end
+        if self.itemFrame then
+            self.itemFrame:Regenerate()
+            self.itemFrame:RequestLayout()
+        end
+        self:UpdateBagFilterToggles()
+    end
+
+    function InventoryFrame:UpdateBagFilterToggles()
+        for _, bag in ipairs(self.bagButtons) do
+            if bag.UpdateToggle then
+                bag:UpdateToggle()
+            end
         end
     end
 
@@ -711,7 +745,14 @@ do
         local w, h = self:GetWidth(), self:GetHeight()
         self.sets.w = w
         self.sets.h = h
-        self:UpdateItemFrameSize()
+        -- One-frame debounce while dragging the resize corner
+        if not self._resizeDriver then
+            self._resizeDriver = CreateFrame("Frame", nil, self)
+        end
+        self._resizeDriver:SetScript("OnUpdate", function(driver)
+            driver:SetScript("OnUpdate", nil)
+            self:UpdateItemFrameSize()
+        end)
     end
 
     function InventoryFrame:UpdateItemFrameSize()
@@ -790,6 +831,11 @@ do
             self.tokenBar:Refresh()
         end
         self:UpdateItemFrameSize()
+        if not self.isBank and mod.ScheduleHighlightMainMenuBags then
+            mod.ScheduleHighlightMainMenuBags()
+        elseif not self.isBank and mod.HighlightMainMenuBags then
+            mod.HighlightMainMenuBags()
+        end
     end
 
     function InventoryFrame:OnHide()
@@ -799,6 +845,11 @@ do
             CloseBankFrame()
         end
         self:SetPlayer(mod.playerName)
+        if not self.isBank and mod.ScheduleHighlightMainMenuBags then
+            mod.ScheduleHighlightMainMenuBags()
+        elseif not self.isBank and mod.HighlightMainMenuBags then
+            mod.HighlightMainMenuBags()
+        end
     end
 
     function InventoryFrame:ToggleFrame(auto)
@@ -917,7 +968,7 @@ local function CombuctorSkinFrame(frame)
     local bagToggle = _G[frame:GetName() .. 'BagToggle']
     if bagToggle then
         bagToggle:ClearAllPoints()
-        bagToggle:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', -12, -30)
+        bagToggle:SetPoint('TOPRIGHT', frame, 'TOPRIGHT', -18, -30)
     end
 
     -- Portrait click opens CharacterFrame
