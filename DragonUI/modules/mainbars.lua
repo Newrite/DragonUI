@@ -315,6 +315,7 @@ local mainBarPageByClass = {
   REAPER = '[form:1] 7; [nostealth] 1;',
   SPIRITMAGE = '[stealth] 7; [nostealth] 1;',
   HERO = '[bonusbar:1,nostealth] 7; [bonusbar:1,stealth] 8; [bonusbar:2] 8; [bonusbar:3] 9; [bonusbar:4] 10;',
+  SONOFARUGAL = '[bonusbar:1] 7; [bonusbar:2] 8; [bonusbar:3] 9; [bonusbar:4] 10;',
   DEFAULT = '[bonusbar:5] 11; [bar:2] 2; [bar:3] 3; [bar:4] 4; [bar:5] 5; [bar:6] 6;'
 }
 
