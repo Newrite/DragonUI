@@ -166,6 +166,7 @@ local function ApplyBarStyling(barDef)
         local bg = bar:CreateTexture(nil, "BACKGROUND")
         bg:SetTexture(BG_TEXTURE)
         bg:SetAllPoints()
+        bar.DragonUIBackground = bg
 
         -- Border (from atlas) - rotated 90 degrees for vertical bar
         local border = bar:CreateTexture(nil, "ARTWORK", nil, 0)
@@ -176,6 +177,7 @@ local function ApplyBarStyling(barDef)
         border:SetTexCoord(minX, maxY, maxX, maxY, minX, minY, maxX, minY)
         border:SetPoint("TOPLEFT", bar, "TOPLEFT", -2, 2)
         border:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 2, -2)
+        bar.DragonUIBorder = border
     else
         -- Horizontal bar: resize and reposition
         local origW = bar:GetWidth() or 125
@@ -193,6 +195,7 @@ local function ApplyBarStyling(barDef)
         local bg = bar:CreateTexture(nil, "BACKGROUND")
         bg:SetTexture(BG_TEXTURE)
         bg:SetAllPoints()
+        bar.DragonUIBackground = bg
 
         -- Border (from atlas)
         local border = bar:CreateTexture(nil, "ARTWORK", nil, 0)
@@ -200,6 +203,7 @@ local function ApplyBarStyling(barDef)
         border:SetTexCoord(unpack(UV_COORDS.border))
         border:SetPoint("TOPLEFT", bar, "TOPLEFT", -2, 2)
         border:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 2, -2)
+        bar.DragonUIBorder = border
     end
 
     -- Create text (value only, no max)

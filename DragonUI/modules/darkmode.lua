@@ -498,6 +498,19 @@ local function DarkenUnitFrameBorders(tint)
         end
         DarkenFrameBorderTextures(_G["PartyMemberFrame" .. i .. "PetFrame"])
     end
+
+    -- Energy / Rage bar borders (Hero class power bars, styled by energy_bar module)
+    for _, barName in ipairs({ "PlayerFrameEnergyBar", "PlayerFrameRageBar" }) do
+        local bar = _G[barName]
+        if bar then
+            if bar.DragonUIBorder then
+                DarkenTexture(bar.DragonUIBorder, tint)
+            end
+            if bar.DragonUIBackground then
+                DarkenTexture(bar.DragonUIBackground, tint)
+            end
+        end
+    end
 end
 
 -- -----------------------------------------------------------------------
