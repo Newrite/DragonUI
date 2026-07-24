@@ -133,6 +133,7 @@ local function UpdateAuraPositionsDetached(self, auraName, numAuras, numOpposite
     local offsetY = AURA_OFFSET_Y + extraGap
     local rowWidth = 0
     local firstAuraOnRow = 0
+    local lastVisibleIndex = 0
 
     for i = 1, numAuras do
         local aura = _G[auraName .. i]
@@ -155,20 +156,21 @@ local function UpdateAuraPositionsDetached(self, auraName, numAuras, numOpposite
             end
 
             if rowWidth > maxRowWidth then
-                updateFunc(self, auraName, i, numOppositeAuras, firstAuraOnRow, size, offsetX, offsetY, mirrorAurasVertically)
+                updateFunc(self, auraName, i, numOppositeAuras, firstAuraOnRow, size, offsetX, offsetY, mirrorAurasVertically, true)
                 rowWidth = size
                 self.auraRows = self.auraRows + 1
                 firstAuraOnRow = i
                 offsetY = AURA_OFFSET_Y + extraGap
             else
-                updateFunc(self, auraName, i, numOppositeAuras, i - 1, size, offsetX, offsetY, mirrorAurasVertically)
+                updateFunc(self, auraName, i, numOppositeAuras, lastVisibleIndex, size, offsetX, offsetY, mirrorAurasVertically, false)
             end
+            lastVisibleIndex = i
         end
     end
 end
 
 local function UpdateBuffAnchorDetached(self, buffName, index, numDebuffs, anchorIndex, size, offsetX, offsetY,
-                                        mirrorVertically)
+                                        mirrorVertically, isNewRow)
     local point, relativePoint
     local startY, auraOffsetY
 
@@ -199,7 +201,7 @@ local function UpdateBuffAnchorDetached(self, buffName, index, numDebuffs, ancho
         self.buffs:SetPoint(point .. "LEFT", buff, point .. "LEFT", 0, 0)
         self.buffs:SetPoint(relativePoint .. "LEFT", buff, relativePoint .. "LEFT", 0, -auraOffsetY)
         self.spellbarAnchor = buff
-    elseif anchorIndex ~= (index - 1) then
+    elseif isNewRow then
         buff:SetPoint(point .. "LEFT", _G[buffName .. anchorIndex], relativePoint .. "LEFT", 0, -offsetY)
         self.buffs:SetPoint(relativePoint .. "LEFT", buff, relativePoint .. "LEFT", 0, -auraOffsetY)
         self.spellbarAnchor = buff
@@ -212,7 +214,7 @@ local function UpdateBuffAnchorDetached(self, buffName, index, numDebuffs, ancho
 end
 
 local function UpdateDebuffAnchorDetached(self, debuffName, index, numBuffs, anchorIndex, size, offsetX, offsetY,
-                                          mirrorVertically)
+                                          mirrorVertically, isNewRow)
     local debuff = _G[debuffName .. index]
     local isFriend = UnitIsFriend("player", self.unit)
     local point, relativePoint
@@ -246,14 +248,14 @@ local function UpdateDebuffAnchorDetached(self, debuffName, index, numBuffs, anc
         if isFriend or (not isFriend and numBuffs == 0) then
             self.spellbarAnchor = debuff
         end
-    elseif anchorIndex ~= (index - 1) then
+    elseif isNewRow then
         debuff:SetPoint(point .. "LEFT", _G[debuffName .. anchorIndex], relativePoint .. "LEFT", 0, -offsetY)
         self.debuffs:SetPoint(relativePoint .. "LEFT", debuff, relativePoint .. "LEFT", 0, -auraOffsetY)
         if isFriend or (not isFriend and numBuffs == 0) then
             self.spellbarAnchor = debuff
         end
     else
-        debuff:SetPoint(point .. "LEFT", _G[debuffName .. (index - 1)], point .. "RIGHT", offsetX, 0)
+        debuff:SetPoint(point .. "LEFT", _G[debuffName .. anchorIndex], point .. "RIGHT", offsetX, 0)
     end
 
     debuff:SetWidth(size)
