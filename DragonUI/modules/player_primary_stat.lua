@@ -56,6 +56,30 @@ local function OnEnable()
 
     anchor = addon.CreateUIFrame(30, 30, "PlayerPrimaryStat")
 
+    local stat = PlayerPrimaryStat
+    if stat and stat.Border then
+        stat.Border:SetTexture(nil)
+        stat.Border:SetAtlas(nil)
+        stat.Border:SetTexture("Interface\\AddOns\\DragonUI\\assets\\UI-Frame-PortraitMetal-CornerTopLeft.blp")
+        stat.Border:ClearAllPoints()
+        stat.Border:SetPoint("CENTER", stat, "CENTER", 0, 2)
+        stat.Border:SetSize(34, 34)
+    end
+    if stat then
+        for i = 1, stat:GetNumRegions() do
+            local region = select(i, stat:GetRegions())
+            if region:GetObjectType() == "Texture" and region:GetDrawLayer() == "HIGHLIGHT" then
+                region:SetTexture(nil)
+            end
+        end
+        local ht = stat:CreateTexture(nil, "HIGHLIGHT")
+        ht:SetPoint("CENTER", stat, "CENTER", 0, 0)
+        ht:SetSize(34, 34)
+        ht:SetTexture("Interface\\AddOns\\DragonUI\\assets\\baghighlight2.blp")
+        ht:SetBlendMode("ADD")
+        stat:SetHighlightTexture(ht)
+    end
+
     original_SetPoint = PlayerPrimaryStat.SetPoint
     PlayerPrimaryStat.SetPoint = function(self, ...)
         if IsEditorActive() then return end
