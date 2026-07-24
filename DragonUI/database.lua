@@ -214,6 +214,12 @@ local defaults = {
                 posY = -6,
                 custom_position = false,
             },
+            targetPrimaryStat = {
+                anchor = "TOPRIGHT",
+                posX = -80,
+                posY = -6,
+                custom_position = false,
+            },
         },
         -- Quest Tracker
         questtracker = {
@@ -801,6 +807,9 @@ local defaults = {
         modules = {
             noop = {
                 enabled = true -- Hide default Blizzard UI elements to allow DragonUI replacements
+            },
+            playerPrimaryStat = {
+                enabled = true -- Primary stat icon movability widget
             },
             cooldowns = {
                 enabled = true -- Show cooldown timers on action buttons

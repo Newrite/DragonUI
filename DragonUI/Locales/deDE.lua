@@ -220,6 +220,7 @@ L["Error Messages"] = "Fehlermeldungen"
 L["ErrorMessages"] = "Fehlermeldungen"
 L["ExtraActionButton"] = "Extra-Aktionsschaltfläche"
 L["PlayerPrimaryStat"] = "Hauptstatistik"
+L["TargetPrimaryStat"] = "Hauptstatistik (Ziel)"
 L["Primary stat icon movability widget"] = "Widget zur Beweglichkeit des Primärstatistik-Symbols"
 
 -- Editor mode system messages

@@ -220,6 +220,7 @@ L["Error Messages"] = "ì˜¤ë¥˜ ë©”ì‹œì§€"
 L["ErrorMessages"] = "ì˜¤ë¥˜ ë©”ì‹œì§€"
 L["ExtraActionButton"] = "추가 행동 버튼"
 L["PlayerPrimaryStat"] = "주스탯"
+L["TargetPrimaryStat"] = "대상 주스탯"
 L["Primary stat icon movability widget"] = "주스탯 아이콘 이동 위젯"
 
 -- Editor mode system messages
