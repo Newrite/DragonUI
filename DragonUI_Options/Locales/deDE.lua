@@ -326,10 +326,10 @@ L["Recommended Addon"] = "Empfohlenes Addon"
 L["For a smoother, more polished chat experience, check out CleanerChat-WotLK — it adds chat filter tweaks, improved chat styling, and Glass UI overlays."] = "Für ein flüssigeres Chat-Erlebnis, probier CleanerChat-WotLK — bietet Chat-Filter, verbesserten Chat-Stil und Glass-UI-Overlays."
 L["Download (select and Ctrl+C to copy):"] = "Download (auswählen und Strg+C zum Kopieren):"
 
--- Combuctor
-L["Enable Combuctor"] = "Combuctor (Kombi-Beutel) aktivieren"
+-- Bagster
+L["Enable Bagster"] = "Bagster (Kombi-Beutel) aktivieren"
 L["All-in-one bag replacement with item filtering, search, quality indicators, and bank integration."] = "Komplett-Taschenersatz mit Gegenstandsfilterung, Suche, Qualitätsindikatoren und Bankintegration."
-L["Combuctor Settings"] = "Combuctor (Kombi-Beutel) Einstellungen"
+L["Bagster Settings"] = "Bagster (Kombi-Beutel) Einstellungen"
 
 -- Item usability tint
 L["Item Usability"] = "Gegenstandsverwendbarkeit"
@@ -381,7 +381,7 @@ L["Show the Devices subtab."] = "Zeigt die Unterregisterkarte „Geräte“ an."
 L["Show the Trade Goods subtab."] = "Zeigt die Unterregisterkarte „Handelsgüter“ an."
 L["Show the Gem subtab."] = "Zeigt die Unterregisterkarte „Edelstein“ an."
 L["Show the Recipe subtab."] = "Zeigt die Unterregisterkarte „Rezept“ an."
-L["Configure Combuctor bag replacement settings."] = "Einstellungen für den Austausch des Combuctors (Kombi-Beutels) konfigurieren."
+L["Configure Bagster bag replacement settings."] = "Einstellungen für den Austausch des Bagsters (Kombi-Beutels) konfigurieren."
 L["Category Tabs"] = "Kategorie-Registerkarten"
 L["Inventory Tabs"] = "Inventar-Registerkarten"
 L["Bank Tabs"] = "Bank-Registerkarten"
@@ -442,7 +442,7 @@ L["Pet action bar positioning and styling"] = "Positionierung und Styling der Be
 L["Multicast (totem/possess) bar positioning and styling"] = "Positionierung und Styling der Multicast-Leiste (Totems/Besessenheit)"
 L["Chat Mods"] = "Chat-Mods"
 L["Chat enhancements: hide buttons, editbox position, URL copy, chat copy, link hover, tell target"] = "Chat-Verbesserungen: Schaltflächen ausblenden, Position des Bearbeitungsfelds, URL kopieren, Chat kopieren, Link-Hover, Ziel angeben"
-L["Combuctor"] = "Combuctor (Kombi-Beutel)"
+L["Bagster"] = "Bagster (Kombi-Beutel)"
 L["All-in-one bag replacement with filtering and search"] = "All-in-One-Ersatz für Taschen mit Filter- und Suchfunktion"
 
 -- ============================================================================

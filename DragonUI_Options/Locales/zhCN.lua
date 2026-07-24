@@ -329,10 +329,10 @@ L["Recommended Addon"] = "推荐插件"
 L["For a smoother, more polished chat experience, check out CleanerChat-WotLK — it adds chat filter tweaks, improved chat styling, and Glass UI overlays."] = "想要更流畅的聊天体验，试试 CleanerChat-WotLK — 提供聊天筛选、改良样式和 Glass UI 叠层。"
 L["Download (select and Ctrl+C to copy):"] = "下载（选取后 Ctrl+C 复制）："
 
--- 背包整合 (Combuctor)
-L["Enable Combuctor"] = "启用背包整合 (Combuctor)"
+-- 背包整合 (Bagster)
+L["Enable Bagster"] = "启用背包整合 (Bagster)"
 L["All-in-one bag replacement with item filtering, search, quality indicators, and bank integration."] = "具有物品过滤、搜索、品质指示器和银行整合功能的一体化背包替代插件。"
-L["Combuctor Settings"] = "Combuctor设置"
+L["Bagster Settings"] = "Bagster设置"
 
 -- Item usability tint
 L["Item Usability"] = "物品可用性"
@@ -386,7 +386,7 @@ L["Show the Devices subtab."] = "显示设备子标签页。"
 L["Show the Trade Goods subtab."] = "显示商品子标签页。"
 L["Show the Gem subtab."] = "显示宝石子标签页。"
 L["Show the Recipe subtab."] = "显示配方子标签页。"
-L["Configure Combuctor bag replacement settings."] = "配置背包整合 (Combuctor) 替代设置。"
+L["Configure Bagster bag replacement settings."] = "配置背包整合 (Bagster) 替代设置。"
 L["Category Tabs"] = "分类标签页"
 L["Inventory Tabs"] = "背包标签页"
 L["Bank Tabs"] = "银行标签页"
@@ -447,7 +447,7 @@ L["Pet action bar positioning and styling"] = "宠物动作条位置和样式设
 L["Multicast (totem/possess) bar positioning and styling"] = "多目标施法（图腾/控制）条位置和样式设置"
 L["Chat Mods"] = "聊天功能修改"
 L["Chat enhancements: hide buttons, editbox position, URL copy, chat copy, link hover, tell target"] = "聊天增强：隐藏按钮、输入框位置、URL/聊天复制、链接悬停提示、/告诉目标"
-L["Combuctor"] = "背包整合 (Combuctor)"
+L["Bagster"] = "背包整合 (Bagster)"
 L["All-in-one bag replacement with filtering and search"] = "具有过滤和搜索功能的一体化背包替代"
 
 -- ============================================================================

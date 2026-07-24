@@ -11,7 +11,7 @@ local _arialn = addon.Fonts and addon.Fonts.ARIALN or "Fonts\\ARIALN.TTF"
 
 local defaults = {
     global = {
-        combuctorCache = {}, -- Per-character bank snapshot (realm|name keys); used by combuctor module
+        bagsterCache = {}, -- Per-character bank snapshot (realm|name keys); used by bagster module
         questLootLearned = {} -- Learned quest loot sources for nameplates: [mobName] = {objectiveText=true}
     },
     profile = {
@@ -1078,7 +1078,7 @@ local defaults = {
                 x_position = -270, -- Horizontal position from screen center
                 y_offset = 270, -- Vertical offset
             },
-            combuctor = {
+            bagster = {
                 enabled = false, -- All-in-one bag replacement with filtering and search
                 money_display = "icons", -- Coin display: "icons" (g/s/c icons) or "text"
                 item_scale = 1.25, -- Max item slot scale in the grid
