@@ -488,6 +488,27 @@ local function BuildAurasTab(scroll)
         return GetAuraCooldownConfig().target.max_duration_minutes
     end)
 
+    RegisterDynamicWidget(C:AddToggle(timerSection, {
+        label = LO["Ignore Keeper's Aura from Target"],
+        desc = LO["Hide all buffs on the target whose name starts with 'Keeper's'."],
+        getFunc = function()
+            return GetAuraCooldownConfig().target.ignore_keepers_aura == true
+        end,
+        setFunc = function(val)
+            local cfg = GetAuraCooldownConfig()
+            cfg.target.ignore_keepers_aura = val and true or false
+        end,
+        callback = function()
+            if isRefreshingAuraWidgets then return end
+            if addon.RefreshTargetFocusAuraLayout then
+                addon.RefreshTargetFocusAuraLayout()
+            end
+        end,
+        requiresReload = false,
+    }), IsTargetTimerSettingsDisabled, function()
+        return GetAuraCooldownConfig().target.ignore_keepers_aura == true
+    end)
+
     C:AddHeading(timerSection, LO["Focus Aura Timer Settings"])
 
     RegisterDynamicWidget(C:AddSlider(timerSection, {

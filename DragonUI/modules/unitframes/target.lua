@@ -100,14 +100,17 @@ local function GetAuraCountsAndSizes(frame)
     local largeDebuffList = {}
 
     -- Large from caster (Blizzard's PLAYER_UNITS rule), not width: prior SetSize corrupts width inference.
+    -- Skip hidden buttons (e.g. Keeper's aura filtered) instead of breaking so later visible auras are still counted.
     for i = 1, MAX_TARGET_BUFFS do
         local buff = _G[selfName .. "Buff" .. i]
-        if not buff or not buff:IsShown() then
+        if not buff then
             break
         end
-        numBuffs = i
-        local caster = select(8, UnitBuff(unit, i))
-        largeBuffList[i] = caster and PLAYER_CAST_UNITS[caster] or false
+        if buff:IsShown() then
+            numBuffs = i
+            local caster = select(8, UnitBuff(unit, i))
+            largeBuffList[i] = caster and PLAYER_CAST_UNITS[caster] or false
+        end
     end
 
     for i = 1, MAX_TARGET_DEBUFFS do
@@ -129,31 +132,37 @@ local function UpdateAuraPositionsDetached(self, auraName, numAuras, numOpposite
     extraGap = extraGap or 0
     local offsetY = AURA_OFFSET_Y + extraGap
     local rowWidth = 0
-    local firstAuraOnRow = 1
+    local firstAuraOnRow = 0
 
     for i = 1, numAuras do
-        if largeAuraList[i] then
-            size = largeSize
-            offsetY = AURA_OFFSET_Y + AURA_OFFSET_Y + extraGap
+        local aura = _G[auraName .. i]
+        if not aura or not aura:IsShown() then
+            -- Skip hidden auras (e.g. filtered by Keepers option)
         else
-            size = smallSize
-        end
+            if largeAuraList[i] then
+                size = largeSize
+                offsetY = AURA_OFFSET_Y + AURA_OFFSET_Y + extraGap
+            else
+                size = smallSize
+            end
 
-        if i == 1 then
-            rowWidth = size
-            self.auraRows = self.auraRows + 1
-        else
-            rowWidth = rowWidth + size + offsetX
-        end
+            if firstAuraOnRow == 0 then
+                rowWidth = size
+                self.auraRows = self.auraRows + 1
+                firstAuraOnRow = i
+            else
+                rowWidth = rowWidth + size + offsetX
+            end
 
-        if rowWidth > maxRowWidth then
-            updateFunc(self, auraName, i, numOppositeAuras, firstAuraOnRow, size, offsetX, offsetY, mirrorAurasVertically)
-            rowWidth = size
-            self.auraRows = self.auraRows + 1
-            firstAuraOnRow = i
-            offsetY = AURA_OFFSET_Y + extraGap
-        else
-            updateFunc(self, auraName, i, numOppositeAuras, i - 1, size, offsetX, offsetY, mirrorAurasVertically)
+            if rowWidth > maxRowWidth then
+                updateFunc(self, auraName, i, numOppositeAuras, firstAuraOnRow, size, offsetX, offsetY, mirrorAurasVertically)
+                rowWidth = size
+                self.auraRows = self.auraRows + 1
+                firstAuraOnRow = i
+                offsetY = AURA_OFFSET_Y + extraGap
+            else
+                updateFunc(self, auraName, i, numOppositeAuras, i - 1, size, offsetX, offsetY, mirrorAurasVertically)
+            end
         end
     end
 end
@@ -256,6 +265,33 @@ local function UpdateDebuffAnchorDetached(self, debuffName, index, numBuffs, anc
     end
 end
 
+-- Hide target buffs whose name starts with "Keeper's" when the option is enabled.
+local function FilterKeepersAuras(frame)
+    if not frame or not frame.unit or not UnitExists(frame.unit) then
+        return
+    end
+    if frame:GetName() ~= "TargetFrame" then
+        return
+    end
+    local cfg = addon.db and addon.db.profile and addon.db.profile.modules
+        and addon.db.profile.modules.auracooldowns
+    if not cfg or not cfg.target or cfg.target.ignore_keepers_aura ~= true then
+        return
+    end
+    local unit = frame.unit
+    local selfName = frame:GetName()
+    for i = 1, MAX_TARGET_BUFFS do
+        local buff = _G[selfName .. "Buff" .. i]
+        if not buff then break end
+        if buff:IsShown() then
+            local name = UnitBuff(unit, i)
+            if name and strsub(name, 1, 8) == "Keeper's" then
+                buff:Hide()
+            end
+        end
+    end
+end
+
 local function ApplyDragonAuraLayout(frame)
     if not frame or not frame.unit or not UnitExists(frame.unit) then
         return
@@ -326,6 +362,8 @@ local function InstallDetachedAuraLayoutHook()
         return
     end
 
+    -- Filter first so hidden auras don't participate in layout.
+    hooksecurefunc("TargetFrame_UpdateAuras", FilterKeepersAuras)
     hooksecurefunc("TargetFrame_UpdateAuras", ApplyDragonAuraLayout)
 
     _G.DragonUI_DetachedAuraLayoutHooked = true

@@ -842,6 +842,7 @@ local defaults = {
                     min_duration = 0,
                     max_duration_minutes = 0,
                     font_size = 11,
+                    ignore_keepers_aura = false,
                 },
                 focus = {
                     enabled = false,
