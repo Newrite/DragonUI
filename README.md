@@ -28,7 +28,7 @@ This fork keeps two long-lived branches:
 - Isolated Personal Resource Display from regular nameplate behavior so it shows only DragonUI health and resource bars, with optional screen-space offset stabilization while following the character plus independent visibility, custom/class health color, position, scale, dimensions, horizontal/vertical layout, value-format, and native all-source absorb-shield controls.
 - Added player-only nameplate health text formats, including current/max values without percentages.
 - Switched unit-frame and nameplate absorb layers to Ascension's native all-source absorb API, including full-health overlays, explicit boss-frame support, and independent friendly/enemy nameplate controls.
-- Restored the framed Combuctor money and tracked-currency rows removed by the vanilla money-layout rewrite.
+- Restored the framed Bagster money and tracked-currency rows removed by the vanilla money-layout rewrite.
 - Fixed aura and debuff positioning/refresh behavior, including persistent debuff placement after reloads.
 - Avoided protected unit-frame attribute writes that could trigger blocked secure-function errors.
 - Included compatibility and regression fixes for Ascension inspector, action bars, buffs, and custom class handling.
@@ -133,7 +133,7 @@ WTF/Account/<YourAccount>/SavedVariables/DragonUI*
 
 ### Inventory And Navigation
 
-- 🎒 Auto-sort for bags and bank with slot locking, plus integrated Combuctor for unified inventory browsing.
+- 🎒 Auto-sort for bags and bank with slot locking, plus integrated module (Bagster) for unified inventory browsing.
 - 🗺️ Custom Retail-style minimap (compatible with SexyMap).
 
 ### Utility And Quality Of Life

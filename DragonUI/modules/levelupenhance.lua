@@ -37,6 +37,12 @@ local function GetModuleConfig()
 end
 
 -- =============================================================================
+-- INTERNAL STATE
+-- =============================================================================
+
+local newLevelFrame
+
+-- =============================================================================
 -- EDITOR MODE
 -- =============================================================================
 
@@ -61,30 +67,28 @@ local function ApplyWidgetPosition()
 end
 
 -- =============================================================================
--- INTERNAL STATE
--- =============================================================================
-
-local newLevelFrame
-
--- =============================================================================
 -- NEW LEVEL FRAME
 -- =============================================================================
 
 local function ShowNewLevelFrame(level)
     if not newLevelFrame or not newLevelFrame.footer then return end
     newLevelFrame.footer:SetText(string.format(L and L["Level %d"] or "Level %d", level))
-    if not newLevelFrame:IsVisible() or newLevelFrame:GetAlpha() < 0.1 then
-        newLevelFrame:Show()
-        UIFrameFadeIn(newLevelFrame, 2, 0, 1)
-        newLevelFrame.timeShown = 0
-        newLevelFrame:SetScript("OnUpdate", function(self, elapsed)
-            self.timeShown = self.timeShown + elapsed
-            if self.timeShown >= 5 then
-                UIFrameFadeOut(newLevelFrame, 2, 1, 0)
-                self:SetScript("OnUpdate", nil)
-            end
-        end)
-    end
+    newLevelFrame:ClearAllPoints()
+    newLevelFrame:SetPoint("TOP", UIParent, "TOP", 0, -128)
+    newLevelFrame:SetFrameStrata("HIGH")
+    newLevelFrame:SetAlpha(1)
+    newLevelFrame:Show()
+    newLevelFrame.timeShown = 0
+    local fadeInfo = { mode = "IN", fadeFunc = function() end, timeToFade = 1.5, startAlpha = 1, endAlpha = 1 }
+    UIFrameFade(newLevelFrame, fadeInfo)
+    local updateFrame = CreateFrame("Frame")
+    updateFrame:SetScript("OnUpdate", function(self, elapsed)
+        newLevelFrame.timeShown = newLevelFrame.timeShown + elapsed
+        if newLevelFrame.timeShown >= 4.5 then
+            UIFrameFadeOut(newLevelFrame, 1.5, 1, 0)
+            self:SetScript("OnUpdate", nil)
+        end
+    end)
 end
 
 -- =============================================================================
@@ -95,7 +99,7 @@ function addon.ApplyLevelUpEnhanceSystem()
     if LevelUpEnhance.applied then return end
 
     newLevelFrame = CreateFrame("Frame", nil, UIParent)
-    newLevelFrame:SetFrameStrata("BACKGROUND")
+    newLevelFrame:SetFrameStrata("MEDIUM")
     newLevelFrame:SetWidth(400)
     newLevelFrame:SetHeight(200)
 
@@ -150,7 +154,6 @@ function addon.ApplyLevelUpEnhanceSystem()
     eventFrame:SetScript("OnEvent", function(self, event, ...)
         if not IsModuleEnabled() then return end
         if addon.EditorMode and addon.EditorMode:IsActive() then return end
-        newLevelFrame.footer:SetText("")
         ShowNewLevelFrame(select(1, ...))
     end)
 
@@ -183,11 +186,10 @@ function addon.RestoreLevelUpEnhanceSystem()
 end
 
 function addon.RefreshLevelUpEnhanceSystem()
-    if LevelUpEnhance.applied then
+    if IsModuleEnabled() then
+        addon.ApplyLevelUpEnhanceSystem()
+    else
         addon.RestoreLevelUpEnhanceSystem()
-        addon.ApplyLevelUpEnhanceSystem()
-    elseif IsModuleEnabled() then
-        addon.ApplyLevelUpEnhanceSystem()
     end
 end
 
@@ -206,12 +208,7 @@ initFrame:SetScript("OnEvent", function(self, event, arg1)
         addon:After(0.5, function()
             if addon.db and addon.db.RegisterCallback then
                 addon.db.RegisterCallback(addon, "OnProfileChanged", function()
-                    if IsModuleEnabled() then
-                        addon.RestoreLevelUpEnhanceSystem()
-                        addon.ApplyLevelUpEnhanceSystem()
-                    else
-                        addon.RestoreLevelUpEnhanceSystem()
-                    end
+                    addon.RefreshLevelUpEnhanceSystem()
                 end)
             end
         end)

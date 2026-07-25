@@ -1,4 +1,4 @@
-﻿<Ui xmlns="http://www.blizzard.com/wow/ui/">
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
     <!-- Conflict Detection module (loaded early) -->
     <Script file="compatibility.lua"/>
 
@@ -47,6 +47,12 @@
     <!-- Editor Mode module -->
     <Script file="editor_mode.lua"/>
 
+    <!-- Extra Action Button movability widget -->
+    <Script file="extra_action_button.lua"/>
+
+    <!-- Player Primary Stat movability widget -->
+    <Script file="player_primary_stat.lua"/>
+
     <!-- Dark Mode module -->
     <Script file="darkmode.lua"/>
 
@@ -60,6 +66,9 @@
     <!-- Item Quality Borders module -->
     <Script file="itemquality.lua"/>
 
+    <!-- Item Level on gear icons -->
+    <Script file="itemlevel.lua"/>
+
     <!-- Chat Mods module -->
     <Script file="chatmods.lua"/>
 
@@ -72,8 +81,8 @@
     <!-- Bag Skin module -->
     <Script file="bags_skin.lua"/>
 
-    <!-- Combuctor bag replacement module -->
-    <Include file="combuctor\combuctor.xml"/>
+    <!-- Bagster bag replacement module -->
+    <Include file="bagster\bagster.xml"/>
 
     <!-- Bag Sort module (sort buttons for bags and bank) -->
     <Script file="bagsort.lua"/>
@@ -93,4 +102,7 @@
 
     <!-- Talent Inspector module (CoA talent tree viewer in inspect) -->
     <Script file="inspector.lua"/>
+
+    <!-- Ascension WildCard Dice movability widget -->
+    <Script file="wildcarddice.lua"/>
 </Ui>

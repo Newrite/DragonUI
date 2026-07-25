@@ -154,6 +154,7 @@ local function DarkenActionButtonBorders(tint)
         "MultiBarRightButton",
         "MultiBarLeftButton",
         "BonusActionButton",
+        "DragonUI_ExtraBarButton",
     }
     for _, prefix in ipairs(prefixes) do
         for i = 1, 12 do
@@ -497,6 +498,19 @@ local function DarkenUnitFrameBorders(tint)
         end
         DarkenFrameBorderTextures(_G["PartyMemberFrame" .. i .. "PetFrame"])
     end
+
+    -- Energy / Rage bar borders (Hero class power bars, styled by energy_bar module)
+    for _, barName in ipairs({ "PlayerFrameEnergyBar", "PlayerFrameRageBar" }) do
+        local bar = _G[barName]
+        if bar then
+            if bar.DragonUIBorder then
+                DarkenTexture(bar.DragonUIBorder, tint)
+            end
+            if bar.DragonUIBackground then
+                DarkenTexture(bar.DragonUIBackground, tint)
+            end
+        end
+    end
 end
 
 -- -----------------------------------------------------------------------
@@ -809,10 +823,42 @@ end
 -- Forward declaration so ApplyDarkMode can reference RestoreDarkMode
 local RestoreDarkMode
 
-local function ApplyDarkMode()
+-- White aura mask reads lighter than action-bar chrome at the same vertex color; crush toward black.
+local function GetAuraBorderTintValues()
+    local tint = GetTintValues()
+    return { tint[1] * tint[1], tint[2] * tint[2], tint[3] * tint[3] }
+end
+
+-- force=true: enable / intensity / custom color change (overwrites Auras color).
+-- force=false/nil: login/profile apply — keep Auras color if the player set buff_color_user_override.
+local function SyncAuraBorderColorFromDarkMode(tint, force)
+    local modules = addon.db and addon.db.profile and addon.db.profile.modules
+    if not modules then return end
+    local ab = modules.auraborders
+    if not ab then
+        ab = {}
+        modules.auraborders = ab
+    end
+    if tint then
+        if not force and ab.buff_color_user_override then
+            return
+        end
+        ab.buff_color = { r = tint[1], g = tint[2], b = tint[3] }
+        ab.buff_color_user_override = false
+    else
+        ab.buff_color = { r = 0.2, g = 0.2, b = 0.2 }
+        ab.buff_color_user_override = false
+    end
+    if addon.RefreshAuraBordersSystem then
+        addon.RefreshAuraBordersSystem()
+    end
+end
+
+-- forceAuraSync: when true, push dark-mode tint onto aura buff borders (and clear user override).
+local function ApplyDarkMode(forceAuraSync)
     if DarkModeModule.applied then
-        -- Refresh: restore first, then re-apply
-        RestoreDarkMode()
+        -- Texture refresh only — do not reset aura border color mid-reapply.
+        RestoreDarkMode(false)
         DarkModeModule.applied = false
     end
 
@@ -837,6 +883,7 @@ local function ApplyDarkMode()
     DarkenCompactRaidFrameManager(tint)
 
     DarkModeModule.applied = true
+    SyncAuraBorderColorFromDarkMode(GetAuraBorderTintValues(), forceAuraSync == true)
 
     -- Delayed re-darken for XP/Rep borders: mainbars creates DragonflightUI bars
     -- and restyles RetailUI textures at various times. A second pass at 0.5s
@@ -848,8 +895,18 @@ local function ApplyDarkMode()
     end)
 end
 
-RestoreDarkMode = function()
-    if not DarkModeModule.applied then return end
+-- resetAuraBorders defaults to true (module/options disable). Pass false for texture-only re-apply.
+RestoreDarkMode = function(resetAuraBorders)
+    if resetAuraBorders == nil then
+        resetAuraBorders = true
+    end
+
+    if not DarkModeModule.applied then
+        if resetAuraBorders then
+            SyncAuraBorderColorFromDarkMode(nil, true)
+        end
+        return
+    end
 
     -- Restore ALL tracked textures efficiently
     for texture in pairs(DarkModeModule.darkenedTextures) do
@@ -870,14 +927,17 @@ RestoreDarkMode = function()
     end
 
     DarkModeModule.applied = false
+    if resetAuraBorders then
+        SyncAuraBorderColorFromDarkMode(nil, true)
+    end
 end
 
-local function RefreshDarkMode()
+local function RefreshDarkMode(forceAuraSync)
     if DarkModeModule.applied then
-        RestoreDarkMode()
+        RestoreDarkMode(false)
     end
     if IsModuleEnabled() then
-        ApplyDarkMode()
+        ApplyDarkMode(forceAuraSync == true)
     end
 end
 
@@ -993,12 +1053,11 @@ local function InstallNameBackgroundVertexGuards()
 end
 
 local function InstallVertexColorGuards()
-    if DarkModeModule.hooks.vertexGuardsInstalled then return end
-
-    -- Action bar button NormalTextures
+    -- Idempotent: Extra Bar buttons may not exist on the first PEW pass.
     local prefixes = {
         "ActionButton", "MultiBarBottomLeftButton", "MultiBarBottomRightButton",
         "MultiBarRightButton", "MultiBarLeftButton", "BonusActionButton",
+        "DragonUI_ExtraBarButton",
     }
     for _, prefix in ipairs(prefixes) do
         for i = 1, 12 do
@@ -1364,4 +1423,5 @@ addon.RefreshDarkModeActionButtons = function()
     DarkenActionButtonBorders(tint)
     DarkenStanceButtonBorders(tint)
     DarkenPetButtonBorders(tint)
+    InstallVertexColorGuards()
 end

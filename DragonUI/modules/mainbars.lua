@@ -309,13 +309,12 @@ local mainBarPageByClass = {
   PRIEST = '[bonusbar:1] 7;',
   ROGUE = '[bonusbar:1] 7; [bonusbar:2] 8;',
   -- CoA custom classes with stealth (use [stealth] condition, not bonusbar)
+  PROPHET = '[bonusbar:1,nostealth] 7; [bonusbar:1,stealth] 7; [bonusbar:2] 8; [bonusbar:3] 9; [bonusbar:4] 10;',
   RANGER = '[stealth] 7; [nostealth] 1;',
   REAPER = '[form:1] 7; [nostealth] 1;',
   SPIRITMAGE = '[stealth] 7; [nostealth] 1;',
   HERO = '[bonusbar:1,nostealth] 7; [bonusbar:1,stealth] 8; [bonusbar:2] 8; [bonusbar:3] 9; [bonusbar:4] 10;',
-  -- Bloodmage uses the HERO-style stealth/form page layout. The generic
-  -- form fallback reserves page 7 differently and shifts these pages by one.
-  SONOFARUGAL = '[bonusbar:1,nostealth] 7; [bonusbar:1,stealth] 8; [bonusbar:2] 8; [bonusbar:3] 9; [bonusbar:4] 10;',
+  SONOFARUGAL = '[bonusbar:1] 7; [bonusbar:2] 8; [bonusbar:3] 9; [bonusbar:4] 10;',
   DEFAULT = '[bonusbar:5] 11; [bar:2] 2; [bar:3] 3; [bar:4] 4; [bar:5] 5; [bar:6] 6;'
 }
 
@@ -3296,6 +3295,7 @@ local function GetMigratedBarDBTable(barKey, isSecondary)
         end
         local fadePrefix = GetMigratedBarFadePrefix(barKey)
         return {
+            always_hidden = ab[barKey .. "_always_hidden"],
             show_on_hover = ab[barKey .. "_show_on_hover"],
             show_in_combat = ab[barKey .. "_show_in_combat"],
             hide_in_combat = ab[barKey .. "_hide_in_combat"],

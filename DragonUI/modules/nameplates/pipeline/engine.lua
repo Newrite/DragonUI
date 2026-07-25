@@ -104,6 +104,12 @@ function CB.OnUpdateCombo(plateData)
     NP.widgets.Sync("Combo", plateData)
 end
 
+function CB.OnUpdateQuest(plateData)
+    -- Elite after Quest: the elite dragon must reappear when a quest elite completes.
+    NP.widgets.Sync("Quest", plateData)
+    NP.widgets.Sync("Elite", plateData)
+end
+
 function CB.OnUpdateAuras(plateData)
     NP.gather.RefreshPlateAuras(plateData, nil, "queue_auras")
 end
@@ -364,6 +370,10 @@ local function EngineOnUpdate(_, elapsed)
     -- Engine tick counter for per-frame memoization.
     NP.module._engineFrame = (NP.module._engineFrame or 0) + 1
 
+    if NP.quest and NP.quest.TickDeferredRebuild then
+        NP.quest.TickDeferredRebuild(NP.module._engineFrame)
+    end
+
     -- 0. Castbar progress on active plates.
     NP.castbar.TickAllPlateCastBars()
 
@@ -561,6 +571,9 @@ local function EngineOnEvent(_, event, unit, ...)
     end
     if event == "UPDATE_MOUSEOVER_UNIT" then
         NP.module.mouseoverGUID = UnitGUID("mouseover")
+        if NP.quest and NP.quest.OnMouseover then
+            NP.quest.OnMouseover()
+        end
         return
     end
     if event == "UNIT_TARGET" and unit then
@@ -579,6 +592,18 @@ local function EngineOnEvent(_, event, unit, ...)
     end
     if event == "UNIT_COMBO_POINTS" then
         E.QueueMass(CB.OnUpdateCombo)
+        return
+    end
+    if event == "QUEST_LOG_UPDATE" or event == "UNIT_QUEST_LOG_CHANGED" then
+        if NP.quest and NP.quest.OnQuestLogChanged then
+            NP.quest.OnQuestLogChanged()
+        end
+        return
+    end
+    if event == "LOOT_OPENED" then
+        if NP.quest and NP.quest.OnLootOpened then
+            NP.quest.OnLootOpened()
+        end
         return
     end
     if event == "PLAYER_TOTEM_UPDATE" then
@@ -603,6 +628,9 @@ local function EngineOnEvent(_, event, unit, ...)
             E.QueueMass(CB.OnUpdateNameplate)
         end
         E.QueueMass(CB.OnUpdateCastbar)
+        if NP.quest_coexist and NP.quest_coexist.Check then
+            NP.quest_coexist.Check()
+        end
         return
     end
     if event == "PARTY_MEMBERS_CHANGED" or event == "RAID_ROSTER_UPDATE" then
@@ -914,6 +942,9 @@ local function RunNameplatesApply()
         f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
         f:RegisterEvent("RAID_TARGET_UPDATE")
         f:RegisterEvent("UNIT_COMBO_POINTS")
+        f:RegisterEvent("QUEST_LOG_UPDATE")
+        f:RegisterEvent("UNIT_QUEST_LOG_CHANGED")
+        f:RegisterEvent("LOOT_OPENED")
         f:RegisterEvent("UNIT_THREAT_SITUATION_UPDATE")
         f:RegisterEvent("PLAYER_TOTEM_UPDATE")
         f:RegisterEvent("PLAYER_REGEN_ENABLED")
@@ -1018,6 +1049,9 @@ local function RunNameplatesRestore()
     end
     for name in pairs(NP.state.AuraGUIDByName) do
         NP.state.AuraGUIDByName[name] = nil
+    end
+    if NP.quest and NP.quest.ClearIndex then
+        NP.quest.ClearIndex()
     end
     for icon in pairs(NP.state.AuraGUIDByRaidIcon) do
         NP.state.AuraGUIDByRaidIcon[icon] = nil

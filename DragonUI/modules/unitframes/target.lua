@@ -52,9 +52,45 @@ local function ShouldUseDetachedAuraLayout(frame)
     return false
 end
 
+local PLAYER_CAST_UNITS = { player = true, pet = true, vehicle = true }
+
+-- Returns buffSize, debuffSize when custom sizing is active; nil when Blizzard defaults apply.
+local function GetCustomAuraSizes()
+    local cfg = addon.db and addon.db.profile and addon.db.profile.modules
+        and addon.db.profile.modules.auracooldowns
+    if not cfg or cfg.enabled ~= true or cfg.icons_enabled ~= true then
+        return nil
+    end
+
+    local function Resolve(block)
+        local sub = cfg[block] or {}
+        local size = tonumber(sub.icon_size) or 0
+        local scale = tonumber(sub.icon_scale) or 1
+        if size <= 0 then
+            size = SMALL_AURA_SIZE
+        end
+        size = math.floor(size * scale + 0.5)
+        if size < 8 then
+            size = 8
+        end
+        return size
+    end
+
+    local buffSize = Resolve("buffs")
+    local debuffSize = Resolve("debuffs")
+    if buffSize == SMALL_AURA_SIZE and debuffSize == SMALL_AURA_SIZE then
+        return nil
+    end
+
+    return buffSize, debuffSize
+end
+
+addon.GetCustomAuraSizes = GetCustomAuraSizes
+
 local function GetAuraCountsAndSizes(frame)
     local selfName = frame and frame.GetName and frame:GetName()
-    if not selfName then
+    local unit = frame and frame.unit
+    if not selfName or not unit then
         return 0, 0, {}, {}
     end
 
@@ -63,13 +99,18 @@ local function GetAuraCountsAndSizes(frame)
     local largeBuffList = {}
     local largeDebuffList = {}
 
+    -- Large from caster (Blizzard's PLAYER_UNITS rule), not width: prior SetSize corrupts width inference.
+    -- Skip hidden buttons (e.g. Keeper's aura filtered) instead of breaking so later visible auras are still counted.
     for i = 1, MAX_TARGET_BUFFS do
         local buff = _G[selfName .. "Buff" .. i]
-        if not buff or not buff:IsShown() then
+        if not buff then
             break
         end
-        numBuffs = i
-        largeBuffList[i] = (buff:GetWidth() or SMALL_AURA_SIZE) > SMALL_AURA_SIZE
+        if buff:IsShown() then
+            numBuffs = i
+            local caster = select(8, UnitBuff(unit, i))
+            largeBuffList[i] = caster and PLAYER_CAST_UNITS[caster] or false
+        end
     end
 
     for i = 1, MAX_TARGET_DEBUFFS do
@@ -78,48 +119,58 @@ local function GetAuraCountsAndSizes(frame)
             break
         end
         numDebuffs = i
-        largeDebuffList[i] = (debuff:GetWidth() or SMALL_AURA_SIZE) > SMALL_AURA_SIZE
+        local caster = select(8, UnitDebuff(unit, i))
+        largeDebuffList[i] = caster and PLAYER_CAST_UNITS[caster] or false
     end
 
     return numBuffs, numDebuffs, largeBuffList, largeDebuffList
 end
 
 local function UpdateAuraPositionsDetached(self, auraName, numAuras, numOppositeAuras, largeAuraList, updateFunc,
-                                           maxRowWidth, offsetX, mirrorAurasVertically)
+                                           maxRowWidth, offsetX, mirrorAurasVertically, smallSize, largeSize, extraGap)
     local size
-    local offsetY = AURA_OFFSET_Y
+    extraGap = extraGap or 0
+    local offsetY = AURA_OFFSET_Y + extraGap
     local rowWidth = 0
-    local firstAuraOnRow = 1
+    local firstAuraOnRow = 0
+    local lastVisibleIndex = 0
 
     for i = 1, numAuras do
-        if largeAuraList[i] then
-            size = LARGE_AURA_SIZE
-            offsetY = AURA_OFFSET_Y + AURA_OFFSET_Y
+        local aura = _G[auraName .. i]
+        if not aura or not aura:IsShown() then
+            -- Skip hidden auras (e.g. filtered by Keepers option)
         else
-            size = SMALL_AURA_SIZE
-        end
+            if largeAuraList[i] then
+                size = largeSize
+                offsetY = AURA_OFFSET_Y + AURA_OFFSET_Y + extraGap
+            else
+                size = smallSize
+            end
 
-        if i == 1 then
-            rowWidth = size
-            self.auraRows = self.auraRows + 1
-        else
-            rowWidth = rowWidth + size + offsetX
-        end
+            if firstAuraOnRow == 0 then
+                rowWidth = size
+                self.auraRows = self.auraRows + 1
+                firstAuraOnRow = i
+            else
+                rowWidth = rowWidth + size + offsetX
+            end
 
-        if rowWidth > maxRowWidth then
-            updateFunc(self, auraName, i, numOppositeAuras, firstAuraOnRow, size, offsetX, offsetY, mirrorAurasVertically)
-            rowWidth = size
-            self.auraRows = self.auraRows + 1
-            firstAuraOnRow = i
-            offsetY = AURA_OFFSET_Y
-        else
-            updateFunc(self, auraName, i, numOppositeAuras, i - 1, size, offsetX, offsetY, mirrorAurasVertically)
+            if rowWidth > maxRowWidth then
+                updateFunc(self, auraName, i, numOppositeAuras, firstAuraOnRow, size, offsetX, offsetY, mirrorAurasVertically, true)
+                rowWidth = size
+                self.auraRows = self.auraRows + 1
+                firstAuraOnRow = i
+                offsetY = AURA_OFFSET_Y + extraGap
+            else
+                updateFunc(self, auraName, i, numOppositeAuras, lastVisibleIndex, size, offsetX, offsetY, mirrorAurasVertically, false)
+            end
+            lastVisibleIndex = i
         end
     end
 end
 
 local function UpdateBuffAnchorDetached(self, buffName, index, numDebuffs, anchorIndex, size, offsetX, offsetY,
-                                        mirrorVertically)
+                                        mirrorVertically, isNewRow)
     local point, relativePoint
     local startY, auraOffsetY
 
@@ -150,7 +201,7 @@ local function UpdateBuffAnchorDetached(self, buffName, index, numDebuffs, ancho
         self.buffs:SetPoint(point .. "LEFT", buff, point .. "LEFT", 0, 0)
         self.buffs:SetPoint(relativePoint .. "LEFT", buff, relativePoint .. "LEFT", 0, -auraOffsetY)
         self.spellbarAnchor = buff
-    elseif anchorIndex ~= (index - 1) then
+    elseif isNewRow then
         buff:SetPoint(point .. "LEFT", _G[buffName .. anchorIndex], relativePoint .. "LEFT", 0, -offsetY)
         self.buffs:SetPoint(relativePoint .. "LEFT", buff, relativePoint .. "LEFT", 0, -auraOffsetY)
         self.spellbarAnchor = buff
@@ -163,7 +214,7 @@ local function UpdateBuffAnchorDetached(self, buffName, index, numDebuffs, ancho
 end
 
 local function UpdateDebuffAnchorDetached(self, debuffName, index, numBuffs, anchorIndex, size, offsetX, offsetY,
-                                          mirrorVertically)
+                                          mirrorVertically, isNewRow)
     local debuff = _G[debuffName .. index]
     local isFriend = UnitIsFriend("player", self.unit)
     local point, relativePoint
@@ -197,14 +248,14 @@ local function UpdateDebuffAnchorDetached(self, debuffName, index, numBuffs, anc
         if isFriend or (not isFriend and numBuffs == 0) then
             self.spellbarAnchor = debuff
         end
-    elseif anchorIndex ~= (index - 1) then
+    elseif isNewRow then
         debuff:SetPoint(point .. "LEFT", _G[debuffName .. anchorIndex], relativePoint .. "LEFT", 0, -offsetY)
         self.debuffs:SetPoint(relativePoint .. "LEFT", debuff, relativePoint .. "LEFT", 0, -auraOffsetY)
         if isFriend or (not isFriend and numBuffs == 0) then
             self.spellbarAnchor = debuff
         end
     else
-        debuff:SetPoint(point .. "LEFT", _G[debuffName .. (index - 1)], point .. "RIGHT", offsetX, 0)
+        debuff:SetPoint(point .. "LEFT", _G[debuffName .. anchorIndex], point .. "RIGHT", offsetX, 0)
     end
 
     debuff:SetWidth(size)
@@ -216,7 +267,34 @@ local function UpdateDebuffAnchorDetached(self, debuffName, index, numBuffs, anc
     end
 end
 
-local function ApplyDetachedAuraLayout(frame)
+-- Hide target buffs whose name starts with "Keeper's" when the option is enabled.
+local function FilterKeepersAuras(frame)
+    if not frame or not frame.unit or not UnitExists(frame.unit) then
+        return
+    end
+    if frame:GetName() ~= "TargetFrame" then
+        return
+    end
+    local cfg = addon.db and addon.db.profile and addon.db.profile.modules
+        and addon.db.profile.modules.auracooldowns
+    if not cfg or not cfg.target or cfg.target.ignore_keepers_aura ~= true then
+        return
+    end
+    local unit = frame.unit
+    local selfName = frame:GetName()
+    for i = 1, MAX_TARGET_BUFFS do
+        local buff = _G[selfName .. "Buff" .. i]
+        if not buff then break end
+        if buff:IsShown() then
+            local name = UnitBuff(unit, i)
+            if name and strsub(name, 1, 8) == "Keeper's" then
+                buff:Hide()
+            end
+        end
+    end
+end
+
+local function ApplyDragonAuraLayout(frame)
     if not frame or not frame.unit or not UnitExists(frame.unit) then
         return
     end
@@ -225,6 +303,15 @@ local function ApplyDetachedAuraLayout(frame)
     if frameName ~= "TargetFrame" and frameName ~= "FocusFrame" then
         return
     end
+
+    local detached = ShouldUseDetachedAuraLayout(frame)
+    local buffSize, debuffSize = GetCustomAuraSizes()
+    if not detached and not buffSize then
+        return
+    end
+    buffSize = buffSize or SMALL_AURA_SIZE
+    debuffSize = debuffSize or SMALL_AURA_SIZE
+    local largeDelta = LARGE_AURA_SIZE - SMALL_AURA_SIZE
 
     local numBuffs, numDebuffs, largeBuffList, largeDebuffList = GetAuraCountsAndSizes(frame)
     if numBuffs == 0 and numDebuffs == 0 then
@@ -235,13 +322,37 @@ local function ApplyDetachedAuraLayout(frame)
     local mirrorAurasVertically = frame.buffsOnTop and true or false
     frame.spellbarAnchor = nil
 
+    -- Attached mode mirrors Blizzard: shrink rows beside a visible ToT, expand back after NUM_TOT_AURA_ROWS.
+    local haveToT = not detached and frame.totFrame and frame.totFrame:IsShown()
+    local totRowWidth = frame.TOT_AURA_ROW_WIDTH or 101
+    local buffGap = addon.GetAuraChromeGap and addon.GetAuraChromeGap(buffSize + largeDelta) or 0
+    local debuffGap = addon.GetAuraChromeGap and addon.GetAuraChromeGap(debuffSize + largeDelta) or 0
+    local debuffOffsetX = (detached and 3 or 4) + debuffGap
+
+    local maxRowWidth = (haveToT and totRowWidth) or DEFAULT_AURA_ROW_WIDTH
     UpdateAuraPositionsDetached(frame, frameName .. "Buff", numBuffs, numDebuffs, largeBuffList,
-        UpdateBuffAnchorDetached, DEFAULT_AURA_ROW_WIDTH, 3, mirrorAurasVertically)
+        UpdateBuffAnchorDetached, maxRowWidth, 3 + buffGap, mirrorAurasVertically, buffSize, buffSize + largeDelta,
+        buffGap)
+    maxRowWidth = (haveToT and frame.auraRows < (_G.NUM_TOT_AURA_ROWS or 2) and totRowWidth) or DEFAULT_AURA_ROW_WIDTH
     UpdateAuraPositionsDetached(frame, frameName .. "Debuff", numDebuffs, numBuffs, largeDebuffList,
-        UpdateDebuffAnchorDetached, DEFAULT_AURA_ROW_WIDTH, 3, mirrorAurasVertically)
+        UpdateDebuffAnchorDetached, maxRowWidth, debuffOffsetX, mirrorAurasVertically, debuffSize, debuffSize + largeDelta,
+        debuffGap)
 
     if frame.spellbar and _G.Target_Spellbar_AdjustPosition then
         _G.Target_Spellbar_AdjustPosition(frame.spellbar)
+    end
+end
+
+-- Re-runs the full Blizzard update chain (layout -> our hook -> spellbar -> castbar) after config changes.
+function addon.RefreshTargetFocusAuraLayout()
+    if type(_G.TargetFrame_UpdateAuras) ~= "function" then
+        return
+    end
+    if TargetFrame and UnitExists("target") then
+        _G.TargetFrame_UpdateAuras(TargetFrame)
+    end
+    if FocusFrame and UnitExists("focus") then
+        _G.TargetFrame_UpdateAuras(FocusFrame)
     end
 end
 
@@ -253,11 +364,9 @@ local function InstallDetachedAuraLayoutHook()
         return
     end
 
-    hooksecurefunc("TargetFrame_UpdateAuras", function(frame)
-        if ShouldUseDetachedAuraLayout(frame) then
-            ApplyDetachedAuraLayout(frame)
-        end
-    end)
+    -- Filter first so hidden auras don't participate in layout.
+    hooksecurefunc("TargetFrame_UpdateAuras", FilterKeepersAuras)
+    hooksecurefunc("TargetFrame_UpdateAuras", ApplyDragonAuraLayout)
 
     _G.DragonUI_DetachedAuraLayoutHooked = true
 end

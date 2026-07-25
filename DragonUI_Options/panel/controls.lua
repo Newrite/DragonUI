@@ -228,6 +228,10 @@ end
 local function SkinCheckBox(widget)
     -- Darken the checkbox background
     if widget.checkbg then
+        -- AceGUI reuses CheckBox widgets; always re-anchor so prior indent does not leak.
+        local indent = widget._dragonCheckIndent or 0
+        widget.checkbg:ClearAllPoints()
+        widget.checkbg:SetPoint("TOPLEFT", indent, 0)
         widget.checkbg:SetTexture("Interface\\ChatFrame\\ChatFrameBackground")
         widget.checkbg:SetVertexColor(0.14, 0.14, 0.16, 1)
         widget.checkbg:SetWidth(18)
@@ -634,7 +638,14 @@ function Controls:AddToggle(parent, opts)
     local desc = NormalizeDescription(opts.desc)
     cb:SetLabel(label)
     if desc then cb:SetDescription(desc) end
-    if opts.width then cb:SetWidth(opts.width) else cb:SetFullWidth(true) end
+    -- relWidth packs toggles into columns inside a Flow container (e.g. 0.33 = 3 per row)
+    if opts.relWidth then
+        cb:SetRelativeWidth(opts.relWidth)
+    elseif opts.width then
+        cb:SetWidth(opts.width)
+    else
+        cb:SetFullWidth(true)
+    end
 
     -- `tooltip` shows the text on hover instead of as an always-visible description
     local tooltip = NormalizeDescription(opts.tooltip)
@@ -664,6 +675,9 @@ function Controls:AddToggle(parent, opts)
             cb:SetDisabled(opts.disabled)
         end
     end
+
+    -- Must assign every time: AceGUI recycles CheckBoxes and a prior indent would leak.
+    cb._dragonCheckIndent = opts.indent
 
     cb:SetCallback("OnValueChanged", function(_, _, value)
         if opts.setFunc then

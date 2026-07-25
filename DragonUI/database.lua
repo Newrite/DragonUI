@@ -11,7 +11,8 @@ local _arialn = addon.Fonts and addon.Fonts.ARIALN or "Fonts\\ARIALN.TTF"
 
 local defaults = {
     global = {
-        combuctorCache = {} -- Per-character bank snapshot (realm|name keys); used by combuctor module
+        bagsterCache = {}, -- Per-character bank snapshot (realm|name keys); used by bagster module
+        questLootLearned = {} -- Learned quest loot sources for nameplates: [mobName] = {objectiveText=true}
     },
     profile = {
         version = 1,
@@ -168,6 +169,12 @@ local defaults = {
                 posY = 160,
                 custom_position = false
             },
+            extraActionButton = {
+                anchor = "CENTER",
+                posX = 0,
+                posY = 0,
+                custom_position = false
+            },
             positionPresetPanel = {
                 anchor = "TOP",
                 posX = 0,
@@ -199,6 +206,25 @@ local defaults = {
                 anchor = "CENTER",
                 posX = 0,
                 posY = 200,
+                custom_position = false,
+            },
+            playerPrimaryStat = {
+                anchor = "TOPLEFT",
+                posX = 80,
+                posY = -6,
+                custom_position = false,
+            },
+            targetPrimaryStat = {
+                anchor = "TOPRIGHT",
+                posX = -80,
+                posY = -6,
+                custom_position = false,
+            },
+            -- Ascension WildCard dice frame (visible during Draft / WildCard rolls)
+            wildcarddice = {
+                anchor = "TOP",
+                posX = 0,
+                posY = -32,
                 custom_position = false,
             },
         },
@@ -333,10 +359,12 @@ local defaults = {
 
 
             -- Micro menu and bag bar visibility
+            micro_always_hidden = false,
             micro_show_on_hover = false,
             micro_show_in_combat = false,
             micro_hide_in_combat = false,
             micro_visibility_logic = "and",
+            bag_always_hidden = false,
             bag_show_on_hover = false,
             bag_show_in_combat = false,
             bag_hide_in_combat = false,
@@ -355,7 +383,9 @@ local defaults = {
                 scale_menu = 1.5,
                 x_position = 5,
                 y_position = -54,
-                icon_spacing = 15 -- Gap between icons
+                icon_spacing = 15, -- Migrated from old stride to padding on first load
+                columns = 12, -- 1 = vertical; high = single row
+                invert_order = false,
             },
 
             -- Normal colored icons configuration
@@ -363,14 +393,17 @@ local defaults = {
                 scale_menu = 0.9,
                 x_position = -113,
                 y_position = -53,
-                icon_spacing = 26
+                icon_spacing = 26, -- Migrated from old stride to padding on first load
+                columns = 12, -- 1 = vertical; high = single row
+                invert_order = false,
             }
         },
 
         bags = {
             scale = 1,
             x_position = 1,
-            y_position = 41
+            y_position = 41,
+            tint_unusable = true, -- Red icon tint for gear/Use items the player cannot use
         },
 
         xprepbar = {
@@ -425,7 +458,9 @@ local defaults = {
                 show = true,
                 range = true,
                 shadow = {0, 0, 0, 1},
-                font = {_arialn, 12, "OUTLINE"}
+                color = {0.6, 0.6, 0.6, 1},
+                font = {_arialn, 12, "OUTLINE"},
+                font_size = 12,
             },
             macros = {
                 show = true,
@@ -780,6 +815,9 @@ local defaults = {
             noop = {
                 enabled = true -- Hide default Blizzard UI elements to allow DragonUI replacements
             },
+            playerPrimaryStat = {
+                enabled = true -- Primary stat icon movability widget
+            },
             cooldowns = {
                 enabled = true -- Show cooldown timers on action buttons
             },
@@ -811,6 +849,7 @@ local defaults = {
                     min_duration = 0,
                     max_duration_minutes = 0,
                     font_size = 11,
+                    ignore_keepers_aura = false,
                 },
                 focus = {
                     enabled = false,
@@ -860,8 +899,10 @@ local defaults = {
             },
             auraborders = {
                 enabled = true, -- Modern DF-style borders on buff/debuff icons (player/target/focus)
-                buff_color = { r = 0.2, g = 0.2, b = 0.2 }, -- grayish neutral for buff borders; debuffs use dispel-type color
-                custom_border = true -- border style: true = rounded (custom texture overlay), false = square (solid lines)
+                buff_color = { r = 0.2, g = 0.2, b = 0.2 }, -- neutral buff chrome over white mask; debuffs use dispel-type color
+                custom_border = true, -- border style: true = rounded (custom texture overlay), false = square (solid lines)
+                -- When true, login ApplyDarkMode must not overwrite buff_color (user set it in Auras).
+                buff_color_user_override = false,
             },
             keybinding = {
                 enabled = true, -- Enable LibKeyBound integration for intuitive keybinding (hover + key press)
@@ -935,9 +976,30 @@ local defaults = {
                 debuffOffsetY = 0, -- vertical offset for the debuff icon row
                 showDebuffPositionDebug = false, -- persistent debug box showing debuff row bounds
                 showRaidMarkers = true, -- show raid target markers (skull, cross, etc.)
+                raidMarkerDebuffLayout = false, -- force beside-bar raid marker on all plates (as when showDebuffs)
                 showEliteIcon = true, -- show elite/rare dragon icon on nameplates
                 eliteIconStyle = "dragon", -- "dragon" | "star" (star uses *-icon-old textures)
                 showComboPoints = false, -- show combo points on target nameplate
+                questIcons = { -- quest objective icons on nameplates (kill/loot); stock: target/mouseover/focus only, awesome_wotlk: all plates
+                    enabled = true,
+                    nameResolution = true, -- token-less: match plate name to active objectives (kill: addon-free, loot: quest-addon DB)
+                    lootProvider = "auto", -- loot DB source: auto|off|pfquest|questie|questhelper
+                    questieCoexist = "ask", -- who draws icons when Questie's own nameplate icons are on: ask|dragonui|questie
+                    pointerMode = false, -- always show quest_pointer; skips kill/loot type crossref
+                    killIcon = "sword", -- "sword" | "skull"
+                    lootIcon = "bag", -- "bag" | "chest"
+                    eliteKillIcon = true, -- distinct icon on elite/rare kill objectives
+                    testIcon = "off", -- force-preview one icon on all plates for tuning: off|sword|skull|elite|bag|chest|pointer
+                    -- Per-icon x/y (from health-bar center) and display size; code-tunable defaults.
+                    icons = {
+                        sword   = { x = -93, y = 6, size = 24 },
+                        skull   = { x = -90, y = 7, size = 22 },
+                        elite   = { x = -90, y = 6, size = 26 },
+                        bag     = { x = -90, y = 7, size = 26 },
+                        chest   = { x = -90, y = 7, size = 22 },
+                        pointer = { x = -78, y = 7, size = 28 },
+                    },
+                },
                 showTotemIcons = false, -- show totem icon on shaman totem nameplates
                 totemIconPosition = "top", -- "top" | "left" | "right"
                 totemIconOnly = false, -- hide the totem nameplate entirely; show only the totem icon
@@ -950,6 +1012,7 @@ local defaults = {
                 levelTextFormat = "plain", -- "brackets" | "parentheses" | "plain"
                 nameReactionColors = false, -- tint name text with health-bar reaction color
                 enemyNameClassColors = false, -- class colors for enemy player name text
+                friendlyNameClassColors = false, -- class colors for friendly player name text (needs bar class options)
                 friendlyPlayerColor = { r = 0, g = 0, b = 1 }, -- default friendly player color (vanilla blue)
                 friendlyNPCColor = { r = 0, g = 1, b = 0 }, -- default friendly NPC color (green)
                 partyClassColors = false, -- use class colors for party members instead of friendlyPlayerColor
@@ -1029,6 +1092,26 @@ local defaults = {
                 enabled = true, -- Color item borders by quality in bags, character panel, bank, merchant
                 min_quality = 2 -- Minimum quality to show (2 = Uncommon/green)
             },
+            itemlevel = {
+                enabled = true, -- Show item level on gear icons
+                font_size = 12,
+                font_family = "expressway", -- default|expressway|primary|narrow|skurri|morpheus
+                font_outline = "THICKOUTLINE", -- NONE|OUTLINE|THICKOUTLINE (no real bold in 3.3.5a)
+                show_average = true, -- Average item level on the character/inspect panel
+                tooltip_cvar = false, -- Also set Blizzard's showItemLevel CVar (tooltip line)
+                -- Per-context toggles
+                bags = true,
+                bank = true,
+                guildbank = true,
+                character = true,
+                inspect = true,
+                merchant = true,
+                trade = true,
+                loot = true,
+                lootroll = true,
+                mail = true,
+                auction = true,
+            },
             chatmods = {
                 enabled = true, -- Chat enhancements: hide buttons, editbox position, URL copy, chat copy
                 editbox = "bottom", -- Editbox position: "top", "bottom", or "middle"
@@ -1046,11 +1129,13 @@ local defaults = {
                 x_position = -270, -- Horizontal position from screen center
                 y_offset = 270, -- Vertical offset
             },
-            combuctor = {
+            bagster = {
                 enabled = false, -- All-in-one bag replacement with filtering and search
                 money_display = "icons", -- Coin display: "icons" (g/s/c icons) or "text"
-                item_scale = 1, -- Maximum item slot scale in the grid
-                item_spacing = 2, -- Gap in pixels between item slots
+                item_scale = 1, -- Target item slot scale (1 = native 37px slot); cell flexes to fill the width
+                item_spacing = 2, -- Gap between slots (pitch = 37 + spacing)
+                bag_break = 1, -- 0 off, 1 normal↔profession (+keyring block), 2 every bag
+                break_space = 1.3, -- Extra rows between bag-break groups
                 glow_quality = true, -- Colored ring on uncommon and better items
                 glow_quest = true, -- Golden border on quest items
                 glow_alpha = 1, -- Quality ring opacity

@@ -25,6 +25,8 @@ local function GetConfig(entry)
 end
 
 local function EvaluateShouldShow(cfg, state)
+    if cfg.always_hidden then return false end
+
     local showOnHover = cfg.show_on_hover
     -- hide_in_combat is show_in_combat with inverted polarity — same slot, opposite condition.
     local combatActive = cfg.show_in_combat or cfg.hide_in_combat
@@ -131,7 +133,8 @@ function VF.Update(key)
     local cfg = GetConfig(entry)
     if not cfg then return end
 
-    if not cfg.show_on_hover and not cfg.show_in_combat and not cfg.hide_in_combat then
+    -- always_hidden annuls hover/combat: fall through to the normal hide path below.
+    if not cfg.always_hidden and not cfg.show_on_hover and not cfg.show_in_combat and not cfg.hide_in_combat then
         local _, _, fadeInDuration = GetFadeConfig(cfg)
         ApplyMouseState(entry, cfg, true)
         if entry.onVisibilityChange then entry.onVisibilityChange(true) end
@@ -212,7 +215,7 @@ local POLL_INTERVAL = 0.15
 -- instead of relying on OnEnter/OnLeave — those stop firing the moment the mouse is disabled.
 local function EvaluatePollHover(key, entry)
     local cfg = GetConfig(entry)
-    if not cfg or not cfg.show_on_hover then return end
+    if not cfg or cfg.always_hidden or not cfg.show_on_hover then return end
 
     local isOver = false
     for _, frame in ipairs(entry.hoverFrames) do
@@ -315,6 +318,20 @@ function VF.Reset(key, alpha)
     end
 end
 
+-- Full teardown on module disable: Reset leaves the hover poller ticking; this drops the entry.
+function VF.Unregister(key)
+    local entry = registry[key]
+    if not entry then return end
+    if hoverTimers[key] and addon.core and addon.core.CancelTimer then
+        addon.core:CancelTimer(hoverTimers[key], true)
+        hoverTimers[key] = nil
+    end
+    if entry.driver then entry.driver:SetScript("OnUpdate", nil) end
+    if entry.poller then entry.poller:SetScript("OnUpdate", nil) end
+    ApplyAlpha(entry, 1)
+    registry[key] = nil
+end
+
 function VF.RefreshAll()
     for key, entry in pairs(registry) do
         local frame = entry.frames and entry.frames[1]
@@ -336,7 +353,7 @@ combatFrame:SetScript("OnEvent", function(self, event)
         -- EnableMouse is protected mid-combat on secure buttons; arm once for hover/combat-show bars.
         if inCombat and entry.clickThrough and entry.hoverFrames then
             local cfg = GetConfig(entry)
-            if cfg and (cfg.show_in_combat or cfg.show_on_hover) then
+            if cfg and not cfg.always_hidden and (cfg.show_in_combat or cfg.show_on_hover) then
                 for _, frame in ipairs(entry.hoverFrames) do
                     if frame and frame.EnableMouse then frame:EnableMouse(true) end
                 end

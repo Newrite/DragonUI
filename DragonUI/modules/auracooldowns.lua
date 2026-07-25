@@ -4,7 +4,6 @@ local ceil = math.ceil
 local format = string.format
 local GetTime = GetTime
 local hooksecurefunc = hooksecurefunc
-local abs = math.abs
 local UnitBuff = UnitBuff
 local UnitDebuff = UnitDebuff
 
@@ -20,7 +19,8 @@ local AuraCooldownsModule = {
     registeredEvents = {},
     hooks = {},
     stateDrivers = {},
-    frames = {}
+    frames = {},
+    styleGeneration = 1
 }
 addon.AuraCooldownsModule = AuraCooldownsModule
 
@@ -196,8 +196,14 @@ local function EnsureText(cooldown)
         return cooldown._duiAuraText
     end
 
-    local text = cooldown:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    text:SetPoint("CENTER", cooldown, "CENTER", 0, 0)
+    -- Sibling holder above the cooldown: auraborders scales the cooldown, which would scale a child FontString.
+    local parent = (cooldown.GetParent and cooldown:GetParent()) or cooldown
+    local holder = CreateFrame("Frame", nil, parent)
+    holder:SetAllPoints(parent)
+    holder:SetFrameLevel(parent:GetFrameLevel() + 15)
+
+    local text = holder:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    text:SetPoint("CENTER", parent, "CENTER", 0, 0)
     text:Hide()
 
     cooldown._duiAuraText = text
@@ -209,10 +215,6 @@ local function HideCooldownText(cooldown)
         cooldown._duiAuraText:Hide()
         cooldown._duiAuraText:SetText("")
     end
-end
-
-local function ShouldCustomizeIcon(auraCfg)
-    return auraCfg and ((auraCfg.icon_size or 0) > 0 or abs((auraCfg.icon_scale or 1) - 1) > 0.001)
 end
 
 local function ShouldCustomizeStacks(common, auraCfg)
@@ -228,22 +230,20 @@ local function ShouldCustomizeStacks(common, auraCfg)
 end
 
 local function StyleAuraButton(cooldown)
-    if not cooldown then return nil, nil, nil end
+    if not cooldown then return nil end
 
     local button = cooldown.GetParent and cooldown:GetParent()
-    if not button then return nil, nil, nil end
+    if not button then return nil end
+
+    -- Positions/fonts are static per config (Blizzard only SetText/Show/Hides the count); restyle once per config change.
+    if button._duiStyleGen == AuraCooldownsModule.styleGeneration then
+        return button
+    end
 
     local common = GetCommonConfig()
     local auraCfg = GetAuraTypeConfig(IsDebuffCooldown(cooldown))
 
-    if ShouldCustomizeIcon(auraCfg) then
-        if (auraCfg.icon_size or 0) > 0 then
-            button:SetSize(auraCfg.icon_size, auraCfg.icon_size)
-        end
-        button:SetScale(auraCfg.icon_scale or 1)
-    else
-        button:SetScale(1)
-    end
+    -- icon_size/icon_scale feed the shared aura layout hook (target.lua); resizing here would fight it.
 
     if ShouldCustomizeStacks(common, auraCfg) then
         local buttonName = button.GetName and button:GetName()
@@ -262,7 +262,8 @@ local function StyleAuraButton(cooldown)
         end
     end
 
-    return button, common, auraCfg
+    button._duiStyleGen = AuraCooldownsModule.styleGeneration
+    return button
 end
 
 local function FormatRemaining(remaining)
@@ -307,11 +308,8 @@ local function UpdateCooldownText(cooldown)
         return
     end
 
-    local common = GetCommonConfig()
-    local auraCfg = GetAuraTypeConfig(IsDebuffCooldown(cooldown))
-
     if IsIconFeatureEnabled() then
-        button = select(1, StyleAuraButton(cooldown)) or button
+        button = StyleAuraButton(cooldown) or button
     end
 
     if not IsTimerFeatureEnabled() or not IsTimerEnabledForUnit(unitKey) then
@@ -350,14 +348,18 @@ local function UpdateCooldownText(cooldown)
     end
 
     local text = EnsureText(cooldown)
-    text:ClearAllPoints()
-    text:SetPoint(common.duration_anchor, button, common.duration_anchor, common.duration_offset_x, common.duration_offset_y)
-    SetJustifyFromAnchor(text, common.duration_anchor)
+    if text._duiStyleGen ~= AuraCooldownsModule.styleGeneration then
+        local common = GetCommonConfig()
+        text:ClearAllPoints()
+        text:SetPoint(common.duration_anchor, button, common.duration_anchor, common.duration_offset_x, common.duration_offset_y)
+        SetJustifyFromAnchor(text, common.duration_anchor)
 
-    local fontPath = ResolveFontPath(common.duration_font)
-    local fontSize = ReadNumber(unitCfg.font_size, 11)
-    if not text:SetFont(fontPath, fontSize, "THINOUTLINE") and STANDARD_TEXT_FONT then
-        text:SetFont(STANDARD_TEXT_FONT, fontSize, "THINOUTLINE")
+        local fontPath = ResolveFontPath(common.duration_font)
+        local fontSize = ReadNumber(unitCfg.font_size, 11)
+        if not text:SetFont(fontPath, fontSize, "THINOUTLINE") and STANDARD_TEXT_FONT then
+            text:SetFont(STANDARD_TEXT_FONT, fontSize, "THINOUTLINE")
+        end
+        text._duiStyleGen = AuraCooldownsModule.styleGeneration
     end
 
     local textValue, r, g, b = FormatRemaining(remaining)
@@ -522,6 +524,8 @@ local function RegisterModuleEvents()
 end
 
 function addon.ApplyAuraCooldownTextSystem()
+    -- Config may have changed: invalidate cached button/text styling so the next update restyles once.
+    AuraCooldownsModule.styleGeneration = AuraCooldownsModule.styleGeneration + 1
     AuraCooldownsModule.initialized = true
 
     if AuraCooldownsModule.applied then
@@ -570,5 +574,10 @@ function addon.RefreshAuraCooldownTextSystem()
         addon.ApplyAuraCooldownTextSystem()
     else
         addon.RestoreAuraCooldownTextSystem()
+    end
+
+    -- Size/scale changes must re-run wrap/anchor math and re-anchor the castbar.
+    if addon.RefreshTargetFocusAuraLayout then
+        addon.RefreshTargetFocusAuraLayout()
     end
 end

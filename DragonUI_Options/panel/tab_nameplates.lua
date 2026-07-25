@@ -111,6 +111,16 @@ local function RefreshAndRebuildNameplates()
     end
 end
 
+-- Force the quest name/loot indexes to rebuild (provider or name-mode toggle changed).
+local function RefreshQuestNameResolution()
+    local np = addon.Nameplates
+    if np and np.quest then
+        if np.quest.ClearIndex then np.quest.ClearIndex() end
+        if np.quest.OnQuestLogChanged then np.quest.OnQuestLogChanged() end
+    end
+    RefreshNameplates()
+end
+
 local function OnModuleToggle(val)
     if not addon.db.profile.modules then
         addon.db.profile.modules = {}
@@ -206,6 +216,7 @@ local subTabs = {
     { key = "target",   label = LO["Target & Threat"] },
     { key = "bars",     label = LO["Bars"] },
     { key = "icons",    label = LO["Icons"] },
+    { key = "quest",    label = LO["Quest"] },
     { key = "debuffs",  label = LO["Debuffs"] },
 }
 
@@ -918,11 +929,28 @@ local function BuildHealthSubTab(scroll)
         callback = RefreshNameplates,
     })
 
+    local function ClearFriendlyNameClassIfNoBarClass()
+        local np = addon.db.profile.modules and addon.db.profile.modules.nameplates
+        if np and not np.friendlyClassColors and not np.partyClassColors then
+            np.friendlyNameClassColors = false
+        end
+    end
+
+    local function RefreshNameplatesAndTab()
+        RefreshNameplates()
+        if Panel and Panel.SelectTab then
+            Panel:SelectTab("nameplates")
+        end
+    end
+
     C:AddToggle(health, {
         label = LO["Party Class Colors"],
         desc = LO["Use class colors for party member nameplates instead of the friendly player color."],
         dbPath = DB .. ".partyClassColors",
-        callback = RefreshNameplates,
+        callback = function()
+            ClearFriendlyNameClassIfNoBarClass()
+            RefreshNameplatesAndTab()
+        end,
     })
 
     C:AddToggle(health, {
@@ -934,10 +962,7 @@ local function BuildHealthSubTab(scroll)
             if np and not val then
                 np.enemyNameClassColors = false
             end
-            RefreshNameplates()
-            if Panel and Panel.SelectTab then
-                Panel:SelectTab("nameplates")
-            end
+            RefreshNameplatesAndTab()
         end,
     })
 
@@ -945,7 +970,10 @@ local function BuildHealthSubTab(scroll)
         label = LO["Friendly Class Colors"],
         desc = LO["Class-color every friendly player, not just your group. Party and raid show automatically; others fill in when you target or mouse over them, or instantly with awesome_wotlk."],
         dbPath = DB .. ".friendlyClassColors",
-        callback = RefreshNameplates,
+        callback = function()
+            ClearFriendlyNameClassIfNoBarClass()
+            RefreshNameplatesAndTab()
+        end,
     })
 
     local headline = C:AddSection(scroll, LO["Headline Mode"])
@@ -1164,6 +1192,18 @@ local function BuildHealthSubTab(scroll)
         label = LO["Name Reaction Colors"],
         desc = LO["Tint name text with the health bar reaction color (red/yellow/green/blue)."],
         dbPath = DB .. ".nameReactionColors",
+        callback = RefreshNameplates,
+    })
+
+    C:AddToggle(nameLevel, {
+        label = LO["Class Colors on Friendly Names"],
+        desc = LO["Use class colors for friendly player name text."],
+        dbPath = DB .. ".friendlyNameClassColors",
+        disabled = function()
+            local np = addon.db.profile.modules and addon.db.profile.modules.nameplates
+            if not np then return false end
+            return not (np.friendlyClassColors or np.partyClassColors)
+        end,
         callback = RefreshNameplates,
     })
 
@@ -1440,12 +1480,30 @@ local function BuildIconsSubTab(scroll)
 
     local iconSection = C:AddSection(scroll, LO["Icons & Markers"])
 
+    local function RebuildIconsSubTab()
+        RefreshNameplates()
+        if Panel and Panel.SelectTab then
+            Panel:SelectTab("nameplates")
+        end
+    end
+
     C:AddToggle(iconSection, {
         label = LO["Show Raid Markers"],
         desc = LO["Show raid target markers (skull, cross, star, etc.) on nameplates."],
         dbPath = DB .. ".showRaidMarkers",
-        callback = RefreshNameplates,
+        callback = RebuildIconsSubTab,
     })
+
+    -- Nested under Show Raid Markers (same pattern as off-target cast options).
+    if (Panel and Panel.indexing) or C:GetDBValue(DB .. ".showRaidMarkers") then
+        C:AddToggle(iconSection, {
+            label = LO["Beside Bar Layout"],
+            desc = LO["Place the raid marker beside the bar (as with DragonUI debuffs). Useful with other aura addons."],
+            dbPath = DB .. ".raidMarkerDebuffLayout",
+            indent = 18,
+            callback = RefreshNameplates,
+        })
+    end
 
     C:AddToggle(iconSection, {
         label = LO["Color Health Bar by Raid Marker"],
@@ -1661,6 +1719,170 @@ local function BuildIconsSubTab(scroll)
         end,
         callback = ToggleBGHTestMarkTarget,
     })
+end
+
+local function BuildQuestSubTab(scroll)
+    C:AddSpacer(scroll)
+
+    local function IsQuestIconsDisabled()
+        return not C:GetDBValue(DB .. ".questIcons.enabled")
+    end
+
+    -- X / Y / Size sliders in one row, bound to icons[keyGetter()] (the selected texture).
+    local function AddIconRow(parent, keyGetter)
+        local function field(f)
+            return DB .. ".questIcons.icons." .. keyGetter() .. "." .. f
+        end
+        local row = C:AddRow(parent)
+        C:AddSlider(row, {
+            label = LO["Offset X"],
+            getFunc = function() return C:GetDBValue(field("x")) end,
+            setFunc = function(v) C:SetDBValue(field("x"), v) end,
+            min = -200, max = 200, step = 1, width = 150,
+            disabled = IsQuestIconsDisabled,
+            callback = RefreshNameplates,
+        })
+        C:AddSlider(row, {
+            label = LO["Offset Y"],
+            getFunc = function() return C:GetDBValue(field("y")) end,
+            setFunc = function(v) C:SetDBValue(field("y"), v) end,
+            min = -200, max = 200, step = 1, width = 150,
+            disabled = IsQuestIconsDisabled,
+            callback = RefreshNameplates,
+        })
+        C:AddSlider(row, {
+            label = LO["Size"],
+            getFunc = function() return C:GetDBValue(field("size")) end,
+            setFunc = function(v) C:SetDBValue(field("size"), v) end,
+            min = 8, max = 128, step = 1, width = 150,
+            disabled = IsQuestIconsDisabled,
+            callback = RefreshNameplates,
+        })
+    end
+
+    -- General
+    local general = C:AddSection(scroll, LO["Quest Icons"])
+    C:AddToggle(general, {
+        label = LO["Show Quest Icons"],
+        desc = LO["Show kill/loot icons over your quest-objective mobs. Without awesome_wotlk, only your target, mouseover and focus show them."],
+        dbPath = DB .. ".questIcons.enabled",
+        callback = RefreshAndRebuildNameplates,
+    })
+    C:AddToggle(general, {
+        label = LO["Resolve By Name"],
+        desc = LO["Match plate names to your active objectives so icons show on every plate without awesome_wotlk. Kill objectives work on their own; loot needs a quest addon below."],
+        dbPath = DB .. ".questIcons.nameResolution",
+        disabled = IsQuestIconsDisabled,
+        callback = RefreshQuestNameResolution,
+    })
+    C:AddDropdown(general, {
+        label = LO["Loot Database"],
+        desc = LO["Which quest addon supplies loot data (which mob drops a quest item). Auto picks the best loaded one."],
+        dbPath = DB .. ".questIcons.lootProvider",
+        values = {
+            auto = LO["Auto"],
+            off = LO["Off"],
+            pfquest = "pfQuest",
+            questie = "Questie",
+            questhelper = "QuestHelper",
+        },
+        width = 220,
+        disabled = IsQuestIconsDisabled,
+        callback = RefreshQuestNameResolution,
+    })
+    C:AddDropdown(general, {
+        label = LO["Icons With Questie"],
+        desc = LO["Who draws quest icons on plates when Questie is loaded with its own nameplate icons on. DragonUI disables Questie's (needs reload); Questie hides DragonUI's."],
+        dbPath = DB .. ".questIcons.questieCoexist",
+        values = {
+            ask = LO["Ask"],
+            dragonui = "DragonUI",
+            questie = "Questie",
+        },
+        width = 220,
+        disabled = function() return IsQuestIconsDisabled() or not (_G.Questie or _G.QuestieLoader) end,
+        callback = function()
+            local np = addon.Nameplates
+            if not (np and np.quest_coexist) then return end
+            local val = C:GetDBValue(DB .. ".questIcons.questieCoexist")
+            if np.quest_coexist.ApplyChoice then np.quest_coexist.ApplyChoice(val) end
+            if val == "ask" and np.quest_coexist.Check then np.quest_coexist.Check() end
+        end,
+    })
+    C:AddToggle(general, {
+        label = LO["Pointer Mode"],
+        desc = LO["Show a single quest marker on any objective mob instead of separate kill/loot icons."],
+        dbPath = DB .. ".questIcons.pointerMode",
+        disabled = IsQuestIconsDisabled,
+        callback = RefreshAndRebuildNameplates,
+    })
+
+    -- Test preview (tuning aid)
+    local test = C:AddSection(scroll, LO["Test Preview"])
+    C:AddDescription(test, LO["Force one icon on all enemy nameplates so you can position and size it. Set to Off when done."])
+    C:AddDropdown(test, {
+        label = LO["Preview Icon"],
+        dbPath = DB .. ".questIcons.testIcon",
+        values = {
+            off = LO["Off"],
+            sword = LO["Sword"],
+            skull = LO["Skull"],
+            elite = LO["Elite"],
+            bag = LO["Bag"],
+            chest = LO["Chest"],
+            pointer = LO["Pointer"],
+        },
+        width = 220,
+        disabled = IsQuestIconsDisabled,
+        callback = RefreshNameplates,
+    })
+
+    -- Kill icon: style + position/size of the selected texture
+    local killS = C:AddSection(scroll, LO["Kill Icon"])
+    C:AddDropdown(killS, {
+        label = LO["Icon"],
+        desc = LO["Choose the icon shown for kill objectives."],
+        dbPath = DB .. ".questIcons.killIcon",
+        values = {
+            sword = LO["Sword"],
+            skull = LO["Skull"],
+        },
+        width = 220,
+        disabled = IsQuestIconsDisabled,
+        callback = RefreshAndRebuildNameplates,
+    })
+    AddIconRow(killS, function() return C:GetDBValue(DB .. ".questIcons.killIcon") end)
+
+    -- Elite kill icon (auto-override for elite/rare kill objectives)
+    local eliteS = C:AddSection(scroll, LO["Elite Kill Icon"])
+    C:AddToggle(eliteS, {
+        label = LO["Enabled"],
+        desc = LO["Show a distinct icon on elite and rare kill objectives."],
+        dbPath = DB .. ".questIcons.eliteKillIcon",
+        disabled = IsQuestIconsDisabled,
+        callback = RefreshNameplates,
+    })
+    AddIconRow(eliteS, function() return "elite" end)
+
+    -- Loot icon
+    local lootS = C:AddSection(scroll, LO["Loot Icon"])
+    C:AddDropdown(lootS, {
+        label = LO["Icon"],
+        desc = LO["Choose the icon shown for loot/collect objectives."],
+        dbPath = DB .. ".questIcons.lootIcon",
+        values = {
+            bag = LO["Bag"],
+            chest = LO["Chest"],
+        },
+        width = 220,
+        disabled = IsQuestIconsDisabled,
+        callback = RefreshAndRebuildNameplates,
+    })
+    AddIconRow(lootS, function() return C:GetDBValue(DB .. ".questIcons.lootIcon") end)
+
+    -- Pointer icon
+    local ptrS = C:AddSection(scroll, LO["Pointer Icon"])
+    AddIconRow(ptrS, function() return "pointer" end)
 end
 
 local function BuildDebuffsSubTab(scroll)
@@ -1899,6 +2121,7 @@ local subTabBuilders = {
     target   = BuildTargetSubTab,
     bars     = BuildBarsSubTab,
     icons    = BuildIconsSubTab,
+    quest    = BuildQuestSubTab,
     debuffs  = BuildDebuffsSubTab,
 }
 

@@ -221,6 +221,12 @@ L["Left"] = true
 L["Right"] = true
 L["Error Messages"] = true
 L["ErrorMessages"] = true
+L["ExtraActionButton"] = "Extra Action Button"
+L["PlayerPrimaryStat"] = "Primary Stat"
+L["TargetPrimaryStat"] = "Target Primary Stat"
+L["Primary stat icon movability widget"] = true
+L["WildCardDice"] = "WildCard Dice"
+L["Ascension WildCard dice movability widget"] = true
 
 -- Editor mode system messages
 L["All editable frames shown for editing"] = true
@@ -479,6 +485,9 @@ L["Dark Mode"] = true
 L["Darken UI borders and chrome"] = true
 L["Item Quality"] = true
 L["Color item borders by quality in bags, character panel, bank, and merchant"] = true
+L["Item Level"] = true
+L["Show item level on gear icons in bags, character panel, bank, and more"] = true
+L["Item Level: %d"] = true
 L["Key Binding"] = true
 L["LibKeyBound integration for intuitive keybinding"] = true
 L["Buff Frame"] = true
@@ -496,7 +505,7 @@ L["Right Click"] = true
 L["Middle Click"] = true
 L["Bag Skin"] = true
 L["Retail-style skin for Blizzard bag windows"] = true
-L["Combuctor"] = true
+L["Bagster"] = true
 L["All-in-one bag replacement with filtering and search"] = true
 L["Stance Bar"] = true
 L["Vehicle"] = true
@@ -536,6 +545,9 @@ L["|cff00ff00Drag|r to move"] = true
 L["|cff00ff00Alt+Right-Click|r to reset position"] = true
 L["Toggle Inventory"] = true
 L["Toggle Bank"] = true
+L["|cff00ff00Left-Click|r to show this bag's items"] = true
+L["|cff00ff00Left-Click|r to hide this bag's items"] = true
+L["|cff00ff00Drag|r to move this bag"] = true
 L["Sort complete."] = true
 L["Sort already in progress."] = true
 L["Bags already sorted!"] = true
@@ -568,3 +580,13 @@ L["Level %d"] = true
 -- Version Check Module
 L["Version Check"] = true
 L["Broadcast and detect addon version updates across group members"] = true
+
+-- Quest nameplate icons wizard (Questie coexistence)
+L["Quest Icons on Nameplates"] = true
+L["Which quest icons do you want on your nameplates?"] = true
+L["Kill"] = true
+L["Loot"] = true
+L['Pointer mode (just "!")'] = true
+L["Use Questie"] = true
+L["Applying quest icon settings needs a UI reload."] = true
+L["Reload"] = true
