@@ -353,15 +353,18 @@ local INSPECT_SLOT_FRAMES = {
     "InspectMainHandSlot", "InspectSecondaryHandSlot", "InspectRangedSlot", "InspectTabardSlot",
 }
 
--- Ascension prefixes character slot frames with "Ascension" (e.g. AscensionCharacterHeadSlot).
+-- Ascension prefixes slot frames with "Ascension" (e.g. AscensionCharacterHeadSlot).
 -- Resolve the actual frame name, preferring Ascension's variant when present.
-local function ResolveCharacterSlotFrame(frameName)
+local function ResolveSlotFrame(frameName)
     local ascensionName = "Ascension" .. frameName
     if _G[ascensionName] then
         return ascensionName
     end
     return frameName
 end
+
+local ResolveCharacterSlotFrame = ResolveSlotFrame
+local ResolveInspectSlotFrame = ResolveSlotFrame
 
 -- Never labelled: ammo, cosmetic slots, and the bag bar's own equipment slots.
 -- Needed by slot ID too, since the inspect path reads tooltips, not equipSlot.
@@ -556,7 +559,8 @@ end
 
 local function HideInspectTexts()
     for _, frameName in ipairs(INSPECT_SLOT_FRAMES) do
-        local button = _G[frameName]
+        local resolved = ResolveInspectSlotFrame(frameName)
+        local button = _G[resolved]
         if button then HideButtonItemLevel(button) end
     end
     if averageTexts["inspect"] then averageTexts["inspect"]:Hide() end
@@ -597,7 +601,8 @@ local function UpdateAllInspectSlots()
     if not IsContextEnabled("inspect") then return end
     if not InspectFrame or not InspectFrame:IsShown() then return end
     for _, frameName in ipairs(INSPECT_SLOT_FRAMES) do
-        local button = _G[frameName]
+        local resolved = ResolveInspectSlotFrame(frameName)
+        local button = _G[resolved]
         if button then UpdateInspectSlot(button) end
     end
     UpdateInspectAverage()
