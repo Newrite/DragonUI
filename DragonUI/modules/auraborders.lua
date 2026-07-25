@@ -138,7 +138,8 @@ local function EnsureBorder(button, isDebuff, isUnit)
         return button.duiSlice
     end
 
-    local icon = _G[button:GetName() .. "Icon"]
+    local buttonName = button:GetName()
+    local icon = (buttonName and _G[buttonName .. "Icon"]) or button.icon
     if not icon then return nil end
 
     local spec = GetSpec(isDebuff, isUnit)
@@ -149,7 +150,7 @@ local function EnsureBorder(button, isDebuff, isUnit)
     local o = spec.overhang
     host:SetPoint("TOPLEFT", icon, "TOPLEFT", -o, o)
     host:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", o, -o)
-    local cd = _G[button:GetName() .. "Cooldown"]
+    local cd = (buttonName and _G[buttonName .. "Cooldown"]) or button.cooldown or button.cd
     local level = (cd and cd.GetFrameLevel and cd:GetFrameLevel()) or button:GetFrameLevel()
     host:SetFrameLevel(level + 5)
     host:Hide()
@@ -180,6 +181,10 @@ local function RestoreButton(button)
     if button.duiStockBorder then
         button.duiStockBorder:Show()
         button.duiStockBorder = nil
+    end
+    if button._duiAttachedAura and button.SetBackdropBorderColor then
+        local color = button._duiFallbackBorderColor or { 0.2, 0.2, 0.2 }
+        button:SetBackdropBorderColor(color[1], color[2], color[3], 1)
     end
 end
 
@@ -242,6 +247,22 @@ local function StyleAura(button, isDebuff, stockBorderName, isUnit)
     if useCustom then slice.custom:Show() else slice.custom:Hide() end
 
     button.duiHost:Show()
+    if button._duiAttachedAura and button.SetBackdropBorderColor then
+        local color = button._duiFallbackBorderColor or { 0.2, 0.2, 0.2 }
+        button:SetBackdropBorderColor(color[1], color[2], color[3], 0)
+    end
+end
+
+-- Shared entry point for filtered stock buttons and attached unit-frame aura
+-- buttons. Border geometry and module restore behavior stay centralized here.
+function addon.RefreshFilteredAuraBorder(button, isDebuff, isUnit, overrideR, overrideG, overrideB)
+    if not button or not button.GetName then return end
+    local buttonName = button:GetName()
+    local stockBorderName = isDebuff and buttonName and (buttonName .. "Border") or nil
+    StyleAura(button, isDebuff and true or false, stockBorderName, isUnit and true or false)
+    if overrideR and button.duiSlice then
+        ColorSlice(button.duiSlice, overrideR, overrideG, overrideB)
+    end
 end
 
 -- ============================================================================
@@ -254,6 +275,10 @@ local function InstallHooks()
 
     if type(AuraButton_Update) == "function" then
         hooksecurefunc("AuraButton_Update", function(buttonName, index, filter)
+            if (buttonName == "BuffButton" or buttonName == "DebuffButton")
+                and addon.IsAuraIconFilteringEnabled and addon.IsAuraIconFilteringEnabled("buffframe") then
+                return
+            end
             local name = buttonName .. index
             local button = _G[name]
             if not button or not button:IsShown() then return end
@@ -265,6 +290,8 @@ local function InstallHooks()
         hooksecurefunc("TargetFrame_UpdateAuras", function(frame)
             local frameName = frame and frame.GetName and frame:GetName()
             if frameName ~= "TargetFrame" and frameName ~= "FocusFrame" then return end
+            local unitKey = frameName == "TargetFrame" and "target" or "focus"
+            if addon.IsAuraIconFilteringEnabled and addon.IsAuraIconFilteringEnabled(unitKey) then return end
 
             for i = 1, MAX_TARGET_BUFFS do
                 local buff = _G[frameName .. "Buff" .. i]
@@ -315,21 +342,30 @@ local function RestyleShown(name, isDebuff, stockSuffix, isUnit)
 end
 
 local function RestyleAll()
-    for i = 1, MAX_PLAYER_BUFFS do
-        RestyleShown("BuffButton" .. i, false, nil, false)
-    end
-    for i = 1, MAX_PLAYER_DEBUFFS do
-        RestyleShown("DebuffButton" .. i, true, "Border", false)
+    local playerFiltered = addon.IsAuraIconFilteringEnabled
+        and addon.IsAuraIconFilteringEnabled("buffframe")
+    if not playerFiltered then
+        for i = 1, MAX_PLAYER_BUFFS do
+            RestyleShown("BuffButton" .. i, false, nil, false)
+        end
+        for i = 1, MAX_PLAYER_DEBUFFS do
+            RestyleShown("DebuffButton" .. i, true, "Border", false)
+        end
     end
     for i = 1, MAX_TEMP_ENCHANTS do
         RestyleShown("TempEnchant" .. i, false, "Border", false)
     end
     for _, frameName in ipairs({ "TargetFrame", "FocusFrame" }) do
-        for i = 1, MAX_TARGET_BUFFS do
-            RestyleShown(frameName .. "Buff" .. i, false, nil, true)
-        end
-        for i = 1, MAX_TARGET_DEBUFFS do
-            RestyleShown(frameName .. "Debuff" .. i, true, "Border", true)
+        local unitKey = frameName == "TargetFrame" and "target" or "focus"
+        local filtered = addon.IsAuraIconFilteringEnabled
+            and addon.IsAuraIconFilteringEnabled(unitKey)
+        if not filtered then
+            for i = 1, MAX_TARGET_BUFFS do
+                RestyleShown(frameName .. "Buff" .. i, false, nil, true)
+            end
+            for i = 1, MAX_TARGET_DEBUFFS do
+                RestyleShown(frameName .. "Debuff" .. i, true, "Border", true)
+            end
         end
     end
     -- VanityBuffs container (Ascension)
@@ -347,6 +383,10 @@ function addon.ApplyAuraBordersSystem()
     InstallHooks()
     AuraBordersModule.applied = true
     RestyleAll()
+    if addon.AuraCustomizationModule and addon.AuraCustomizationModule.applied
+        and addon.AuraCustomizationModule.RefreshStandardAll then
+        addon.AuraCustomizationModule:RefreshStandardAll()
+    end
 end
 
 function addon.RestoreAuraBordersSystem()

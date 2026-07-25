@@ -9,6 +9,93 @@ local addon = select(2, ...);
 -- Locale-aware font (set by core/fonts.lua, loaded before this file)
 local _arialn = addon.Fonts and addon.Fonts.ARIALN or "Fonts\\ARIALN.TTF"
 
+local function AuraIconDefaults(options)
+    options = options or {}
+    local includeNoDuration = options.include_no_duration
+    if includeNoDuration == nil then includeNoDuration = true end
+
+    return {
+        enabled = false,
+        show_buffs = true,
+        show_debuffs = true,
+        max_buffs = options.max_buffs or 32,
+        max_debuffs = options.max_debuffs or 16,
+        caster = options.caster or "all", -- all | mine | others
+        other_style = options.other_style or "desaturate", -- normal | desaturate
+        other_color = { r = 0.55, g = 0.55, b = 0.55 },
+        sort = "index",
+        no_duration_last = true,
+        include_no_duration = includeNoDuration,
+        min_duration = 0,
+        max_duration_minutes = 0,
+        whitelist = "",
+        blacklist = "",
+
+        -- Attached unit-frame icon layout. Blizzard's minimap aura frame keeps
+        -- its native layout and ignores these fields.
+        anchor = options.anchor or "BOTTOMLEFT",
+        offset_x = options.offset_x or 0,
+        offset_y = options.offset_y or -2,
+        buff_size = options.buff_size or 17,
+        debuff_size = options.debuff_size or 17,
+        scale = 1,
+        spacing_x = 2,
+        spacing_y = 2,
+        per_row = options.per_row or 8,
+        growth_x = options.growth_x or "RIGHT",
+        growth_y = options.growth_y or "DOWN",
+        show_cooldown = true,
+        show_duration = true,
+        duration_font_size = 10,
+    }
+end
+
+local function AuraBarDefaults()
+    return {
+        enabled = false,
+        show_buffs = true,
+        show_debuffs = true,
+        max_bars = 8,
+        width = 250,
+        height = 18,
+        scale = 1,
+        spacing = 2,
+        font_size = 10,
+        growth = "DOWN",
+        icon_side = "LEFT",
+        show_icon = true,
+        caster = "all",
+        other_style = "desaturate",
+        other_color = { r = 0.45, g = 0.45, b = 0.45 },
+        sort = "time_asc",
+        no_duration_last = true,
+        include_no_duration = false,
+        min_duration = 0,
+        max_duration_minutes = 0,
+        whitelist = "",
+        blacklist = "",
+        buff_color = { r = 0.20, g = 0.55, b = 1.00 },
+        debuff_color = { r = 0.80, g = 0.10, b = 0.10 },
+        debuff_type_color = true,
+
+        texture = "Blizzard",
+        background_texture = "Flat",
+        background_color = { r = 0.05, g = 0.05, b = 0.05, a = 0.90 },
+        border_texture = "DragonUI 1 Pixel",
+        border_size = 1,
+        border_inset = 0,
+        border_color = { r = 0, g = 0, b = 0, a = 1 },
+        icon_border_texture = "DragonUI 1 Pixel",
+        icon_border_size = 1,
+        icon_border_inset = 0,
+        icon_border_mode = "aura", -- aura | border | custom
+        icon_border_color = { r = 0, g = 0, b = 0, a = 1 },
+        font = "DragonUI Narrow",
+        text_color = { r = 1, g = 1, b = 1, a = 1 },
+        text_outline = "OUTLINE",
+    }
+end
+
 local defaults = {
     global = {
         combuctorCache = {} -- Per-character bank snapshot (realm|name keys); used by combuctor module
@@ -36,6 +123,21 @@ local defaults = {
                 anchor = "TOPLEFT",
                 posX = 250,
                 posY = -220
+            },
+            playerAuraBars = {
+                anchor = "CENTER",
+                posX = -320,
+                posY = 180
+            },
+            targetAuraBars = {
+                anchor = "CENTER",
+                posX = 320,
+                posY = 180
+            },
+            focusAuraBars = {
+                anchor = "CENTER",
+                posX = 320,
+                posY = 40
             },
             party = {
                 anchor = "TOPLEFT",
@@ -818,6 +920,34 @@ local defaults = {
                     max_duration_minutes = 0,
                     font_size = 11,
                 }
+            },
+            aura_customization = {
+                enabled = true,
+                icons = {
+                    buffframe = AuraIconDefaults({ other_style = "normal" }),
+                    player = AuraIconDefaults({
+                        caster = "mine",
+                        include_no_duration = false,
+                        anchor = "BOTTOMLEFT",
+                        offset_x = 72,
+                        offset_y = 8,
+                        buff_size = 20,
+                        debuff_size = 20,
+                    }),
+                    target = AuraIconDefaults({ anchor = "BOTTOMLEFT", offset_x = 5, offset_y = 4 }),
+                    focus = AuraIconDefaults({ anchor = "BOTTOMLEFT", offset_x = 5, offset_y = 4 }),
+                    pet = AuraIconDefaults({ max_buffs = 16, max_debuffs = 16, per_row = 6, buff_size = 15, debuff_size = 15 }),
+                    tot = AuraIconDefaults({ max_buffs = 8, max_debuffs = 8, per_row = 4, buff_size = 15, debuff_size = 15 }),
+                    fot = AuraIconDefaults({ max_buffs = 8, max_debuffs = 8, per_row = 4, buff_size = 15, debuff_size = 15 }),
+                    party = AuraIconDefaults({ max_buffs = 16, max_debuffs = 16, anchor = "RIGHT", offset_x = 4, offset_y = 0, per_row = 4, buff_size = 15, debuff_size = 15 }),
+                    boss = AuraIconDefaults({ max_buffs = 16, max_debuffs = 16, anchor = "LEFT", offset_x = -4, offset_y = 0, per_row = 4, growth_x = "LEFT", buff_size = 15, debuff_size = 15 }),
+                    arena = AuraIconDefaults({ max_buffs = 16, max_debuffs = 16, anchor = "LEFT", offset_x = -4, offset_y = 0, per_row = 4, growth_x = "LEFT", buff_size = 15, debuff_size = 15 }),
+                },
+                bars = {
+                    player = AuraBarDefaults(),
+                    target = AuraBarDefaults(),
+                    focus = AuraBarDefaults(),
+                },
             },
             rage_indicator = {
                 enabled = true, -- Tint action button icons by range and usability

@@ -29,8 +29,7 @@ local AURA_OFFSET_Y = _G.AURA_OFFSET_Y or 3
 local AURA_START_X = _G.AURA_START_X or 5
 local AURA_START_Y = _G.AURA_START_Y or 32
 local SMALL_AURA_SIZE = _G.SMALL_AURA_SIZE or 17
-local LARGE_AURA_SIZE = _G.LARGE_AURA_SIZE or 21
-local DEFAULT_AURA_ROW_WIDTH = 122
+local DEFAULT_AURA_ROW_WIDTH = _G.AURA_ROW_WIDTH or 122
 
 local function IsToTDetached()
     local cfg = addon.db and addon.db.profile and addon.db.profile.unitframe and addon.db.profile.unitframe.tot
@@ -60,8 +59,8 @@ local function GetAuraCountsAndSizes(frame)
 
     local numBuffs = 0
     local numDebuffs = 0
-    local largeBuffList = {}
-    local largeDebuffList = {}
+    local buffSizes = {}
+    local debuffSizes = {}
 
     for i = 1, MAX_TARGET_BUFFS do
         local buff = _G[selfName .. "Buff" .. i]
@@ -69,7 +68,9 @@ local function GetAuraCountsAndSizes(frame)
             break
         end
         numBuffs = i
-        largeBuffList[i] = (buff:GetWidth() or SMALL_AURA_SIZE) > SMALL_AURA_SIZE
+        local size = buff:GetWidth() or SMALL_AURA_SIZE
+        local scale = buff.GetScale and buff:GetScale() or 1
+        buffSizes[i] = { size = size, layoutSize = size * scale }
     end
 
     for i = 1, MAX_TARGET_DEBUFFS do
@@ -78,13 +79,15 @@ local function GetAuraCountsAndSizes(frame)
             break
         end
         numDebuffs = i
-        largeDebuffList[i] = (debuff:GetWidth() or SMALL_AURA_SIZE) > SMALL_AURA_SIZE
+        local size = debuff:GetWidth() or SMALL_AURA_SIZE
+        local scale = debuff.GetScale and debuff:GetScale() or 1
+        debuffSizes[i] = { size = size, layoutSize = size * scale }
     end
 
-    return numBuffs, numDebuffs, largeBuffList, largeDebuffList
+    return numBuffs, numDebuffs, buffSizes, debuffSizes
 end
 
-local function UpdateAuraPositionsDetached(self, auraName, numAuras, numOppositeAuras, largeAuraList, updateFunc,
+local function UpdateAuraPositionsDetached(self, auraName, numAuras, numOppositeAuras, auraSizes, updateFunc,
                                            maxRowWidth, offsetX, mirrorAurasVertically)
     local size
     local offsetY = AURA_OFFSET_Y
@@ -92,23 +95,25 @@ local function UpdateAuraPositionsDetached(self, auraName, numAuras, numOpposite
     local firstAuraOnRow = 1
 
     for i = 1, numAuras do
-        if largeAuraList[i] then
-            size = LARGE_AURA_SIZE
+        local auraSize = auraSizes[i]
+        size = auraSize and auraSize.size or SMALL_AURA_SIZE
+        local layoutSize = auraSize and auraSize.layoutSize or size
+        if layoutSize > SMALL_AURA_SIZE then
             offsetY = AURA_OFFSET_Y + AURA_OFFSET_Y
         else
-            size = SMALL_AURA_SIZE
+            offsetY = AURA_OFFSET_Y
         end
 
         if i == 1 then
-            rowWidth = size
+            rowWidth = layoutSize
             self.auraRows = self.auraRows + 1
         else
-            rowWidth = rowWidth + size + offsetX
+            rowWidth = rowWidth + layoutSize + offsetX
         end
 
         if rowWidth > maxRowWidth then
             updateFunc(self, auraName, i, numOppositeAuras, firstAuraOnRow, size, offsetX, offsetY, mirrorAurasVertically)
-            rowWidth = size
+            rowWidth = layoutSize
             self.auraRows = self.auraRows + 1
             firstAuraOnRow = i
             offsetY = AURA_OFFSET_Y
@@ -140,6 +145,7 @@ local function UpdateBuffAnchorDetached(self, buffName, index, numDebuffs, ancho
     if not buff then
         return
     end
+    buff:ClearAllPoints()
 
     if index == 1 then
         if UnitIsFriend("player", self.unit) or numDebuffs == 0 then
@@ -185,6 +191,7 @@ local function UpdateDebuffAnchorDetached(self, debuffName, index, numBuffs, anc
     if not debuff then
         return
     end
+    debuff:ClearAllPoints()
 
     if index == 1 then
         if isFriend and numBuffs > 0 then
@@ -216,7 +223,7 @@ local function UpdateDebuffAnchorDetached(self, debuffName, index, numBuffs, anc
     end
 end
 
-local function ApplyDetachedAuraLayout(frame)
+local function ApplyDetachedAuraLayout(frame, maxRowWidth)
     if not frame or not frame.unit or not UnitExists(frame.unit) then
         return
     end
@@ -226,19 +233,23 @@ local function ApplyDetachedAuraLayout(frame)
         return
     end
 
-    local numBuffs, numDebuffs, largeBuffList, largeDebuffList = GetAuraCountsAndSizes(frame)
-    if numBuffs == 0 and numDebuffs == 0 then
-        return
-    end
-
+    local numBuffs, numDebuffs, buffSizes, debuffSizes = GetAuraCountsAndSizes(frame)
     frame.auraRows = 0
     local mirrorAurasVertically = frame.buffsOnTop and true or false
     frame.spellbarAnchor = nil
 
-    UpdateAuraPositionsDetached(frame, frameName .. "Buff", numBuffs, numDebuffs, largeBuffList,
-        UpdateBuffAnchorDetached, DEFAULT_AURA_ROW_WIDTH, 3, mirrorAurasVertically)
-    UpdateAuraPositionsDetached(frame, frameName .. "Debuff", numDebuffs, numBuffs, largeDebuffList,
-        UpdateDebuffAnchorDetached, DEFAULT_AURA_ROW_WIDTH, 3, mirrorAurasVertically)
+    if numBuffs == 0 and numDebuffs == 0 then
+        if frame.spellbar and _G.Target_Spellbar_AdjustPosition then
+            _G.Target_Spellbar_AdjustPosition(frame.spellbar)
+        end
+        return
+    end
+
+    maxRowWidth = maxRowWidth or DEFAULT_AURA_ROW_WIDTH
+    UpdateAuraPositionsDetached(frame, frameName .. "Buff", numBuffs, numDebuffs, buffSizes,
+        UpdateBuffAnchorDetached, maxRowWidth, 3, mirrorAurasVertically)
+    UpdateAuraPositionsDetached(frame, frameName .. "Debuff", numDebuffs, numBuffs, debuffSizes,
+        UpdateDebuffAnchorDetached, maxRowWidth, 3, mirrorAurasVertically)
 
     if frame.spellbar and _G.Target_Spellbar_AdjustPosition then
         _G.Target_Spellbar_AdjustPosition(frame.spellbar)
@@ -255,7 +266,11 @@ local function InstallDetachedAuraLayoutHook()
 
     hooksecurefunc("TargetFrame_UpdateAuras", function(frame)
         if ShouldUseDetachedAuraLayout(frame) then
-            ApplyDetachedAuraLayout(frame)
+            local unitKey = frame == TargetFrame and "target" or "focus"
+            if addon.IsAuraIconFilteringEnabled and addon.IsAuraIconFilteringEnabled(unitKey) then
+                return
+            end
+            ApplyDetachedAuraLayout(frame, DEFAULT_AURA_ROW_WIDTH)
         end
     end)
 

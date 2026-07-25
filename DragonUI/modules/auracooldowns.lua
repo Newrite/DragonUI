@@ -16,6 +16,8 @@ local UnitDebuff = UnitDebuff
 local AuraCooldownsModule = {
     initialized = false,
     applied = false,
+    iconFeatureWasEnabled = false,
+    iconSettingsSignature = nil,
     originalStates = {},
     registeredEvents = {},
     hooks = {},
@@ -149,6 +151,25 @@ local function GetAuraTypeConfig(isDebuff)
     }
 end
 
+local function GetIconSettingsSignature()
+    local cfg = GetModuleConfig() or {}
+    local buffs = cfg.buffs or {}
+    local debuffs = cfg.debuffs or {}
+    return table.concat({
+        tostring(cfg.icons_enabled == true),
+        tostring(cfg.stack_anchor or "TOPRIGHT"),
+        tostring(cfg.stack_offset_x or 0),
+        tostring(cfg.stack_offset_y or 0),
+        tostring(cfg.count_font or "system"),
+        tostring(buffs.icon_size or 0),
+        tostring(buffs.icon_scale or 1),
+        tostring(buffs.stack_font_size or 0),
+        tostring(debuffs.icon_size or 0),
+        tostring(debuffs.icon_scale or 1),
+        tostring(debuffs.stack_font_size or 0),
+    }, ":")
+end
+
 local function ResolveUnitKey(cooldown)
     if not cooldown then return nil end
 
@@ -211,6 +232,45 @@ local function HideCooldownText(cooldown)
     end
 end
 
+local function CaptureCountTextState(button, count)
+    if not button or not count or button._duiAuraCountOriginal then return end
+    local state = { points = {} }
+    if count.GetNumPoints and count.GetPoint then
+        for i = 1, count:GetNumPoints() do
+            state.points[i] = { count:GetPoint(i) }
+        end
+    end
+    if count.GetFont then state.font, state.fontSize, state.fontFlags = count:GetFont() end
+    if count.GetJustifyH then state.justifyH = count:GetJustifyH() end
+    if count.GetJustifyV then state.justifyV = count:GetJustifyV() end
+    if count.GetShadowOffset then state.shadowX, state.shadowY = count:GetShadowOffset() end
+    button._duiAuraCountOriginal = state
+end
+
+local function RestoreCountTextState(button)
+    if not button then return end
+    local state = button._duiAuraCountOriginal
+    local buttonName = button.GetName and button:GetName()
+    local count = (buttonName and _G[buttonName .. "Count"]) or button.count
+    if not state or not count then return end
+
+    if count.ClearAllPoints then count:ClearAllPoints() end
+    if count.SetPoint then
+        for i = 1, #state.points do count:SetPoint(unpack(state.points[i])) end
+    end
+    if state.font and count.SetFont then count:SetFont(state.font, state.fontSize, state.fontFlags) end
+    if state.justifyH and count.SetJustifyH then count:SetJustifyH(state.justifyH) end
+    if state.justifyV and count.SetJustifyV then count:SetJustifyV(state.justifyV) end
+    if state.shadowX and count.SetShadowOffset then count:SetShadowOffset(state.shadowX, state.shadowY) end
+end
+
+local function ResetAuraButtonStyle(cooldown)
+    local button = cooldown and cooldown.GetParent and cooldown:GetParent()
+    if not button then return end
+    if button.SetScale then button:SetScale(1) end
+    RestoreCountTextState(button)
+end
+
 local function ShouldCustomizeIcon(auraCfg)
     return auraCfg and ((auraCfg.icon_size or 0) > 0 or abs((auraCfg.icon_scale or 1) - 1) > 0.001)
 end
@@ -249,6 +309,7 @@ local function StyleAuraButton(cooldown)
         local buttonName = button.GetName and button:GetName()
         local count = buttonName and _G[buttonName .. "Count"] or button.count
         if count then
+            CaptureCountTextState(button, count)
             count:ClearAllPoints()
             count:SetPoint(common.stack_anchor, button, common.stack_anchor, common.stack_offset_x, common.stack_offset_y)
             count:SetJustifyV("TOP")
@@ -260,6 +321,8 @@ local function StyleAuraButton(cooldown)
             local countSize = auraCfg.stack_font_size > 0 and auraCfg.stack_font_size or 10
             count:SetFont(countFont, countSize, "THINOUTLINE")
         end
+    else
+        RestoreCountTextState(button)
     end
 
     return button, common, auraCfg
@@ -286,6 +349,7 @@ local function UpdateCooldownText(cooldown)
 
     if not AuraCooldownsModule.applied or not IsModuleEnabled() then
         HideCooldownText(cooldown)
+        ResetAuraButtonStyle(cooldown)
         return
     end
 
@@ -312,6 +376,10 @@ local function UpdateCooldownText(cooldown)
 
     if IsIconFeatureEnabled() then
         button = select(1, StyleAuraButton(cooldown)) or button
+    else
+        -- Blizzard restores icon dimensions during its aura layout pass, but
+        -- does not undo a scale previously applied by DragonUI.
+        ResetAuraButtonStyle(cooldown)
     end
 
     if not IsTimerFeatureEnabled() or not IsTimerEnabledForUnit(unitKey) then
@@ -439,6 +507,9 @@ end
 
 local function ScanAuraCooldownsForFrame(frameName)
     local unitToken = GetUnitTokenForFrame(frameName)
+    if addon.IsAuraIconFilteringEnabled and addon.IsAuraIconFilteringEnabled(unitToken) then
+        return
+    end
 
     for i = 1, MAX_AURA_BUFFS do
         local start, duration = GetAuraTiming(unitToken, i, false)
@@ -454,6 +525,12 @@ end
 local function ScanAllAuraCooldowns()
     ScanAuraCooldownsForFrame("TargetFrame")
     ScanAuraCooldownsForFrame("FocusFrame")
+end
+
+local function RefreshNativeAuraLayouts()
+    if not _G.TargetFrame_UpdateAuras then return end
+    if _G.TargetFrame then _G.TargetFrame_UpdateAuras(_G.TargetFrame) end
+    if _G.FocusFrame then _G.TargetFrame_UpdateAuras(_G.FocusFrame) end
 end
 
 local function EnsureUpdateFrame()
@@ -524,7 +601,16 @@ end
 function addon.ApplyAuraCooldownTextSystem()
     AuraCooldownsModule.initialized = true
 
+    local iconFeatureEnabled = IsIconFeatureEnabled()
+    local restoreNativeIcons = AuraCooldownsModule.iconFeatureWasEnabled and not iconFeatureEnabled
+    local iconSettingsSignature = GetIconSettingsSignature()
+    local iconSettingsChanged = AuraCooldownsModule.iconSettingsSignature
+        and AuraCooldownsModule.iconSettingsSignature ~= iconSettingsSignature
+    AuraCooldownsModule.iconFeatureWasEnabled = iconFeatureEnabled
+    AuraCooldownsModule.iconSettingsSignature = iconSettingsSignature
+
     if AuraCooldownsModule.applied then
+        if restoreNativeIcons or iconSettingsChanged then RefreshNativeAuraLayouts() end
         ScanAllAuraCooldowns()
         return
     end
@@ -538,12 +624,19 @@ function addon.ApplyAuraCooldownTextSystem()
 end
 
 function addon.RestoreAuraCooldownTextSystem()
+    AuraCooldownsModule.applied = false
+    AuraCooldownsModule.iconFeatureWasEnabled = false
+    AuraCooldownsModule.iconSettingsSignature = nil
+
     local tracked = AuraCooldownsModule.frames.trackedCooldowns
     if tracked then
         for cooldown in pairs(tracked) do
             HideCooldownText(cooldown)
+            ResetAuraButtonStyle(cooldown)
         end
     end
+
+    RefreshNativeAuraLayouts()
 
     if AuraCooldownsModule.frames.updateFrame then
         AuraCooldownsModule.frames.updateFrame:Hide()
@@ -562,7 +655,6 @@ function addon.RestoreAuraCooldownTextSystem()
 
     AuraCooldownsModule.registeredEvents = {}
 
-    AuraCooldownsModule.applied = false
 end
 
 function addon.RefreshAuraCooldownTextSystem()

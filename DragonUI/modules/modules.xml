@@ -36,6 +36,8 @@
 
     <!-- UnitFrames -->
     <Include file="unitframes\unitframes.xml"/>
+    <!-- Shared unit-frame aura filters/icons and player/target/focus aura bars -->
+    <Script file="aura_customization.lua"/>
     <Script file="hp_low_alert.lua"/>
 
     <!-- Cast Bar module -->

@@ -159,6 +159,56 @@ local function ShowVersion()
     addon:Print(L["DragonUI Version: "] .. version)
 end
 
+local function ShowAuraCustomizationStatus(arg)
+    local normalized = arg and arg:lower() or ""
+    if normalized == "refresh" and addon.RefreshAuraCustomizationSystem then
+        local ok, err = pcall(addon.RefreshAuraCustomizationSystem)
+        if not ok then
+            addon:Print("Aura refresh failed: " .. tostring(err))
+        end
+    end
+
+    local module = addon.AuraCustomizationModule
+    addon:Print("=== Aura Customization Diagnostic ===")
+    if not module then
+        print("  Source file: |cffff0000NOT LOADED|r")
+        print("  Check Logs\\FrameXML.log for aura_customization.lua")
+        return
+    end
+
+    local registryInfo = addon.ModuleRegistry and addon.ModuleRegistry.GetInfo
+        and addon.ModuleRegistry:GetInfo("aura_customization")
+    local cfg = addon.db and addon.db.profile and addon.db.profile.modules
+        and addon.db.profile.modules.aura_customization
+    print("  Source file: " .. (module.sourceLoaded and "|cff00ff00OK|r" or "|cffff0000INCOMPLETE|r"))
+    print("  Registry: " .. (registryInfo and "|cff00ff00OK|r" or "|cffff0000MISSING|r"))
+    print("  Module enabled: " .. (cfg and cfg.enabled ~= false and "yes" or "no"))
+    print("  Initialized: " .. (module.initialized and "yes" or "no"))
+    print("  Applied: " .. (module.applied and "|cff00ff00yes|r" or "|cffff0000no|r"))
+    if module.registrationError then
+        print("  Registration error: |cffff0000" .. module.registrationError .. "|r")
+    end
+
+    local units = { "player", "target", "focus" }
+    local widgetKeys = {
+        player = "playerAuraBars",
+        target = "targetAuraBars",
+        focus = "focusAuraBars",
+    }
+    for _, unit in ipairs(units) do
+        local barCfg = cfg and cfg.bars and cfg.bars[unit]
+        local state = module.barFrames and module.barFrames[unit]
+        local editable = addon.EditableFrames and addon.EditableFrames[widgetKeys[unit]]
+        print(string.format("  %s: enabled=%s frame=%s mover=%s rows=%d",
+            unit,
+            barCfg and barCfg.enabled == true and "yes" or "no",
+            state and state.anchor and "OK" or "missing",
+            editable and "OK" or "missing",
+            state and state.rows and #state.rows or 0))
+    end
+    print("  Use /dragonui aura refresh to force and diagnose a refresh.")
+end
+
 -- Show help
 local function ShowHelp()
     addon:Print(L["=== DragonUI Commands ==="])
@@ -168,6 +218,7 @@ local function ShowHelp()
     print("  " .. L["/dragonui reset - Reset all positions to defaults"])
     print("  " .. L["/dragonui reset <name> - Reset specific mover"])
     print("  " .. L["/dragonui status - Show module status"])
+    print("  /dragonui aura [refresh] - Diagnose aura icons and bars")
     print("  " .. L["/dragonui debug on|off|status - Toggle diagnostic logging"])
     print("  " .. L["/dragonui kb - Toggle keybind mode"])
     print("  " .. L["/dragonui version - Show version info"])
@@ -196,6 +247,8 @@ local function SlashCommandHandler(input)
         ResetPositions(arg)
     elseif cmd == "status" then
         ShowStatus()
+    elseif cmd == "aura" or cmd == "auradiag" then
+        ShowAuraCustomizationStatus(arg)
     elseif cmd == "debug" then
         SetDebugMode(arg)
     elseif cmd == "kb" or cmd == "keybind" or cmd == "keybinds" then

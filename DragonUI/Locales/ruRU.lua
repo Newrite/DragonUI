@@ -14,6 +14,13 @@ When adding new strings:
 local L = LibStub("AceLocale-3.0"):NewLocale("DragonUI", "ruRU")
 if not L then return end
 
+-- Aura filtering and bars
+L["Aura Filtering and Bars"] = "Фильтры и полосы аур"
+L["Filter, sort, color, and display unit-frame auras as icons or bars."] = "Фильтрация, сортировка, окраска и отображение аур юнит-фреймов значками или полосами."
+L["PlayerAuraBars"] = "Полосы аур игрока"
+L["TargetAuraBars"] = "Полосы аур цели"
+L["FocusAuraBars"] = "Полосы аур фокуса"
+
 -- ============================================================================
 -- CORE / GENERAL
 -- ============================================================================
