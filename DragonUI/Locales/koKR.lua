@@ -222,6 +222,8 @@ L["ExtraActionButton"] = "추가 행동 버튼"
 L["PlayerPrimaryStat"] = "주스탯"
 L["TargetPrimaryStat"] = "대상 주스탯"
 L["Primary stat icon movability widget"] = "주스탯 아이콘 이동 위젯"
+L["WildCardDice"] = "WildCard 주사위"
+L["Ascension WildCard dice movability widget"] = "Ascension WildCard 주사위 이동 위젯"
 
 -- Editor mode system messages
 L["All editable frames shown for editing"] = "íŽ¸ì§‘ì„ ìœ„í•´ ëª¨ë“  í”„ë ˆìž„ì„ í‘œì‹œí•©ë‹ˆë‹¤."

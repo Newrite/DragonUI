@@ -68,6 +68,8 @@ L["ExtraActionButton"] = "Botão de ação extra"
 L["PlayerPrimaryStat"] = "Atributo Principal"
 L["TargetPrimaryStat"] = "Atributo Principal (Alvo)"
 L["Primary stat icon movability widget"] = "Widget de mobilidade do ícone de atributo principal"
+L["WildCardDice"] = "Dados WildCard"
+L["Ascension WildCard dice movability widget"] = "Widget de mobilidade dos dados WildCard do Ascension"
 
 -- Bag Sort (Sell Scrap)
 L["Sell Scrap"] = "Vender Sucata"

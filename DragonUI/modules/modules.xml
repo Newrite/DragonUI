@@ -99,4 +99,7 @@
 
     <!-- Talent Inspector module (CoA talent tree viewer in inspect) -->
     <Script file="inspector.lua"/>
+
+    <!-- Ascension WildCard Dice movability widget -->
+    <Script file="wildcarddice.lua"/>
 </Ui>

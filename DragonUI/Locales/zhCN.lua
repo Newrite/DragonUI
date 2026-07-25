@@ -219,6 +219,8 @@ L["ExtraActionButton"] = "额外动作按钮"
 L["PlayerPrimaryStat"] = "主属性"
 L["TargetPrimaryStat"] = "目标主属性"
 L["Primary stat icon movability widget"] = "主属性图标可移动组件"
+L["WildCardDice"] = "WildCard 骰子"
+L["Ascension WildCard dice movability widget"] = "Ascension WildCard 骰子可移动组件"
 
 L["All editable frames shown for editing"] = "已显示所有可编辑框体以供编辑"
 L["All editable frames hidden, positions saved"] = "所有可编辑框体已隐藏，位置已保存"

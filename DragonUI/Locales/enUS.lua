@@ -225,6 +225,8 @@ L["ExtraActionButton"] = "Extra Action Button"
 L["PlayerPrimaryStat"] = "Primary Stat"
 L["TargetPrimaryStat"] = "Target Primary Stat"
 L["Primary stat icon movability widget"] = true
+L["WildCardDice"] = "WildCard Dice"
+L["Ascension WildCard dice movability widget"] = true
 
 -- Editor mode system messages
 L["All editable frames shown for editing"] = true

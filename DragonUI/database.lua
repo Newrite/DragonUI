@@ -220,6 +220,13 @@ local defaults = {
                 posY = -6,
                 custom_position = false,
             },
+            -- Ascension WildCard dice frame (visible during Draft / WildCard rolls)
+            wildcarddice = {
+                anchor = "TOP",
+                posX = 0,
+                posY = -32,
+                custom_position = false,
+            },
         },
         -- Quest Tracker
         questtracker = {

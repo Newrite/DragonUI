@@ -68,6 +68,8 @@ L["ExtraActionButton"] = "額外動作按鈕"
 L["PlayerPrimaryStat"] = "主屬性"
 L["TargetPrimaryStat"] = "目標主屬性"
 L["Primary stat icon movability widget"] = "主屬性圖示可移動元件"
+L["WildCardDice"] = "WildCard 骰子"
+L["Ascension WildCard dice movability widget"] = "Ascension WildCard 骰子可移動元件"
 
 -- Bag Sort (Sell Scrap)
 L["Sell Scrap"] = "出售垃圾"
