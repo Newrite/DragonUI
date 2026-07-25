@@ -353,6 +353,16 @@ local INSPECT_SLOT_FRAMES = {
     "InspectMainHandSlot", "InspectSecondaryHandSlot", "InspectRangedSlot", "InspectTabardSlot",
 }
 
+-- Ascension prefixes character slot frames with "Ascension" (e.g. AscensionCharacterHeadSlot).
+-- Resolve the actual frame name, preferring Ascension's variant when present.
+local function ResolveCharacterSlotFrame(frameName)
+    local ascensionName = "Ascension" .. frameName
+    if _G[ascensionName] then
+        return ascensionName
+    end
+    return frameName
+end
+
 -- Never labelled: ammo, cosmetic slots, and the bag bar's own equipment slots.
 -- Needed by slot ID too, since the inspect path reads tooltips, not equipSlot.
 local SKIPPED_SLOT_IDS = {
@@ -576,7 +586,8 @@ end
 local function UpdateAllCharacterSlots()
     if not IsContextEnabled("character") then return end
     for _, frameName in ipairs(EQUIP_SLOT_FRAMES) do
-        local button = _G[frameName]
+        local resolved = ResolveCharacterSlotFrame(frameName)
+        local button = _G[resolved]
         if button then UpdateCharacterSlot(button) end
     end
     UpdateCharacterAverage()
