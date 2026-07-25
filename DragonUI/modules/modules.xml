@@ -63,6 +63,9 @@
     <!-- Item Quality Borders module -->
     <Script file="itemquality.lua"/>
 
+    <!-- Item Level on gear icons -->
+    <Script file="itemlevel.lua"/>
+
     <!-- Chat Mods module -->
     <Script file="chatmods.lua"/>
 

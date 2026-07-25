@@ -396,7 +396,7 @@ local defaults = {
             scale = 1,
             x_position = 1,
             y_position = 41,
-            tint_unusable = false, -- Red icon tint for gear/Use items the player cannot use
+            tint_unusable = true, -- Red icon tint for gear/Use items the player cannot use
         },
 
         xprepbar = {
@@ -1061,6 +1061,26 @@ local defaults = {
                 enabled = true, -- Color item borders by quality in bags, character panel, bank, merchant
                 min_quality = 2 -- Minimum quality to show (2 = Uncommon/green)
             },
+            itemlevel = {
+                enabled = true, -- Show item level on gear icons
+                font_size = 12,
+                font_family = "expressway", -- default|expressway|primary|narrow|skurri|morpheus
+                font_outline = "THICKOUTLINE", -- NONE|OUTLINE|THICKOUTLINE (no real bold in 3.3.5a)
+                show_average = true, -- Average item level on the character/inspect panel
+                tooltip_cvar = false, -- Also set Blizzard's showItemLevel CVar (tooltip line)
+                -- Per-context toggles
+                bags = true,
+                bank = true,
+                guildbank = true,
+                character = true,
+                inspect = true,
+                merchant = true,
+                trade = true,
+                loot = true,
+                lootroll = true,
+                mail = true,
+                auction = true,
+            },
             chatmods = {
                 enabled = true, -- Chat enhancements: hide buttons, editbox position, URL copy, chat copy
                 editbox = "bottom", -- Editbox position: "top", "bottom", or "middle"
@@ -1081,7 +1101,7 @@ local defaults = {
             bagster = {
                 enabled = false, -- All-in-one bag replacement with filtering and search
                 money_display = "icons", -- Coin display: "icons" (g/s/c icons) or "text"
-                item_scale = 1.25, -- Max item slot scale in the grid
+                item_scale = 1, -- Target item slot scale (1 = native 37px slot); cell flexes to fill the width
                 item_spacing = 2, -- Gap between slots (pitch = 37 + spacing)
                 bag_break = 1, -- 0 off, 1 normal↔profession (+keyring block), 2 every bag
                 break_space = 1.3, -- Extra rows between bag-break groups
