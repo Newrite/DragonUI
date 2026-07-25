@@ -47,6 +47,9 @@
     <!-- Editor Mode module -->
     <Script file="editor_mode.lua"/>
 
+    <!-- Extra Action Button movability widget -->
+    <Script file="extra_action_button.lua"/>
+
     <!-- Player Primary Stat movability widget -->
     <Script file="player_primary_stat.lua"/>
 
